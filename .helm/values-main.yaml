@@ -1,9 +1,9 @@
 replicaCount: 1
 
-#image:
-#  repository: git-ci-cd.s
-#  pullPolicy: IfNotPresent
-#  tag: "latest"
+image:
+  repository: git-ci-cd.smartalmaty.kz:8443/opendata/analytics-sc-landing
+  pullPolicy: IfNotPresent
+  tag: "latest"
 
 imagePullSecrets:
   - name: regcred

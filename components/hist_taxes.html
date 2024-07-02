@@ -1,0 +1,329 @@
+ 
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Show polygon information on click</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    /* Существующие стили */
+    body { margin: 0; padding: 0; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    .calculation-box {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background-color: rgba(255, 255, 255, 0.72);
+        padding: 6px;
+        border-radius: 5px;
+        font-size: 14px;
+        max-width: 300px;
+    }
+    .button-container {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        z-index: 1;
+    }
+    .button {
+        padding: 8px 16px;
+        background-color: rgba(128, 128, 128, 0.5);
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    .button:hover {
+        background-color: rgba(128, 128, 128, 0.8);
+    }
+
+    /* Стилизация выпадающего списка */
+    #tax-column {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1;
+        width: 200px;
+        background-color: rgba(255, 255, 255, 0.75); /* Полупрозрачный фон */
+        padding: 5px;
+        border-radius: 5px; /* Скругленные углы */
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    #oked-column {
+        position: relative;
+        top: 10px;
+        right: -10px;
+        z-index: 1;
+        width: 470px;
+        background-color: rgba(255, 255, 255, 0.75); /* Полупрозрачный фон */
+        padding: 5px;
+        border-radius: 5px; /* Скругленные углы */
+        font-size: 14px;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+    <div>
+        <div id="forHistogram">
+            <canvas id="myHistogram"></canvas>
+        </div>
+    </div>
+    <br>
+    <br>
+    <div>
+        <div id="forLinePlot">
+            <canvas id="myLinePlot" height="300"></canvas>
+        </div>
+    </div>
+
+<script>
+
+    var rome_quarter = {
+        1 : 'I',
+        2 : 'II',
+        3 : 'III',
+        4 : 'IV',
+    };
+
+    // Data for the histogram
+    var hist_data = {
+        labels: [], // Will be filled with years
+        datasets: []
+    };
+
+    // Colors for the quarters
+    var colors = [
+        'rgba(255, 99, 132, 0.8)',
+        'rgba(54, 162, 235, 0.8)',
+        'rgba(255, 206, 86, 0.8)',
+        'rgba(75, 192, 192, 0.8)'
+    ];
+
+    var districtColors = {
+        'Алатауский район': 'rgba(255, 99, 132, 0.8)',
+        'Алмалинский район': 'rgba(54, 162, 235, 0.8)',
+        'Ауэзовский район': 'rgba(255, 206, 86, 0.8)',
+        'Бостандыкский район': 'rgba(75, 192, 192, 0.8)',
+        'Жетысуский район': 'rgba(153, 102, 255, 0.8)',
+        'Медеуский район': 'rgba(255, 159, 64, 0.8)',
+        'Наурызбайский район': 'rgba(128, 128, 128, 0.8)',
+        'Турксибский район': 'rgba(54, 162, 235, 0.8)'
+    };
+
+    var districtNames = {
+        1 : "Алатауский район",
+        2 : "Алмалинский район",
+        3 : "Ауэзовский район",
+        4 : "Бостандыкский район",
+        5 : "Жетысуский район",
+        6 : "Медеуский район",
+        7 : "Наурызбайский район",
+        8 : "Турксибский район"
+    }
+
+    function generalize_for_city(data) {
+        
+        const aggregatedData = data.data.reduce((acc, curr) => {
+            const { year, quarter, total_sum } = curr;
+            const key = `${year}-${quarter}`;
+            if (!acc[key]) {
+                acc[key] = {
+                    year,
+                    quarter,
+                    total_sum: 0
+                };
+            }
+            acc[key].total_sum += total_sum;
+            return acc;
+        }, {});
+
+        const aggregatedTable = Object.values(aggregatedData).map(item => ({
+            year: item.year,
+            quarter: item.quarter,
+            total_sum: parseInt(item.total_sum.toFixed(0))
+        }));
+
+        var newAggregatedData = aggregatedTable.reduce((acc, curr) => {
+            const { year, quarter, total_sum } = curr;
+            if (!acc[year]) {
+                acc[year] = {};
+            }
+            if (!acc[year][quarter]) {
+                acc[year][quarter] = {
+                    total_sum: 0
+                };
+            }
+            acc[year][quarter].total_sum += total_sum;
+            return acc;
+        }, {});
+
+        return newAggregatedData;
+    }
+
+    // Function to make API request
+    async function fetchData() {
+        try {
+            // Make API request
+            const response = await fetch('https://admin.smartalmaty.kz/streamlit-api/taxes-quarter/filter_by_multiple/?kbk_code=' + selected_tax + '&oked_number=' + selected_oked);
+            const data = await response.json();
+            console.log(data);
+
+            var almaty_hist_data = generalize_for_city(data);
+
+            // Extracting data from almaty_hist_data
+            Object.keys(almaty_hist_data).forEach(year => {
+                hist_data.labels.push(year);
+                for (let quarter = 1; quarter <= 4; quarter++) {
+                    if (almaty_hist_data[year][quarter]) {
+                        if (!hist_data.datasets[quarter - 1]) {
+                            hist_data.datasets[quarter - 1] = {
+                                label: rome_quarter[quarter] + ' квартал',
+                                data: [],
+                                backgroundColor: colors[quarter - 1],
+                                borderColor: colors[quarter - 1],
+                                borderWidth: 1
+                            };
+                        }
+                        hist_data.datasets[quarter - 1].data.push(almaty_hist_data[year][quarter].total_sum.toFixed(2));
+                    } else {
+                        if (!hist_data.datasets[quarter - 1]) {
+                            hist_data.datasets[quarter - 1] = {
+                                label: rome_quarter[quarter] + ' квартал',
+                                data: [],
+                                backgroundColor: colors[quarter - 1],
+                                borderColor: colors[quarter - 1],
+                                borderWidth: 1
+                            };
+                        }
+                        hist_data.datasets[quarter - 1].data.push(0);
+                    }
+                }
+            });
+
+            // Chart configuration
+            var config = {
+                type: 'bar',
+                data: hist_data,
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    if (value >= 1e9) {
+                                        return (value / 1e9).toFixed(0) + ' млрд ₸';
+                                    } else if (value >= 1e6) {
+                                        return (value / 1e6).toFixed(0) + ' млн ₸';
+                                    } else {
+                                        return value.toLocaleString('kz-KZ') + ' ₸';
+                                    }
+                                }
+                            }
+                        }
+                    },
+                },
+            };
+
+            // Create the chart
+            var myChart = new Chart(
+                document.getElementById('myHistogram'),
+                config
+            );
+
+
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+            // Group quarters within each year and district
+            var groupedData = data.data.reduce((acc, curr) => {
+                const { year, quarter, district, total_sum } = curr;
+                if (!acc[year]) {
+                    acc[year] = {};
+                }
+                if (!acc[year][quarter]) {
+                    acc[year][quarter] = {};
+                }
+                if (!acc[year][quarter][district]) {
+                    acc[year][quarter][district] = 0;
+                }
+                acc[year][quarter][district] += total_sum;
+                return acc;
+            }, {});
+
+            // Data for the line plot
+            var line_data = {
+                labels: [], // Will be filled with years
+                datasets: []
+            };
+
+            // Extracting data from groupedData
+            Object.keys(groupedData).forEach(year => {
+                for (let quarter = 1; quarter <= 4; quarter++) {
+                    line_data.labels.push(year + " - " + rome_quarter[quarter] + ' квартал');
+                    Object.keys(groupedData[year][quarter]).forEach(district => {
+                        if (!line_data.datasets[district - 1]) {
+                            line_data.datasets[district - 1] = {
+                                label: districtNames[district],
+                                data: [],
+                                backgroundColor: districtColors[districtNames[district]],
+                                borderColor: districtColors[districtNames[district]],
+                                borderWidth: 1,
+                                fill: false
+                            };
+                        }
+                        line_data.datasets[district - 1].data.push(groupedData[year][quarter][district].toFixed(0));
+                    });
+                }
+            });
+
+            // Chart configuration
+            var line_config = {
+                type: 'line',
+                data: line_data,
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    if (value >= 1e9) {
+                                        return (value / 1e9).toFixed(0) + ' млрд ₸';
+                                    } else if (value >= 1e6) {
+                                        return (value / 1e6).toFixed(0) + ' млн ₸';
+                                    } else {
+                                        return value.toLocaleString('kz-KZ') + ' ₸';
+                                    }
+                                }
+                            }
+                        }
+                    },
+                },
+            };
+
+            // Create the chart
+            var myChart = new Chart(
+                document.getElementById('myLinePlot'),
+                line_config
+            );
+
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    }
+
+    // Call fetchData function when the page loads
+    window.onload = fetchData;
+
+</script>
+</body>
+</html>

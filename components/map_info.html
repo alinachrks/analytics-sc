@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Show Polygon Information on Click</title>
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
+    <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.2.2/mapbox-gl-draw.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js" defer></script>
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.2.2/mapbox-gl-draw.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6.5.0/turf.min.js" defer></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        .calculation-box {
+            position: absolute; top: 10px; left: 10px;
+            background-color: rgba(255, 255, 255, 0.72);
+            padding: 6px;
+            border-radius: 5px;
+            font-size: 14px;
+            max-width: 300px;
+        }
+        .button-container {
+            position: absolute; bottom: 10px; left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 1;
+        }
+        .button {
+            padding: 8px 16px;
+            background-color: rgba(128, 128, 128, 0.5);
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: rgba(128, 128, 128, 0.8);
+        }
+        /* Стилизация выпадающего списка */
+        #color-column {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1;
+            width: 200px;
+            background-color: rgba(255, 255, 255, 0.75);
+            padding: 5px;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<div class="calculation-box" id="sidebar"></div>
+<div class="button-container">
+    <button class="button" id="drawButton">Draw</button>
+    <button class="button" onclick="resetMap()">Reset</button>
+    <button class="button" onclick="toggleFullScreen()">Full Screen</button>
+</div>
+
+<script>
+    let map, draw, geojson = {};
+
+    window.onload = function() {
+        mapboxgl.accessToken = 'pk.eyJ1IjoiYWxpbmFjaCIsImEiOiJjbGlpcnZpaTgwMTZ4M2twaGo1NjRsNHhhIn0.9jw_R_D1i1nqOtaolld-dQ';
+        map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v12',
+            center: [76.879751, 43.24517],
+            zoom: 12
+        });
+
+        draw = new MapboxDraw({
+            displayControlsDefault: false,
+            controls: {
+                polygon: true,
+                trash: true
+            }
+        });
+        map.addControl(draw);
+
+        map.on('draw.create', updateArea);
+        loadGeoJSON();
+    };
+
+    function updateArea(e) {
+        const data = draw.getAll();
+        if (data.features.length > 0) {
+            const centroid = turf.centroid(data);
+            let point = turf.point(centroid.geometry.coordinates);
+            let matchedFeature = geojson.features.find(feature => turf.booleanPointInPolygon(point, feature));
+            if (matchedFeature) {
+                document.getElementById('sidebar').innerHTML = generateInfoHTML(matchedFeature.properties);
+            } else {
+                document.getElementById('sidebar').innerHTML = "No matching polygon found.";
+            }
+        } else {
+            document.getElementById('sidebar').innerHTML = '';
+            if (e.type !== 'draw.delete') alert("Use the draw tools to draw a polygon!");
+        }
+    }
+
+    function generateInfoHTML(props) {
+        let htmlContent = `<div><strong>ID:</strong> ${props.id_x}</div>`;
+        // Add more properties dynamically
+        const propertyDisplayNames = {
+            total_qty: "Численность",
+            avg_age: "Средний возраст",
+            avg_income_amount: "Средний доход",
+            income_qty_product: "Денежный оборот",
+            avg_1m_price: "Средняя цена за кв. метр",
+            num_schools: "Количество школ",
+            school_exist: "Наличие школ",
+            num_hospitals: "Количество больниц",
+            hospit_exist: "Наличие больниц",
+            avg_income: "Средний доход",
+            number_buss: "Количество бизнес центров",
+            price_cluster: "Кластер цен",
+            num_markets: "Количество рынков",
+            num_cafe: "Количество кафе",
+            num_restoran: "Количество ресторанов",
+            num_apteka: "Количество аптек",
+            num_med_c: "Количество медицинских центров",
+            num_vet_c: "Количество ветеринарных клиник",
+            num_fitnes: "Количество фитнес-центров",
+            num_beauty: "Количество салонов красоты",
+            num_books: "Количество книжных магазинов",
+            num_trc: "Количество ТРЦ",
+            num_suvenir: "Количество сувенирных магазинов",
+            num_electr: "Количество магазинов электроники",
+            num_bytovaya: "Количество магазинов бытовой техники",
+            num_notarius: "Количество нотариусов",
+            num_copy: "Количество копировальных центров",
+            num_remont: "Количество ремонтных мастерских",
+            num_obrazovanie: "Количество образовательных учреждений",
+            num_ozd_c: "Количество отделений ЗАГС",
+            num_stomat: "Количество стоматологий"
+            // Add more mappings as needed
+        };
+
+        // Iterate over each property in props
+        for (const key in props) {
+            if (props.hasOwnProperty(key) && propertyDisplayNames[key]) {
+                htmlContent += `<div><strong>${propertyDisplayNames[key]}:</strong> ${props[key]}</div>`;
+            }
+        }
+
+        return htmlContent;
+    }
+
+
+
+    function loadGeoJSON() {
+        const geojsonUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/hex_buy_power.geojson';
+        fetch(geojsonUrl)
+            .then(response => response.json())
+            .then(data => {
+                geojson = data;
+            })
+            .catch(error => console.error('Error loading the geojson data: ', error));
+    }
+
+    function resetMap() {
+        map.flyTo({
+            center: [76.879751, 43.24517],
+            zoom: 12
+        });
+        draw.deleteAll();
+        document.getElementById('sidebar').innerHTML = '';
+    }
+
+    function toggleFullScreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+    }
+</script>
+</body>
+</html>

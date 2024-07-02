@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Show polygon information on click</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
+<style>
+    body { margin: 0; padding: 0; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    .calculation-box {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background-color: rgba(255, 255, 255, 0.641);
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 14px;
+        max-width: 300px;
+    }
+    .calculation-box p {
+        margin: 5px 0;
+    }
+    .button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 5px 10px;
+        background-color: rgba(128, 128, 128, 0.5); /* серый и полупрозрачный цвет */
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        z-index: 1;
+    }
+    .button:hover {
+        background-color: rgba(128, 128, 128, 0.8); /* измененный цвет при наведении */
+    }
+    .legend {
+        position: absolute;
+        bottom: 30px;
+        right: 10px;
+        padding: 10px;
+        background-color: rgba(255, 255, 255, 0.8);
+        border-radius: 5px;
+        font-size: 12px;
+        color: #333;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        z-index: 1;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
+    .legend h4 {
+        margin: 0 10px 0 0;
+        font-size: 14px;
+    }
+    .legend div {
+        display: flex;
+        align-items: center;
+        margin-right: 5px;
+    }
+    .legend span {
+        width: 20px;
+        height: 20px;
+        display: inline-block;
+        margin-right: 5px;
+    }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="calculation-box" id="sidebar"></div>
+<button class="button" onclick="resetMap()">Reset</button>
+<button class="button" onclick="toggleFullScreen()">Full Screen</button>
+<div class="legend" id="legend">
+    <h4>Легенда:</h4>
+    <div><span style="background-color: rgba(219, 209, 202, 0.4);"></span>0</div>
+    <div><span style="background-color: rgba(118, 0, 0, 0.7);"></span>30</div>
+    <div><span style="background-color: rgba(202, 32, 0, 0.7);"></span>40</div>
+    <div><span style="background-color: rgba(255, 93, 0, 0.7);"></span>50</div>
+    <div><span style="background-color: rgba(255, 183, 0, 0.7);"></span>75</div>
+    <div><span style="background-color: rgba(206, 213, 1, 0.7);"></span>85</div>
+    <div><span style="background-color: rgba(51, 141, 0, 0.7);"></span>105</div>
+</div>
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoiYWxpbmFjaCIsImEiOiJjbGlpcnZpaTgwMTZ4M2twaGo1NjRsNHhhIn0.9jw_R_D1i1nqOtaolld-dQ';
+const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/alinach/cly3sycrp007v01pf9secfdmr',
+    center: [76.879751, 43.24517], 
+    zoom: 12
+});
+
+map.on('load', () => {
+    // Replace this URL with your own GeoJSON data URL
+    const geojsonUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/infra_top.geojson';
+
+    // Add a source for your GeoJSON data.
+    map.addSource('custom-data', {
+        'type': 'geojson',
+        'data': geojsonUrl
+    });
+
+    // Add a layer showing your GeoJSON data.
+    map.addLayer({
+        'id': 'custom-data-layer',
+        'type': 'fill',
+        'source': 'custom-data',
+        'paint': {
+            'fill-color': [
+                'interpolate',
+                ['linear'],
+                ['get', 'Всего'],
+                0, 'rgba(219, 209, 202, 0.4)',
+                30, 'rgba(118, 0, 0, 0.7)',
+                40, 'rgba(202, 32, 0, 0.7)',
+                50, 'rgba(255, 93, 0, 0.7)',
+                75, 'rgba(255, 183, 0, 0.7)',
+                85, 'rgba(206, 213, 1, 0.7)',
+                105, 'rgba(51, 141, 0, 0.7)'
+            ],
+            'fill-outline-color': 'rgba(151, 161, 169, 0.6)'
+        }
+    });
+
+    // Add a layer for the highlighted polygon outline.
+    map.addLayer({
+        'id': 'highlighted-polygon-outline',
+        'type': 'line',
+        'source': 'custom-data',
+        'filter': ['==', 'id', ''],
+        'paint': {
+            'line-color': 'rgba(0, 0, 0, 1)',
+            'line-width': 2
+        }
+    });
+
+    // When a click event occurs on a feature in the custom data layer,
+    // open a sidebar with information about the polygon and fly to it.
+    map.on('click', 'custom-data-layer', (e) => {
+        const properties = e.features[0].properties;
+        let sidebarContent = '<div style="width: 100%;">';
+        for (const key in properties) {
+            if (properties.hasOwnProperty(key) && key !== 'Всего' && properties[key] !== 0) {
+                sidebarContent += `<p><strong>${key}:</strong> ${properties[key]}</p>`;
+            }
+        }
+        sidebarContent += '</div>';
+        document.getElementById('sidebar').innerHTML = sidebarContent;
+
+        // Reset the style of all outlines
+        map.setPaintProperty('custom-data-layer', 'fill-outline-color', 'rgba(200, 200, 200, 0.5)');
+        map.setPaintProperty('custom-data-layer', 'fill-outline-width', 1);
+
+        // Set a bold outline for the selected polygon
+        map.setFilter('highlighted-polygon-outline', ['==', 'id', e.features[0].id]);
+        map.setPaintProperty('highlighted-polygon-outline', 'line-width', 4);
+
+        map.flyTo({
+            center: e.lngLat,
+            zoom: 14,
+            essential: true // this animation is considered essential with respect to prefers-reduced-motion
+        });
+    });
+
+    // Change the cursor to a pointer when
+    // the mouse is over the custom data layer.
+    map.on('mouseenter', 'custom-data-layer', () => {
+        map.getCanvas().style.cursor = 'pointer';
+    });
+
+    // Change the cursor back to a pointer
+    // when it leaves the custom data layer.
+    map.on('mouseleave', 'custom-data-layer', () => {
+        map.getCanvas().style.cursor = '';
+    });
+});
+
+function resetMap() {
+    map.setFilter('highlighted-polygon-outline', ['==', 'id', '']);
+    map.flyTo({
+        center: [76.879751, 43.24517],
+        zoom: 16,
+        essential: true // this animation is considered essential with respect to prefers-reduced-motion
+    });
+    document.getElementById('sidebar').innerHTML = '';
+}
+
+function toggleFullScreen() {
+    var button = document.querySelector('.button-container .button:nth-child(2)');
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+        button.textContent = 'Свернуть';
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+            button.textContent = 'Во весь экран';
+        }
+    }
+}
+</script>
+</body>
+</html>

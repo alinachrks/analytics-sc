@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Show polygon information on click</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
+<style>
+    /* Существующие стили */
+    body { margin: 0; padding: 0; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    .calculation-box {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background-color: rgba(255, 255, 255, 0.72);
+        padding: 6px;
+        border-radius: 5px;
+        font-size: 14px;
+        max-width: 300px;
+    }
+    .button-container {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        z-index: 1;
+    }
+    .button {
+        padding: 8px 16px;
+        background-color: rgba(128, 128, 128, 0.5);
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    .button:hover {
+        background-color: rgba(128, 128, 128, 0.8);
+    }
+
+    /* Стилизация выпадающего списка */
+    #color-column {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1;
+        width: 200px;
+        background-color: rgba(255, 255, 255, 0.75); /* Полупрозрачный фон */
+        padding: 5px;
+        border-radius: 5px; /* Скругленные углы */
+        font-size: 14px;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="calculation-box" id="sidebar"></div>
+<div class="button-container">
+    <button class="button" onclick="resetMap()">Reset</button>
+    <button class="button" onclick="toggleFullScreen()">Full Screen</button>
+</div>
+<select id="color-column" onchange="updatePolygonColors()">
+    <option value="typeof">ОКЭД</option>
+    <option value="0111">Выращивание зерновых (кроме риса), бобовых и масличных культур</option>
+    <option value="0112">Выращивание риса</option>
+    <option value="0113">Выращивание овощей, бахчевых, корнеплодов и клубнеплодов</option>
+    <option value="0114">Выращивание сахарного тростника</option>
+    <option value="0115">Выращивание табака</option>
+    <option value="0116">Выращивание прядильных культур</option>
+    <option value="0119">Выращивание прочих одно- или двухлетних культур</option>
+    <option value="0121">Выращивание винограда</option>
+    <option value="0122">Выращивание тропических и субтропических плодов</option>
+    <option value="0123">Выращивание цитрусовых плодов</option>
+    <option value="0124">Выращивание семечковых и косточковых плодов</option>
+    <option value="0125">Выращивание прочих плодов, ягод и орехов</option>
+    <option value="0126">Выращивание маслосодержащих плодов</option>
+    <option value="0127">Выращивание культур для производства напитков</option>
+    <option value="0128">Выращивание специй, пряностей, лекарственных и используемых в парфюмерии растений</option>
+    <option value="0129">Выращивание прочих многолетних культур</option>
+    <option value="0130">Воспроизводство растений</option>
+    <option value="0141">Разведение крупного рогатого скота молочного направления</option>
+    <option value="0142">Разведение прочего крупного рогатого скота и буйволов</option>
+    <option value="0143">Разведение лошадей и прочих животных семейства лошадиных</option>
+    <option value="0145">Разведение овец и коз</option>
+    <option value="0146">Разведение свиней</option>
+    <option value="0147">Разведение сельскохозяйственной птицы</option>
+    <option value="0149">Разведение прочих видов животных</option>
+    <option value="0150">Смешанное сельское хозяйство</option>
+    <option value="0161">Деятельность вспомогательная, связанная с выращиванием растений</option>
+    <option value="0162">Деятельность вспомогательная, связанная с животноводством</option>
+    <option value="0163">Деятельность послеурожайная</option>
+    <option value="0164">Обработка семян для посева</option>
+    <option value="0170">Охота, разведение и предоставление связанных с этим услуг</option>
+    <option value="0210">Лесоводство и прочая лесохозяйственная деятельность</option>
+    <option value="0220">Лесозаготовки</option>
+    <option value="0230">Сбор дикорастущей недревесной продукции</option>
+    <option value="0240">Предоставление услуг в области лесоводства</option>
+    <option value="0311">Морское рыболовство</option>
+    <option value="0312">Пресноводное рыболовство</option>
+    <option value="0321">Морское рыбоводство</option>
+    <option value="0322">Пресноводное рыбоводство</option>
+    <option value="0510">Добыча каменного угля</option>
+    <option value="0520">Добыча лигнита (бурого угля)</option>
+    <option value="0610">Добыча сырой нефти</option>
+    <option value="0620">Добыча природного газа</option>
+    <option value="0710">Добыча железных руд</option>
+    <option value="0721">Добыча урановой и ториевой руд</option>
+    <option value="0729">Добыча прочих металлических руд</option>
+    <option value="0811">Добыча отделочного и строительного камня, известняка, гипса, мела и сланцев</option>
+    <option value="0812">Разработка гравийных и песчаных карьеров, добыча глины и каолина</option>
+    <option value="0891">Добыча минерального сырья для химической промышленности и производства удобрений</option>
+    <option value="0892">Добыча торфа</option>
+    <option value="0893">Добыча соли</option>
+    <option value="0899">Добыча прочих полезных ископаемых, не включенные в другие группировки</option>
+    <option value="0910">Деятельность в области геологической разведки</option>
+    <option value="0990">Деятельность в области обогащения полезных ископаемых</option>
+    <option value="1011">Переработка и консервирование мяса</option>
+    <option value="1012">Переработка и консервирование мяса сельскохозяйственной птицы</option>
+    <option value="1013">Производство продуктов из мяса и мяса сельскохозяйственной птицы</option>
+    <option value="1020">Переработка и консервирование рыбы, ракообразных и моллюсков</option>
+    <option value="1031">Переработка и консервирование картофеля</option>
+    <option value="1032">Производство фруктовых и овощных соков</option>
+    <option value="1039">Прочие виды переработки и консервирования фруктов и овощей</option>
+    <option value="1041">Производство масел и жиров</option>
+    <option value="1042">Производство маргарина и аналогичных пищевых жиров</option>
+    <option value="1051">Переработка молока и производство сыров</option>
+    <option value="1052">Производство мороженого</option>
+    <option value="1061">Производство мукомольно-крупяных продуктов</option>
+    <option value="1062">Производство крахмала и продукции из крахмала</option>
+    <option value="1071">Производство хлебобулочных, макаронных и мучных кондитерских изделий</option>
+    <option value="1072">Производство сухарей и печенья; производство мучных кондитерских изделий длительного хранения</option>
+    <option value="1073">Производство макаронных изделий</option>
+    <option value="1081">Производство сахара</option>
+    <option value="1082">Производство какао, шоколада и сахаристых кондитерских изделий</option>
+    <option value="1083">Переработка чая и кофе</option>
+    <option value="1084">Производство пряностей и приправ</option>
+    <option value="1085">Производство готовых пищевых продуктов</option>
+    <option value="1086">Производство детского питания и диетических пищевых продуктов</option>
+    <option value="1089">Производство прочих продуктов питания, не включенных в другие группировки</option>
+    <option value="1091">Производство готовых кормов для сельскохозяйственных животных</option>
+    <option value="1092">Производство готовых кормов для домашних животных</option>
+    <option value="1101">Дистилляция, ректификация и смешивание спиртных напитков</option>
+    <option value="1102">Производство вина из винограда</option>
+    <option value="1103">Производство сидра и прочих плодовых вин</option>
+    <option value="1104">Производство прочих недистиллированных напитков из сброженного материала</option>
+    <option value="1105">Производство пива</option>
+    <option value="1106">Производство солода</option>
+    <option value="1107">Производство безалкогольных напитков, минеральных вод и других вод в бутылках</option>
+    <option value="1200">Производство табачных изделий</option>
+    <option value="1310">Подготовка и прядение текстильных волокон</option>
+    <option value="1320">Ткацкое производство</option>
+    <option value="1391">Производство вязаного и трикотажного полотна</option>
+    <option value="1392">Производство готовых текстильных изделий, кроме одежды</option>
+    <option value="1393">Производство ковров и ковровых изделий</option>
+    <option value="1394">Производство веревок, канатов, бечевок, шпагата и сетей</option>
+    <option value="1395">Производство нетканых текстильных изделий, кроме одежды</option>
+    <option value="1396">Производство прочих текстильных изделий технического и производственного назначения</option>
+    <option value="1399">Производство прочих текстильных изделий, не включенных в другие группировки</option>
+    <option value="1411">Производство одежды из кожи</option>
+    <option value="1412">Производство спецодежды</option>
+    <option value="1413">Производство прочей верхней одежды</option>
+    <option value="1414">Производство нижнего белья</option>
+    <option value="1419">Производство прочих видов одежды и аксессуаров</option>
+    <option value="1420">Производство меховых изделий</option>
+    <option value="1431">Производство вязаных и трикотажных чулочно-носочных изделий</option>
+    <option value="1439">Производство прочей вязаной и трикотажной одежды</option>
+    <option value="1511">Дубление и выделка кожи; выделка и крашение меха</option>
+    <option value="1512">Производство дорожных принадлежностей, шорно-седельных изделий</option>
+    <option value="1520">Производство обуви</option>
+    <option value="1610">Лесопильное и строгальное производство</option>
+    <option value="1621">Производство шпона, фанеры, плит и панелей из древесины</option>
+    <option value="1622">Производство сборных паркетных покрытий</option>
+    <option value="1623">Производство прочих деревянных строительных конструкций и столярных изделий</option>
+    <option value="1624">Производство деревянной тары</option>
+    <option value="1629">Производство прочих деревянных изделий; производство изделий из пробки, соломки и материалов для плетения</option>
+    <option value="1711">Производство древесной массы и целлюлозы</option>
+    <option value="1712">Производство бумаги и картона</option>
+    <option value="1721">Производство гофрированной бумаги и картона, бумажной и картонной тары</option>
+    <option value="1722">Производство бумажных изделий хозяйственно-бытового и санитарно-гигиенического назначения</option>
+    <option value="1723">Производство писчебумажных изделий</option>
+    <option value="1724">Производство обоев</option>
+    <option value="1729">Производство прочих изделий из бумаги и картона</option>
+    <option value="1813">Деятельность по подготовке материалов к печати и распространению</option>
+    <option value="1920">Производство продуктов нефтепереработки, брикетов из торфа и угля</option>
+    <option value="2011">Производство промышленных газов</option>
+    <option value="2012">Производство красителей и пигментов</option>
+    <option value="2013">Производство прочих основных неорганических химических веществ</option>
+    <option value="2014">Производство прочих основных органических химических веществ</option>
+    <option value="2015">Производство удобрений и азотосодержащих соединений</option>
+    <option value="2016">Производство пластмасс в первичных формах</option>
+    <option value="2017">Производство синтетического каучука в первичных формах</option>
+    <option value="2020">Производство пестицидов и прочей агрохимической продукции</option>
+    <option value="2030">Производство красок, лаков и аналогичных покрытий, типографской краски и мастик</option>
+    <option value="2041">Производство мыла и моющих, чистящих и полирующих средств</option>
+    <option value="2042">Производство парфюмерных и косметических средств</option>
+    <option value="2051">Производство взрывчатых веществ</option>
+    <option value="2052">Производство клея</option>
+    <option value="2053">Производство эфирных масел</option>
+    <option value="2059">Производство прочих химических продуктов, не включенных в другие группировки</option>
+    <option value="2060">Производство искусственных и синтетических волокон</option>
+    <option value="2110">Производство основных фармацевтических продуктов</option>
+    <option value="2120">Производство фармацевтических препаратов и медицинских материалов</option>
+    <option value="2211">Производство резиновых шин, покрышек и камер; восстановление резиновых шин и покрышек</option>
+    <option value="2219">Производство прочих резиновых изделий</option>
+    <option value="2221">Производство пластмассовых плит, листов, труб и профилей</option>
+    <option value="2222">Производство пластмассовых упаковок для товаров</option>
+    <option value="2223">Производство строительных пластмассовых изделий</option>
+    <option value="2229">Производство прочих пластмассовых изделий</option>
+    <option value="2229">Производство прочих пластмассовых изделий</option>
+    <option value="2311">Производство листового стекла</option>
+    <option value="2312">Формирование и обработка листового стекла</option>
+    <option value="2313">Производство полых стеклянных изделий</option>
+    <option value="2314">Производство стекловолокна</option>
+    <option value="2319">Производство и обработка прочих стеклянных изделий</option>
+    <option value="2320">Производство огнеупорных изделий</option>
+    <option value="2331">Производство керамических покрытий и плит</option>
+    <option value="2332">Производство кирпича, черепицы и прочих строительных изделий из обожженной глины</option>
+    <option value="2341">Производство керамических хозяйственных и декоративных изделий</option>
+    <option value="2342">Производство керамических санитарно-технических изделий</option>
+    <option value="2343">Производство керамических электрических изоляторов и изолирующей арматуры</option>
+    <option value="2344">Производство прочих технических керамических изделий</option>
+    <option value="2349">Производство прочих керамических изделий</option>
+    <option value="2351">Производство цемента</option>
+    <option value="2352">Производство извести и строительного гипса</option>
+    <option value="2361">Производство строительных изделий из бетона</option>
+    <option value="2362">Производство изделий из гипса для строительных целей</option>
+    <option value="2365">Производство изделий из асбестоцемента и волокнистого цемента</option>
+    <option value="2369">Производство прочих изделий из бетона, строительного гипса и цемента</option>
+    <option value="2370">Резка, обработка и отделка камня</option>
+    <option value="2391">Производство абразивных изделий</option>
+    <option value="2399">Производство прочей неметаллической минеральной продукции, не включенной в другие группировки</option>
+    <option value="2410">Производство чугуна, стали и ферросплавов</option>
+    <option value="2420">Производство труб, трубок, полых профилей, фитингов из стали</option>
+    <option value="2431">Холодное волочение</option>
+    <option value="2432">Холодная прокатка лент и узких полос</option>
+    <option value="2433">Холодная формовка или гибка</option>
+    <option value="2434">Производство проволоки путем холодного волочения</option>
+    <option value="2441">Производство благородных (драгоценных) металлов</option>
+    <option value="2442">Производство алюминия</option>
+    <option value="2443">Производство свинца, цинка и олова</option>
+    <option value="2444">Производство меди</option>
+    <option value="2445">Производство прочих цветных металлов</option>
+    <option value="2446">Переработка ядерного топлива</option>
+    <option value="2451">Литье чугуна</option>
+    <option value="2452">Литье стали</option>
+    <option value="2511">Производство строительных металлических конструкций и их частей</option>
+    <option value="2512">Производство металлических дверей и окон</option>
+    <option value="2521">Производство радиаторов и котлов центрального отопления</option>
+    <option value="2529">Производство прочих металлических цистерн, резервуаров и контейнеров</option>
+    <option value="2530">Производство паровых котлов, кроме котлов центрального отопления</option>
+    <option value="2540">Производство оружия и боеприпасов</option>
+    <option value="2571">Производство ножевых изделий</option>
+    <option value="2572">Производство замков, петель и шарниров</option>
+    <option value="2573">Производство инструментов</option>
+    <option value="2591">Производство металлических бочек и аналогичных емкостей</option>
+    <option value="2592">Производство упаковки из легких металлов</option>
+    <option value="2593">Производство изделий из проволоки, цепей и пружин</option>
+    <option value="2594">Производство крепежных и резьбовых изделий</option>
+    <option value="2599">Производство прочих готовых металлических изделий, не включенных в другие группировки</option>
+    <option value="2611">Производство электронных элементов</option>
+    <option value="2612">Производство электронных плат</option>
+    <option value="2620">Производство компьютеров и периферийного оборудования</option>
+    <option value="2630">Производство коммуникационного оборудования</option>
+    <option value="2640">Производство электронной бытовой техники</option>
+    <option value="2651">Производство инструментов и приборов для измерения, тестирования и навигации</option>
+    <option value="2652">Производство часов</option>
+    <option value="2660">Производство облучающего, электромедицинского и электротерапевтического оборудования</option>
+    <option value="2670">Производство оптических приборов, фото- и кинооборудования</option>
+    <option value="2680">Производство магнитных и оптических носителей информации</option>
+    <option value="2711">Производство электродвигателей, генераторов и трансформаторов</option>
+    <option value="2712">Производство электрораспределительной и регулирующей аппаратуры</option>
+    <option value="2720">Производство батарей и аккумуляторов</option>
+    <option value="2731">Производство волоконно-оптических кабелей</option>
+    <option value="2732">Производство прочих электрических проводов и кабелей</option>
+    <option value="2733">Производство электромонтажных устройств</option>
+    <option value="2740">Производство электроосветительного оборудования</option>
+    <option value="2751">Производство электрических бытовых приборов</option>
+    <option value="2752">Производство неэлектрических бытовых приборов</option>
+    <option value="2790">Производство прочего электрического оборудования</option>
+    <option value="2811">Производство двигателей и турбин, кроме авиационных, автомобильных и мотоциклетных двигателей</option>
+    <option value="2812">Производство гидравлического и пневматического оборудования</option>
+    <option value="2813">Производство прочих насосов и компрессоров</option>
+    <option value="2814">Производство прочих кранов, клапанов и вентилей</option>
+    <option value="2815">Производство подшипников, зубчатых передач, элементов зубчатых передач и приводов</option>
+    <option value="2821">Производство плит, печей и печных горелок</option>
+    <option value="2822">Производство подъемно-транспортного оборудования</option>
+    <option value="2823">Производство офисной техники и оборудования (за исключением компьютеров и периферийного оборудования)</option>
+    <option value="2824">Производство ручных механизированных инструментов</option>
+    <option value="2825">Производство промышленного холодильного и вентиляционного оборудования</option>
+    <option value="2829">Производство прочих машин и оборудования общего назначения, не включенных в другие группировки</option>
+    <option value="2830">Производство сельскохозяйственной и лесохозяйственной техники</option>
+    <option value="2841">Производство станков для обработки металлов</option>
+    <option value="2849">Производство прочих станков</option>
+    <option value="2891">Производство машин и оборудования для металлургии</option>
+    <option value="2892">Производство машин и оборудования для горнодобывающей промышленности, подземной разработки и строительства</option>
+    <option value="2893">Производство машин и оборудования для производства и переработки продуктов питания, напитков и табачных изделий</option>
+    <option value="2894">Производство машин и оборудования для изготовления текстильных, швейных, меховых и кожаных изделий</option>
+    <option value="2895">Производство машин и оборудования для изготовления бумаги и картона</option>
+    <option value="2896">Производство машин и оборудования для обработки пластмасс и резины</option>
+    <option value="2899">Производство прочих машин и оборудования специального назначения, не включенных в другие группировки</option>
+    <option value="2910">Производство автомобилей</option>
+    <option value="2920">Производство кузовов для автотранспортных средств; производство трейлеров и полуприцепов</option>
+    <option value="2931">Производство электрического и электронного оборудования для автомобилей</option>
+    <option value="2932">Производство прочих частей и принадлежностей автомобилей</option>
+    <option value="3011">Строительство судов и плавучих средств</option>
+    <option value="3012">Строительство прогулочных и спортивных лодок</option>
+    <option value="3020">Производство железнодорожных локомотивов и подвижного состава</option>
+    <option value="3030">Производство воздушных и космических летательных аппаратов и связанного с ними оборудования</option>
+    <option value="3040">Производство военных боевых транспортных средств</option>
+    <option value="3091">Производство мотоциклов</option>
+    <option value="3092">Производство велосипедов, детских и инвалидных колясок/кресел</option>
+    <option value="3099">Производство кузовов для автомобилей; производство прицепов и полуприцепов</option>
+    <option value="3101">Производство мебели для офисов и предприятий торговли</option>
+    <option value="3102">Производство кухонной мебели</option>
+    <option value="3103">Производство матрасов</option>
+    <option value="3109">Производство прочей мебели</option>
+    <option value="3100">Производство офисной и студийной мебели</option>
+    <option value="3211">Чеканка/выпуск монет и медалей</option>
+    <option value="3212">Производство ювелирных и аналогичных изделий</option>
+    <option value="3213">Производство бижутерии и аналогичных изделий</option>
+    <option value="3220">Производство музыкальных инструментов</option>
+    <option value="3230">Производство спортивных товаров</option>
+    <option value="3240">Производство игр и игрушек</option>
+    <option value="3250">Производство медицинских и стоматологических инструментов и принадлежностей</option>
+    <option value="3291">Производство метел и щеток</option>
+    <option value="3299">Производство прочей продукции, не включенной в другие группировки</option>
+    <option value="3511">Производство электроэнергии</option>
+    <option value="3521">Производство газообразного топлива</option>
+    <option value="3811">Сбор неопасных отходов</option>
+    <option value="3812">Сбор опасных отходов</option>
+    <option value="3821">Обработка и удаление неопасных отходов</option>
+    <option value="3832">Переработка отсортированных материалов</option>
+    <option value="5811">Издание книг</option>
+    <option value="5813">Издание газет</option>
+    <option value="5814">Издание журналов и периодических публикаций</option>
+    <option value="5819">Прочие виды издательской деятельности</option>
+    <option value="5829">Издание прочего программного обеспечения</option>
+    <option value="5911">Деятельность по производству кино-, видеофильмов и телевизионных программ</option>
+    <option value="5920">Деятельность в сфере звукозаписи и издания музыкальных произведений</option>
+    <option value="7111">Деятельность в области архитектуры</option>
+    <option value="7420">Деятельность в области фотографии</option>
+    <option value="9003">Художественное и литературное творчество</option>
+    <option value="9102">Деятельность музеев</option>
+    <option value="9602">Предоставление услуг парикмахерскими и салонами красоты</option>
+    <option value="Всего">Всего</option>
+</select>
+
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoiYWxpbmFjaCIsImEiOiJjbGlpcnZpaTgwMTZ4M2twaGo1NjRsNHhhIn0.9jw_R_D1i1nqOtaolld-dQ';
+const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/streets-v12',
+    center: [76.879751, 43.24517], // Centered on New York City
+    zoom: 12
+});
+
+map.on('load', () => {
+    // Replace this URL with your own GeoJSON data URL
+    const geojsonUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/oked_num_rec_hexa.geojson';
+
+    // Add a source for your GeoJSON data.
+    map.addSource('custom-data', {
+        'type': 'geojson',
+        'data': geojsonUrl
+    });
+
+    // Add a layer showing your GeoJSON data.
+    map.addLayer({
+        'id': 'custom-data-layer',
+        'type': 'fill',
+        'source': 'custom-data',
+        'paint': {
+            'fill-color': [
+                'case',
+                ['==', ['typeof', ['get', 'Всего']], 'number'],
+                [
+                    'interpolate',
+                    ['linear'],
+                    ['get', 'Всего'],
+                    0, 'rgba(241, 248, 246, 0.45)',        // Светло-серый
+                    50, 'rgba(17, 87, 171, 0.65)',         // Тёмно-синий
+                    200, 'rgba(0, 128, 128, 0.65)',         // Тиркиз
+                    500, 'rgba(255, 255, 0, 0.65)',         // Жёлтый
+                    800, 'rgba(126, 177, 16, 0.65)',        // Светло-зелёный
+                    1000, 'rgba(39, 116, 6, 0.65)'           // Тёмно-зелёный
+                ],
+                'rgba(211, 211, 211, 0.4)' // Light gray color for NaN
+            ],
+            'fill-outline-color': 'rgba(151, 161, 169, 0.6)',
+            'line-opacity': 1, // Border opacity
+            'line-color': 'rgba(151, 161, 169, 0.6)' // Border color
+        }
+    });
+
+    // Add a layer for the highlighted polygon outline.
+    map.addLayer({
+        'id': 'highlighted-polygon-outline',
+        'type': 'line',
+        'source': 'custom-data',
+        'filter': ['==', 'id', ''],
+        'paint': {
+            'line-color': 'rgba(0, 0, 0, 1)',
+            'line-width': 2
+        }
+    });
+
+    // When a click event occurs on a feature in the custom data layer,
+    // open a sidebar with information about the polygon and fly to it.
+    map.on('click', 'custom-data-layer', (e) => {
+        const properties = e.features[0].properties;
+
+        // Получить имена свойств (столбцов) и их значения
+        const propertyEntries = Object.entries(properties);
+
+        // Отсортировать свойства по значению в обратном порядке (убывающему)
+        const sortedProperties = propertyEntries.sort((a, b) => b[1] - a[1]);
+
+        // Взять только топ-10 свойств
+        const topProperties = sortedProperties.slice(0, 10);
+        
+       // Dictionary to map codes to full names
+        const codeDescriptions = {
+            '0111': 'Выращивание зерновых (кроме риса), бобовых и масличных культур',
+            '0112': 'Выращивание риса',
+            '0113': 'Выращивание овощей, бахчевых, корнеплодов и клубнеплодов',
+            '0114': 'Выращивание сахарного тростника',
+            '0115': 'Выращивание табака',
+            '0116': 'Выращивание прядильных культур',
+            '0119': 'Выращивание прочих одно- или двухлетних культур',
+            '0121': 'Выращивание винограда',
+            '0122': 'Выращивание тропических и субтропических плодов',
+            '5829': 'Издание прочего программного обеспечения',
+            '5911': 'Деятельность по производству кино-, видеофильмов и телевизионных программ',
+            '5920': 'Деятельность в сфере звукозаписи и издания музыкальных произведений',
+            '7111': 'Деятельность в области архитектуры',
+            '7420': 'Деятельность в области фотографии',
+            '9003': 'Художественное и литературное творчество',
+            '9102': 'Деятельность музеев',
+            '9602': 'Предоставление услуг парикмахерскими и салонами красоты',
+            'Всего': 'Всего'
+            // Add other codes and descriptions here
+        };
+
+        let sidebarContent = '<div style="width: 100%;">';
+        for (const [key, value] of topProperties) {
+            let displayName = codeDescriptions[key] || key; // Use the description from the dictionary or the key itself if not found
+            sidebarContent += `<p><strong>${displayName}:</strong> ${value}</p>`;
+        }
+        sidebarContent += '</div>';
+
+        // Display the information in the sidebar
+        document.getElementById('sidebar').innerHTML = sidebarContent;
+
+
+        // Reset the style of all outlines
+        map.setPaintProperty('custom-data-layer', 'fill-outline-color', 'rgba(200, 200, 200, 0.5)');
+        map.setPaintProperty('custom-data-layer', 'fill-outline-width', 1);
+
+        // Set a bold outline for the selected polygon
+        map.setFilter('highlighted-polygon-outline', ['==', 'id', e.features[0].id]);
+        map.setPaintProperty('highlighted-polygon-outline', 'line-width', 4);
+
+        map.flyTo({
+            center: e.lngLat,
+            zoom: 16,
+            essential: true // this animation is considered essential with respect to prefers-reduced-motion
+        });
+    });
+
+    // Change the cursor to a pointer when
+    // the mouse is over the custom data layer.
+    map.on('mouseenter', 'custom-data-layer', () => {
+        map.getCanvas().style.cursor = 'pointer';
+    });
+
+    // Change the cursor back to a pointer
+    // when it leaves the custom data layer.
+    map.on('mouseleave', 'custom-data-layer', () => {
+        map.getCanvas().style.cursor = '';
+    });
+});
+
+function resetMap() {
+    map.setFilter('highlighted-polygon-outline', ['==', 'id', '']);
+    map.flyTo({
+        center: [76.879751, 43.24517],
+        zoom: 12,
+        essential: true // this animation is considered essential with respect to prefers-reduced-motion
+    });
+    document.getElementById('sidebar').innerHTML = '';
+}
+
+function toggleFullScreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        }
+    }
+}
+
+function updatePolygonColors() {
+    const colorProperty = document.getElementById('color-column').value;
+
+    // Find the minimum and maximum values for the selected color property
+    const features = map.querySourceFeatures('custom-data', {
+        sourceLayer: 'your-source-layer-name' // Update this with your actual source layer name
+    });
+    let minValue = Infinity;
+    let maxValue = -Infinity;
+    features.forEach(feature => {
+        const value = feature.properties[colorProperty];
+        if (typeof value === 'number' && !isNaN(value)) {
+            minValue = Math.min(minValue, value);
+            maxValue = Math.max(maxValue, value);
+        }
+    });
+
+    // Set the paint property with the calculated min and max values
+    map.setPaintProperty('custom-data-layer', 'fill-color', [
+        'match',
+        ['typeof', ['get', colorProperty]],
+        'number',
+        [
+            'interpolate',
+            ['linear'],
+            ['get', colorProperty],
+            minValue, 'rgba(241, 248, 246, 0.45)',
+            maxValue * 0.2, 'rgba(17, 87, 171, 0.65)',     // Dark blue
+            maxValue * 0.4, 'rgba(0, 128, 128, 0.65)',     // Teal
+            maxValue * 0.5, 'rgba(255, 255, 0, 0.65)',
+            maxValue * 0.6, 'rgba(126, 177, 16, 0.65)',     // Light green
+            maxValue * 0.7, 'rgba(39, 116, 6, 0.65)'        // Dark green
+        ],
+        'rgba(211, 211, 211, 0.4)' // Light gray color for NaN
+    ],
+    // If the column contains only 0 and 1, set specific colors for them
+    [
+        'match',
+        ['get', colorProperty],
+        0, 'rgba(255, 255, 255, 0.4)', // Light gray for 0
+        1, 'rgba(17, 87, 171, 0.65)',  // Dark blue for 1
+        'rgba(211, 211, 211, 0.4)'     // Light gray color for other values
+    ]);
+}
+
+
+</script>
+</body>
+</html>

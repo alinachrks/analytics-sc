@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Show polygon information on click</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
+<style>
+    /* Существующие стили */
+    body { margin: 0; padding: 0; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    .calculation-box {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background-color: rgba(255, 255, 255, 0.72);
+        padding: 6px;
+        border-radius: 5px;
+        font-size: 14px;
+        max-width: 300px;
+    }
+    .button-container {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        z-index: 1;
+    }
+    .button {
+        padding: 8px 16px;
+        background-color: rgba(128, 128, 128, 0.5);
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    .button:hover {
+        background-color: rgba(128, 128, 128, 0.8);
+    }
+
+    /* Стилизация выпадающего списка */
+    #color-column {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1;
+        width: 200px;
+        background-color: rgba(255, 255, 255, 0.75); /* Полупрозрачный фон */
+        padding: 5px;
+        border-radius: 5px; /* Скругленные углы */
+        font-size: 14px;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="calculation-box" id="sidebar"></div>
+<div class="button-container">
+    <button class="button" onclick="resetMap()">Сбросить</button>
+    <button class="button" onclick="toggleFullScreen()">Во весь экран</button>
+</div>
+<select id="color-column" onchange="updatePolygonColors()">
+    <!-- <option value="total_qty">Численность населения</option> -->
+    <!-- <option value="avg_age">Средний возраст</option> -->
+    <!-- <option value="avg_income_amount">Средний доход</option> -->
+    <option value="income_qty_product">Денежный оборот</option>
+    <option value="avg_1m_price">Средняя цена за кв. метр</option>
+    <option value="number_apart">Количество квартир</option>
+    <option value="avg_dm_18">Покупательская мощность по доходу</option>
+    <option value="total_dm_18">Покупательская мощность по численности</option>
+    <option value="avg_income">Средний доход</option>
+    <option value="people_number">Проходимость</option>
+    <option value="number_buss">Распределение бизнеса</option>
+    <option value="markets">Где востребованы рынки</option>
+    <option value="num_markets">Распределение рынков</option>
+    <option value="cafe">Где востребованы кафе</option>
+    <option value="num_cafe">Распределение кафе</option>
+    <option value="rest">Где востребованы рестораны</option>
+    <option value="num_restoran">Распределение ресторанов</option>
+    <option value="apteka">Где востребованы аптеки</option>
+    <option value="num_apteka">Распределение аптек</option>
+    <option value="med_c">Где востребованы медицинские центры</option>
+    <option value="num_med_c">Распределение медицинских центров</option>
+    <option value="vet_c">Где востребованы ветеринарные центры</option>
+    <option value="num_vet_c">Распределение ветеринарных центров</option>
+    <option value="ozd_c">Где востребованы SPA-центры</option>
+    <option value="num_ozd_c">Распределение SPA-центров</option>
+    <option value="stomat">Где востребованы cтоматологии</option>
+    <option value="num_stomat">Распределение cтоматологий</option>
+    <option value="books">Где востребованы книжные магазины</option>
+    <option value="num_books">Распределение книжных магазинов</option>
+    <option value="trc">Торгово-развлекательные центры</option>
+    <option value="num_trc">Распределение торгово-развлекательных центров</option>
+    <option value="beauty">Где востребованы салоны красоты</option>
+    <option value="num_beauty">Распределение салонов красоты</option>
+    <option value="fitnes">Где востребованы фитнес-центры</option>
+    <option value="num_fitnes">Распределение фитнес-центров</option>
+    <option value="suvenir">Где востребованы сувенирные магазины</option>
+    <option value="num_suvenir">Распределение сувенирных магазинов</option>
+    <option value="electr">Где востребованы магазины электроники</option>
+    <option value="num_electr">Распределение магазинов электроники</option>
+    <option value="bytovaya">Где востребованы магазины бытовой техники</option>
+    <option value="num_bytovaya">Распределение магазинов бытовой техники</option>
+    <option value="notarius">Где востребованы нотариусы</option>
+    <option value="num_notarius">Распределение нотариусов</option>
+    <option value="copy">Где востребованы копировальные центры</option>
+    <option value="num_copy">Распределение копировальных центров</option>
+    <option value="remont">Где востребованы центры ремонта</option>
+    <option value="num_remont">Распределение центров ремонта</option>
+    <option value="obrazovanie">Где востребованы образовательные центры</option>
+    <option value="num_obrazovanie">Распределение образовательных центров</option>
+</select>    
+ 
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoiYWxpbmFjaCIsImEiOiJjbGlpcnZpaTgwMTZ4M2twaGo1NjRsNHhhIn0.9jw_R_D1i1nqOtaolld-dQ';
+const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/alinach/cly3sycrp007v01pf9secfdmr',
+    center: [76.879751, 43.24517], // Centered on New York City
+    zoom: 12
+});
+
+map.on('load', () => {
+    // Replace this URL with your own GeoJSON data URL
+    const geojsonUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/hex_buy_power_1.geojson';
+
+    // Add a source for your GeoJSON data.
+    map.addSource('custom-data', {
+        'type': 'geojson',
+        'data': geojsonUrl
+    });
+
+    // Add a layer showing your GeoJSON data.
+    map.addLayer({
+        'id': 'custom-data-layer',
+        'type': 'fill',
+        'source': 'custom-data',
+        'paint': {
+            'fill-color': [
+                'case',
+                ['==', ['typeof', ['get', 'avg_income_amount']], 'number'],
+                [
+                    'interpolate',
+                    ['linear'],
+                    ['get', 'avg_income_amount'],
+                    0, 'rgba(219, 209, 202, 0.4)',
+                    70000, 'rgba(118, 0, 0, 0.7)',
+                    150000, 'rgba(202, 32, 0, 0.7)',
+                    200000, 'rgba(255, 93, 0, 0.7)',
+                    270000, 'rgba(255, 183, 0, 0.7)',
+                    300000, 'rgba(206, 213, 1, 0.7)',
+                    500000, 'rgba(51, 141, 0, 0.7)'
+                ],
+                'rgba(211, 211, 211, 0.4)' // Light gray color for NaN
+            ],
+            'fill-outline-color': 'rgba(151, 161, 169, 0.6)',
+            'line-opacity': 1, // Border opacity
+            'line-color': 'rgba(151, 161, 169, 0.6)' // Border color
+        }
+    });
+
+    // Add a layer for the highlighted polygon outline.
+    map.addLayer({
+        'id': 'highlighted-polygon-outline',
+        'type': 'line',
+        'source': 'custom-data',
+        'filter': ['==', 'id', ''],
+        'paint': {
+            'line-color': 'rgba(0, 0, 0, 1)',
+            'line-width': 2
+        }
+    });
+
+    // When a click event occurs on a feature in the custom data layer,
+    // open a sidebar with information about the polygon and fly to it.
+    map.on('click', 'custom-data-layer', (e) => {
+        const properties = e.features[0].properties;
+        let sidebarContent = '<div style="width: 100%;">';
+        for (const key in properties) {
+            if (properties.hasOwnProperty(key) && properties[key] != null && properties[key] !== '') {
+                let displayName;
+                switch (key) {
+                    case 'id_x':
+                        displayName = '№';
+                        break;
+                    case 'total_qty':
+                        displayName = 'Численность населения';
+                        break;
+                    case 'avg_age':
+                        displayName = 'Средний возраст';
+                        break;
+                    case 'avg_income_amount':
+                        displayName = 'Средний доход';
+                        break;
+                    case 'income_qty_product':
+                        displayName = 'Денежный оборот';
+                        break;
+                    case 'avg_1m_price':
+                        displayName = 'Средняя цена за кв. метр';
+                        break;
+                    case 'avg_dm_18':
+                        displayName = 'Покупательская мощность по доходу';
+                        break;
+                    case 'total_dm_18':
+                        displayName = 'Покупательская мощность по численности';
+                        break;
+                    case 'num_schools':
+                        displayName = 'Распределение школ';
+                        break;
+                    case 'num_hospitals':
+                        displayName = 'Распределение больниц';
+                        break;
+                    case 'avg_income':
+                        displayName = 'Средний доход';
+                        break;
+                    case 'people_number':
+                        displayName = 'Проходимость';
+                        break;
+                    case 'school_exist':
+                        displayName = 'Наличие школы';
+                        break;
+                    case 'hospit_exist':
+                        displayName = 'Наличие больницы';
+                        break;
+                    case 'number_buss':
+                        displayName = 'Распределение бизнеса';
+                        break;
+                    case 'markets':
+                        displayName = 'Где востребованы рынки';
+                        break;
+                    case 'num_markets':
+                        displayName = 'Распределение рынков';
+                        break;
+                    case 'cafe':
+                        displayName = 'Где востребованы кафе';
+                        break;
+                    case 'num_cafe':
+                        displayName = 'Распределение кафе';
+                        break;
+                    case 'rest':
+                        displayName = 'Где востребованы рестораны';
+                        break;
+                    case 'num_restoran':
+                        displayName = 'Распределение ресторанов';
+                        break;
+                    case 'apteka':
+                        displayName = 'Где востребованы аптеки';
+                        break;
+                    case 'num_apteka':
+                        displayName = 'Распределение аптек';
+                        break;
+                    case 'med_c':
+                        displayName = 'Где востребованы медицинские центры';
+                        break;
+                    case 'num_med_c':
+                        displayName = 'Распределение медицинских центров';
+                        break;
+                    case 'vet_c':
+                        displayName = 'Где востребованы ветеринарные центры';
+                        break;
+                    case 'num_vet_c':
+                        displayName = 'Распределение ветеринарных центров';
+                        break;
+                    case 'ozd_c':
+                        displayName = 'Где востребованы SPA-центры';
+                        break;
+                    case 'num_ozd_c':
+                        displayName = 'Распределение SPA-центров';
+                        break;
+                    case 'stomat':
+                        displayName = 'Где востребованы стоматологии';
+                        break;
+                    case 'num_stomat':
+                        displayName = 'Распределение стоматологий';
+                        break;
+                    case 'books':
+                        displayName = 'Где востребованы книжные магазины';
+                        break;
+                    case 'num_books':
+                        displayName = 'Распределение книжных магазинов';
+                        break;
+                    case 'trc':
+                        displayName = 'Торгово-развлекательные центры';
+                        break;
+                    case 'num_trc':
+                        displayName = 'Распределение торгово-развлекательных центров';
+                        break;
+                    case 'beauty':
+                        displayName = 'Где востребованы салоны красоты';
+                        break;
+                    case 'num_beauty':
+                        displayName = 'Распределение салонов красоты';
+                        break;
+                    case 'fitnes':
+                        displayName = 'Где востребованы фитнес-центры';
+                        break;
+                    case 'num_fitnes':
+                        displayName = 'Распределение фитнес-центров';
+                        break;
+                    case 'suvenir':
+                        displayName = 'Где востребованы сувенирные магазины';
+                        break;
+                    case 'num_suvenir':
+                        displayName = 'Распределение сувенирных магазинов';
+                        break;
+                    case 'electr':
+                        displayName = 'Где востребованы магазины электроники';
+                        break;
+                    case 'num_electr':
+                        displayName = 'Распределение магазинов электроники';
+                        break;
+                    case 'bytovaya':
+                        displayName = 'Где востребованы магазины бытовой техники';
+                        break;
+                    case 'num_bytovaya':
+                        displayName = 'Распределение магазинов бытовой техники';
+                        break;
+                    case 'notarius':
+                        displayName = 'Где востребованы нотариусы';
+                        break;
+                    case 'num_notarius':
+                        displayName = 'Распределение нотариусов';
+                        break;
+                    case 'copy':
+                        displayName = 'Где востребованы копировальные центры';
+                        break;
+                    case 'num_copy':
+                        displayName = 'Распределение копировальных центров';
+                        break;
+                    case 'remont':
+                        displayName = 'Где востребованы центры ремонта';
+                        break;
+                    case 'num_remont':
+                        displayName = 'Распределение центров ремонта';
+                        break;
+                    case 'obrazovanie':
+                        displayName = 'Где востребованы образовательные центры';
+                        break;
+                    case 'num_obrazovanie':
+                        displayName = 'Распределение образовательных центров';
+                        break;
+                    default:
+                        displayName = key;
+                }
+
+                if (key == 'school_exist' || key == 'hospit_exist')
+                    continue
+                sidebarContent += `<p><strong>${displayName}:</strong> ${properties[key]}</p>`;
+            }
+        }
+        sidebarContent += '</div>';
+
+        document.getElementById('sidebar').innerHTML = sidebarContent;
+
+        // Reset the style of all outlines
+        map.setPaintProperty('custom-data-layer', 'fill-outline-color', 'rgba(200, 200, 200, 0.5)');
+        map.setPaintProperty('custom-data-layer', 'fill-outline-width', 1);
+
+        // Set a bold outline for the selected polygon
+        map.setFilter('highlighted-polygon-outline', ['==', 'id', e.features[0].id]);
+        map.setPaintProperty('highlighted-polygon-outline', 'line-width', 4);
+
+        map.flyTo({
+            center: e.lngLat,
+            zoom: 16,
+            essential: true // this animation is considered essential with respect to prefers-reduced-motion
+        });
+    });
+
+    // Change the cursor to a pointer when
+    // the mouse is over the custom data layer.
+    map.on('mouseenter', 'custom-data-layer', () => {
+        map.getCanvas().style.cursor = 'pointer';
+    });
+
+    // Change the cursor back to a pointer
+    // when it leaves the custom data layer.
+    map.on('mouseleave', 'custom-data-layer', () => {
+        map.getCanvas().style.cursor = '';
+    });
+});
+
+function resetMap() {
+    map.setFilter('highlighted-polygon-outline', ['==', 'id', '']);
+    map.flyTo({
+        center: [76.879751, 43.24517],
+        zoom: 12,
+        essential: true // this animation is considered essential with respect to prefers-reduced-motion
+    });
+    document.getElementById('sidebar').innerHTML = '';
+}
+
+function toggleFullScreen() {
+    var button = document.querySelector('.button-container .button:nth-child(2)');
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+        button.textContent = 'Свернуть';
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+            button.textContent = 'Во весь экран';
+        }
+    }
+}
+
+function updatePolygonColors() {
+    const colorProperty = document.getElementById('color-column').value;
+
+    // Find the minimum and maximum values for the selected color property
+    const features = map.querySourceFeatures('custom-data', {
+        sourceLayer: 'your-source-layer-name' // Update this with your actual source layer name
+    });
+    let minValue = Infinity;
+    let maxValue = -Infinity;
+    features.forEach(feature => {
+        const value = feature.properties[colorProperty];
+        if (typeof value === 'number' && !isNaN(value)) {
+            minValue = Math.min(minValue, value);
+            maxValue = Math.max(maxValue, value);
+        }
+    });
+
+    // Set the paint property with the calculated min and max values
+    map.setPaintProperty('custom-data-layer', 'fill-color', [
+        'match',
+        ['typeof', ['get', colorProperty]],
+        'number',
+        [
+            'interpolate',
+            ['linear'],
+            ['get', colorProperty],
+            minValue, 'rgba(241, 248, 246, 0.45)',
+            maxValue * 0.1, 'rgba(17, 87, 171, 0.65)',     // Dark blue
+            maxValue * 0.2, 'rgba(0, 128, 128, 0.65)',     // Teal
+            maxValue * 0.3, 'rgba(255, 255, 0, 0.65)',
+            maxValue * 0.5, 'rgba(126, 177, 16, 0.65)',     // Light green
+            maxValue * 0.6, 'rgba(39, 116, 6, 0.65)'        // Dark green
+        ],
+        'rgba(211, 211, 211, 0.4)' // Light gray color for NaN
+    ],
+    // If the column contains only 0 and 1, set specific colors for them
+    [
+        'match',
+        ['get', colorProperty],
+        0, 'rgba(255, 255, 255, 0.4)', // Light gray for 0
+        1, 'rgba(17, 87, 171, 0.65)',  // Dark blue for 1
+        'rgba(211, 211, 211, 0.4)'     // Light gray color for other values
+    ]);
+}
+
+
+</script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 apiVersion: v2
-name: django-admin-panel
+name: analytics-smartalmaty
 description: A Helm chart for Kubernetes
 
 # A chart can be either an 'application' or a 'library' chart.

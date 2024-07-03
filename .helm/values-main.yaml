@@ -10,6 +10,19 @@ imagePullSecrets:
 nameOverride: ""
 fullnameOverride: ""
 
+env:
+    - name: "POSTGRES_HOST"
+      value: "10.100.200.28"
+    - name: "POSTGRES_DB"
+      value: "analytics-smartalmaty-db"
+    - name: "POSTGRES_USER"
+      value: "opendata"
+    - name: "POSTGRES_PASSWORD"
+      value: "Jgn-kgh0uJGN*74"
+    - name: "PORT"
+      value: "5000"
+
+
 serviceAccount:
   create: true
   annotations: {}

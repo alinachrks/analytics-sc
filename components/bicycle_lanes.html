@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Show line information on click</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
+<style>
+    body { margin: 0; padding: 0; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    .calculation-box {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background-color: rgba(255, 255, 255, 0.72);
+        padding: 6px;
+        border-radius: 5px;
+        font-size: 14px;
+        max-width: 300px;
+    }
+    .button-container {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        z-index: 1;
+    }
+    .button {
+        padding: 8px 16px;
+        background-color: rgba(128, 128, 128, 0.5);
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    .button:hover {
+        background-color: rgba(128, 128, 128, 0.8);
+    }
+    #color-column {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1;
+        width: 200px;
+        background-color: rgba(255, 255, 255, 0.75);
+        padding: 5px;
+        border-radius: 5px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="calculation-box" id="sidebar"></div>
+<div class="button-container">
+    <button class="button" onclick="resetMap()">Reset</button>
+    <button class="button" onclick="toggleFullScreen()">Full Screen</button>
+</div>
+<select id="color-column" onchange="updateLineColors()">
+    <option value="2024">2024</option>
+    <option value="2025">2025</option>
+    <option value="2026">2026</option>
+    <option value="2027">2027</option>
+    <option value="2028">2028</option>
+    <option value="2029">2029</option>
+    <option value="2030">2030</option>
+    <option value="2031">2031</option>
+    <option value="2040">2040</option>
+    <option value="sum">Все до 2040</option>
+</select>
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoiYWxpbmFjaCIsImEiOiJjbGlpcnZpaTgwMTZ4M2twaGo1NjRsNHhhIn0.9jw_R_D1i1nqOtaolld-dQ';
+const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/alinach/cly3sycrp007v01pf9secfdmr',
+    center: [76.879751, 43.24517], 
+    zoom: 12
+});
+
+map.on('load', () => {
+    const geojsonUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/bicycle.geojson';
+
+    map.addSource('custom-data', {
+        'type': 'geojson',
+        'data': geojsonUrl
+    });
+
+    map.addLayer({
+        'id': 'custom-data-layer',
+        'type': 'line',
+        'source': 'custom-data',
+        'paint': {
+            'line-color': '#000000', // Placeholder color, updated dynamically
+            'line-width': 3
+        }
+    });
+
+    document.getElementById('color-column').value = '2024'; 
+    updateLineColors();
+
+    map.on('click', 'custom-data-layer', (e) => {
+        const properties = e.features[0].properties;
+        let sidebarContent = '<div style="width: 100%;">';
+        for (const key in properties) {
+            if (properties.hasOwnProperty(key) && properties[key] != null && properties[key] !== '') {
+                sidebarContent += `<p><strong>${key}:</strong> ${properties[key]}</p>`;
+            }
+        }
+        sidebarContent += '</div>';
+        document.getElementById('sidebar').innerHTML = sidebarContent;
+
+        map.setFeatureState(
+            { source: 'custom-data', id: e.features[0].id },
+            { highlight: true }
+        );
+
+        map.flyTo({
+            center: e.lngLat,
+            zoom: 16,
+            essential: true
+        });
+    });
+
+    map.on('mouseenter', 'custom-data-layer', () => {
+        map.getCanvas().style.cursor = 'pointer';
+    });
+
+    map.on('mouseleave', 'custom-data-layer', () => {
+        map.getCanvas().style.cursor = '';
+    });
+});
+
+function resetMap() {
+    map.flyTo({
+        center: [76.879751, 43.24517],
+        zoom: 12,
+        essential: true
+    });
+    document.getElementById('sidebar').innerHTML = '';
+}
+
+function toggleFullScreen() {
+    var button = document.querySelector('.button-container .button:nth-child(2)');
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+        button.textContent = 'Exit Full Screen';
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+            button.textContent = 'Full Screen';
+        }
+    }
+}
+
+function updateLineColors() {
+    const selectedOption = document.getElementById('color-column').value;
+
+    if (selectedOption === 'sum') {
+        // Градиентная окраска для всех линий по сумме
+        map.setPaintProperty('custom-data-layer', 'line-color', [
+            'interpolate',
+            ['linear'],
+            ['get', 'sum'],
+            2500, '#c7cfd4',  // Серый для самого раннего
+            10000, '#dbdbce',
+            40000, '#b4b4b4',
+            90000, '#cecece',
+            100000, '#e8e8e8',
+            160000, '#f0d8a8',  // Переход к светло-желтому
+            250000, '#f2c45a',
+            360000, '#f4af0c',  // Золотой для промежуточных
+            1000000, '#ffd700'  // Ярко-желтый для самого позднего
+        ]);
+    } else {
+        const year = parseInt(selectedOption);
+
+        map.setPaintProperty('custom-data-layer', 'line-color', [
+            'case',
+            // Жёлтый цвет для линий, которые появились в выбранном году
+            ['>', ['get', year.toString()], 0], '#ffd700',
+            // Серый цвет для линий, которые были построены до выбранного года
+            ['<=', ['get', 'sum'], yearMultiplier(year)], '#c7cfd4',
+            // Полупрозрачный цвет для линий, которые будут построены после выбранного года
+            ['>', ['get', 'sum'], yearMultiplier(year)], 'rgba(210, 214, 210, 0.2)',
+            // Если значение не определено
+            'transparent'
+        ]);
+
+        function yearMultiplier(year) {
+            const multipliers = {
+                2024: 10000,
+                2025: 40000,
+                2026: 100000,
+                2027: 160000,
+                2028: 250000,
+                2029: 360000,
+                2030: 900000,
+                2031: 1000000
+            };
+            return multipliers[year];
+        }
+    }
+}
+
+
+</script>
+</body>
+</html>
+

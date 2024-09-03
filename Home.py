@@ -4,12 +4,6 @@ import json
 import streamlit.components.v1 as components
 import base64
 
-# Function to load data from GeoJSON file
-def load_geojson_data(file_path):
-    with open(file_path, "r") as f:
-        geojson_data = json.load(f)
-    return geojson_data
-
 # Function to load image as base64
 def get_base64_of_bin_file(bin_file):
     with open(bin_file, 'rb') as f:
@@ -195,65 +189,78 @@ def app():
 
     st.header(" ")
 
-    # Adding buttons and displaying maps
+   # Добавление кнопок и отображение карт
     col1, col2, col3, col4 = st.columns(4)
     col5, col6, col7, col8 = st.columns(4)
+    col9, col10, col11, col12 = st.columns(4)  # Новые колонки для дополнительной кнопки, если нужно
 
+    # Существующие кнопки остаются без изменений
     if col1.button("Инфраструктура | Инфрақұрылым", key="btn1"):
         st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
-        with open("components/infra.html", "r") as f:
+        with open("components/infra.html", "r", encoding='utf-8') as f:
             map_html = f.read()
             components.html(map_html, height=1000, scrolling=True)
 
     if col2.button("Жильё | Тұрғын үй", key="btn2"):
         st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
-        with open("components/residential.html", "r") as f:
+        with open("components/residential.html", "r", encoding='utf-8') as f:
             map_html = f.read()
             components.html(map_html, height=1000, scrolling=True)
 
     if col3.button("Бизнес | Бизнес", key="btn3"):
         st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
-        with open("components/business.html", "r") as f:
+        with open("components/business.html", "r", encoding='utf-8') as f:
             map_html = f.read()
             components.html(map_html, height=1000, scrolling=True)
 
     if col4.button("Реновация участков | Реновация", key="btn4"):
         st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
-        with open("components/renovation.html", "r") as f:
+        with open("components/renovation.html", "r", encoding='utf-8') as f:
             map_html = f.read()
             components.html(map_html, height=1000, scrolling=True)
 
     if col5.button("Плотность населения| Тығыздық", key="btn5"):
         st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
-        with open("components/density.html", "r") as f:
+        with open("components/density.html", "r", encoding='utf-8') as f:
             map_html = f.read()
             components.html(map_html, height=1000, scrolling=True)
 
     if col6.button("Демография | Демография", key="btn6"):
         st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
-        with open("components/demographics.html", "r") as f:
+        with open("components/demographics.html", "r", encoding='utf-8') as f:
             map_html = f.read()
             components.html(map_html, height=1000, scrolling=True)
 
     if col7.button("Спрос и предложение | Сұраныс пен ұсыныс", key="btn7"):
         st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
-        with open("components/supply_demand.html", "r") as f:
+        with open("components/supply_demand.html", "r", encoding='utf-8') as f:
             map_html = f.read()
             components.html(map_html, height=1000, scrolling=True)
 
     if col8.button("Привлекательность участков | Тартымдылық", key="btn8"):
         st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
-        with open("components/attractiveness.html", "r") as f:
+        with open("components/attractiveness.html", "r", encoding='utf-8') as f:
             map_html = f.read()
             components.html(map_html, height=1000, scrolling=True)
 
-    # Adding footer
+    # Добавляем новую кнопку для велодорожек
+    if col9.button("Велодорожки | Велосипедные дорожки", key="btn9"):
+        st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
+        with open("components/bicycle_lanes.html", "r", encoding='utf-8') as f:
+            map_html = f.read()
+            components.html(map_html, height=1000, scrolling=True)
+
+    # Добавьте дополнительные кнопки в соответствии с вашими потребностями
+    # ...
+
+    # Добавление футера остается без изменений
     st.markdown('<div class="footer-container"></div>', unsafe_allow_html=True)
     st.markdown('<div class="footer-container"></div>', unsafe_allow_html=True)
 
-    # Footer button with link to Situation Center
+    # Кнопка футера с ссылкой на Ситуационный центр
     st.markdown('<div class="footer-button"><a href="https://demo.opendata.smartalmaty.kz/" target="_blank"><button>Ситуационный центр</button></a></div>', unsafe_allow_html=True)
 
+    # Сайдбар остается без изменений
     with st.sidebar:
         with open("data/comp.json", "r", errors='ignore') as f:
             data = json.load(f)

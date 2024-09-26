@@ -1,64 +1,88 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<title>Hotel Locations in Almaty</title>
-<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
-<link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
-<script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
-<style>
-    body { margin: 0; padding: 0; }
-    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
-    .button-container {
-        position: absolute;
-        bottom: 10px;
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        gap: 10px;
-        z-index: 1;
-    }
-    .button {
-        padding: 8px 16px;
-        background-color: rgba(128, 128, 128, 0.5);
-        color: white;
-        border: none;
-        border-radius: 3px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-    }
-    .button:hover {
-        background-color: rgba(128, 128, 128, 0.8);
-    }
-    /* Legend Styling with Adaptive Font Size */
-    .legend {
-        background-color: white;
-        border-radius: 3px;
-        bottom: 30px;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-        padding: 10px;
-        position: absolute;
-        z-index: 1;
-        right: 10px;
-        width: 150px;
-    }
-    .legend h4 {
-        margin: 0 0 12px;
-        font-size: 0.9vw; /* Adapt to viewport width */
-    }
-    .legend div {
-        display: flex;
-        align-items: center;
-        font-size: 0.7vw; /* Adapt to viewport width */
-    }
-    .legend div span {
-        display: inline-block;
-        height: 15px;
-        width: 15px;
-        margin-right: 12px;
-    }
-</style>
+    <meta charset="utf-8">
+    <title>Hotel Locations in Almaty</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        .button-container {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 1;
+        }
 
+        .button {
+            padding: 12px 20px; /* Увеличен размер кнопки */
+            background-color: #0a4e97; /* Яркий синий цвет для привлечения внимания */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px; /* Увеличен размер текста */
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Тень для объема */
+        }
+
+        .button:hover {
+            background-color: #0056b3; /* Темно-синий цвет при наведении */
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2); /* Увеличенная тень при наведении */
+            transform: translateY(-2px); /* Легкий эффект поднятия кнопки при наведении */
+        }
+
+        .button:active {
+            background-color: #003f7f; /* Цвет кнопки при нажатии */
+            transform: translateY(0); /* Кнопка возвращается на место при нажатии */
+        }
+
+        /* Legend Styling with Adaptive Font Size */
+        .legend {
+            background-color: white;
+            border-radius: 3px;
+            bottom: 30px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            right: 10px;
+            width: 150px;
+            font-family: 'Open Sans', 'Arial Unicode MS', sans-serif; /* Используем те же шрифты */
+        }
+
+        .legend h4 {
+            margin: 0 0 12px;
+            font-size: 0.7vw;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: 'Open Sans Bold', 'Arial Unicode MS Bold', sans-serif; /* Применение нужных шрифтов */
+        }
+
+        .legend div {
+            display: flex;
+            align-items: center;
+            font-size: 0.7vw;
+            font-family: 'Open Sans', 'Arial Unicode MS', sans-serif; /* Применение нужных шрифтов */
+        }
+
+        .legend div span {
+            display: inline-block;
+            height: 15px;
+            width: 15px;
+            margin-right: 12px;
+        }
+
+    </style>
 </head>
 <body>
 <div id="map"></div>
@@ -92,36 +116,51 @@ const map = new mapboxgl.Map({
 });
 
 map.on('load', () => {
-    // Use the raw URL for the GeoJSON file from GitHub
     const geojsonUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/hotels_.geojson';
 
-    // Add a source for your GeoJSON hotel data.
     map.addSource('hotels', {
         'type': 'geojson',
         'data': geojsonUrl
     });
 
-    // Add a circle layer for displaying diamonds (rotated circles) with size and color based on the number of rooms
+    // Add circle layer for hotels
     map.addLayer({
         'id': 'hotels-diamonds',
         'type': 'circle',
         'source': 'hotels',
         'paint': {
-            // Use the number of rooms to determine the size of the diamonds
             'circle-radius': [
                 'interpolate',
                 ['linear'],
-                ['get', 'Количество номеров'],
-                30, 15,   // Small radius for hotels with 50 rooms
-                250, 35   // Larger radius for hotels with 500 rooms
+                ['zoom'],
+                10, [
+                    'interpolate',
+                    ['linear'],
+                    ['get', 'Количество номеров'],
+                    30, 10,
+                    250, 14
+                ],
+                14, [
+                    'interpolate',
+                    ['linear'],
+                    ['get', 'Количество номеров'],
+                    30, 20,
+                    250, 40
+                ],
+                16, [
+                    'interpolate',
+                    ['linear'],
+                    ['get', 'Количество номеров'],
+                    50, 30,
+                    250, 52
+                ]
             ],
-            // Use the provided colors to interpolate the color of the diamonds
             'circle-color': [
                 'interpolate',
                 ['linear'],
                 ['get', 'Количество номеров'],
-                10, '#bddcf0',   
-                20, '#9bcbe8',  
+                10, '#bddcf0',
+                20, '#9bcbe8',
                 30, '#56a6d0',
                 50, '#1081b8',
                 90, '#1071a1',
@@ -131,42 +170,47 @@ map.on('load', () => {
                 210, '#13354c',
                 250, '#122d40'
             ],
-            'circle-stroke-width': 1,  // Add a white border around the diamonds
+            'circle-stroke-width': 1,
             'circle-stroke-color': '#ffffff',
-            'circle-pitch-alignment': 'map',  // Align the circles (diamonds) with the map
-            'circle-pitch-scale': 'viewport'  // Keep size consistent when tilting the map
+            'circle-pitch-alignment': 'map',
+            'circle-pitch-scale': 'viewport'
         }
     });
 
-    // Add a symbol layer for displaying room count as text on top of diamonds
+    // Add symbol layer for room count text
     map.addLayer({
         'id': 'hotels-room-count',
         'type': 'symbol',
         'source': 'hotels',
         'layout': {
-            'text-field': ['get', 'Количество номеров'],  // Display number of rooms as text
+            'text-field': ['get', 'Количество номеров'],
             'text-size': [
-                'interpolate',  // Dynamically change the text size based on the zoom level
-                ['linear'],
-                ['zoom'],
-                10, 10,   // Small text size at zoom level 10
-                14, 12,   // Slightly larger at zoom level 14
-                16, 16,   // Full-size text at zoom level 16
-                20, 24    // Even larger at close zoom levels
-            ],
-            'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-            'text-offset': [0, 0.5],  // Adjust text position relative to the icon
-            'text-anchor': 'center',  // Position the text inside the diamond
-            'text-allow-overlap': true  // Allow text to overlap
-        },
-        'paint': {
-            // Dynamic text color based on background brightness
-            'text-color': [
                 'interpolate',
                 ['linear'],
-                ['get', 'Количество номеров'],  // Use the room count to determine color
-                30, '#000000',   // For smaller numbers of rooms, use black text (for lighter circles)
-                70, '#ffffff'   // For larger numbers of rooms, use white text (for darker circles)
+                ['zoom'],
+                10, 12,
+                14, 14,
+                16, 16,
+                20, 24
+            ],
+            'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+            'text-offset': [0, 0.5],
+            'text-anchor': 'center',
+            'text-allow-overlap': true
+        },
+        'paint': {
+            'text-color': [
+                'step',
+                ['get', 'Количество номеров'],
+                '#000000',  // Чёрный цвет для отелей с меньшим количеством номеров
+                70, '#ffffff' // Белый цвет для отелей с количеством номеров 70 и выше
+            ],
+            'text-opacity': [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                10, 0,
+                14, 1
             ]
         }
     });
@@ -176,16 +220,13 @@ map.on('load', () => {
     const popup = new mapboxgl.Popup({
         closeButton: false,
         closeOnClick: true,
-        offset: 15 // Slight offset so the popup doesn't overlap the point
+        offset: 15
     });
 
-    // When a click event occurs on a feature in the hotel data layer,
-    // display hotel information in a popup near the point.
     map.on('click', 'hotels-diamonds', (e) => {
         const coordinates = e.lngLat;
         const properties = e.features[0].properties;
-        
-        // Set the popup content and apply custom styles
+
         popup
             .setLngLat(coordinates)
             .setHTML(`
@@ -201,8 +242,6 @@ map.on('load', () => {
             `)
             .addTo(map);
 
-        
-        // Fly to the clicked hotel
         map.flyTo({
             center: coordinates,
             zoom: 16,
@@ -211,12 +250,10 @@ map.on('load', () => {
         });
     });
 
-    // Change the cursor to pointer when hovering over the hotel points
     map.on('mouseenter', 'hotels-diamonds', () => {
         map.getCanvas().style.cursor = 'pointer';
     });
 
-    // Reset the cursor when not hovering over the hotel points
     map.on('mouseleave', 'hotels-diamonds', () => {
         map.getCanvas().style.cursor = '';
     });
@@ -247,4 +284,3 @@ function toggleFullScreen() {
 </script>
 </body>
 </html>
-

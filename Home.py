@@ -250,8 +250,13 @@ def app():
             map_html = f.read()
             components.html(map_html, height=1000, scrolling=True)
 
-    # Добавьте дополнительные кнопки в соответствии с вашими потребностями
-    # ...
+    # Добавляем новую кнопку для отелей
+    if col10.button("Гостиницы | .. ", key="btn10"):
+        st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
+        with open("components/hotels.html", "r", encoding='utf-8') as f:
+            map_html = f.read()
+            components.html(map_html, height=1300, scrolling=True)
+
 
     # Добавление футера остается без изменений
     st.markdown('<div class="footer-container"></div>', unsafe_allow_html=True)

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Новостройки в Алматы</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        .button-container {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 1;
+        }
+
+        .button {
+            padding: 12px 20px;
+            background-color: #0a4e97;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .button:active {
+            background-color: #003f7f;
+            transform: translateY(0);
+        }
+
+        .legend {
+            background-color: white;
+            border-radius: 3px;
+            bottom: 30px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            right: 10px;
+            width: 150px;
+            font-family: 'Open Sans', 'Arial Unicode MS', sans-serif;
+        }
+
+        .legend h4 {
+            margin: 0 0 12px;
+            font-size: 0.7vw;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .legend div {
+            display: flex;
+            align-items: center;
+            font-size: 0.7vw;
+        }
+
+        .legend div span {
+            display: inline-block;
+            height: 15px;
+            width: 15px;
+            margin-right: 12px;
+        }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<div class="button-container">
+    <button class="button" onclick="resetMap()">Сбросить</button>
+    <button class="button" onclick="toggleFullScreen()">Во весь экран</button>
+</div>
+
+<!-- Легенда -->
+<div class="legend">
+    <h4>Цены новостроек</h4>
+    <div><span style="background-color:#bddcf0;"></span> менее 50 млн</div>
+    <div><span style="background-color:#9bcbe8;"></span> 50 - 100 млн</div>
+    <div><span style="background-color:#56a6d0;"></span> 100 - 150 млн</div>
+    <div><span style="background-color:#1081b8;"></span> 150 - 200 млн</div>
+    <div><span style="background-color:#1071a1;"></span> более 200 млн</div>
+</div>
+
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoiYWxpbmFjaCIsImEiOiJjbGlpcnZpaTgwMTZ4M2twaGo1NjRsNHhhIn0.9jw_R_D1i1nqOtaolld-dQ';
+const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/alinach/cm1j0n58p00jq01qp98m35mrk',  // Используйте корректный стиль Mapbox
+    center: [76.945, 43.255], // Центр карты для Алматы
+    zoom: 12
+});
+
+map.on('load', () => {
+    const geojsonUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/krisha_new_builds.geojson';
+
+    map.addSource('new-builds', {
+        'type': 'geojson',
+        'data': geojsonUrl
+    });
+
+    // Добавление слоя для отображения новостроек
+    map.addLayer({
+        'id': 'new-builds-layer',
+        'type': 'circle',
+        'source': 'new-builds',
+        'paint': {
+            'circle-radius': [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                10, 10,
+                14, 20
+            ],
+            'circle-color': [
+                'interpolate',
+                ['linear'],
+                ['get', 'price_numeric'], // Предполагается, что цены находятся в столбце 'price_numeric'
+                50000000, '#bddcf0',
+                100000000, '#9bcbe8',
+                150000000, '#56a6d0',
+                200000000, '#1081b8',
+                250000000, '#1071a1'
+            ],
+            'circle-stroke-width': 1,
+            'circle-stroke-color': '#ffffff'
+        }
+    });
+
+    // Всплывающее окно для отображения информации о новостройке
+    const popup = new mapboxgl.Popup({
+        closeButton: false,
+        closeOnClick: true,
+        offset: 15
+    });
+
+    map.on('click', 'new-builds-layer', (e) => {
+        const coordinates = e.lngLat;
+        const properties = e.features[0].properties;
+
+        popup
+            .setLngLat(coordinates)
+            .setHTML(`
+                <div style="font-family: Arial, sans-serif; padding: 10px;">
+                    <h3 style="font-size: 18px; margin: 0 0 10px 0; font-weight: bold;">${properties['address']}</h3>
+                    <p style="font-size: 16px; margin: 0 0 5px 0;">
+                        <strong>Описание:</strong> ${properties['short_description']}
+                    </p>
+                    <p style="font-size: 16px; margin: 0;">
+                        <strong>Цена:</strong> ${properties['price_numeric']}
+                    </p>
+                    <p style="font-size: 16px; margin: 0;">
+                        <strong>Необходимое благоустройство:</strong> ${properties['Необходимое благоустройство']}
+                    </p>
+                </div>
+            `)
+            .addTo(map);
+
+        map.flyTo({
+            center: coordinates,
+            zoom: 16,
+            pitch: 65,
+            essential: true
+        });
+    });
+
+    map.on('mouseenter', 'new-builds-layer', () => {
+        map.getCanvas().style.cursor = 'pointer';
+    });
+
+    map.on('mouseleave', 'new-builds-layer', () => {
+        map.getCanvas().style.cursor = '';
+    });
+});
+
+function resetMap() {
+    map.flyTo({
+        center: [76.945, 43.255],
+        zoom: 12,
+        pitch: 0,
+        essential: true
+    });
+    popup.remove(); // Удаляем всплывающее окно при сбросе карты
+}
+
+function toggleFullScreen() {
+    var button = document.querySelector('.button-container .button:nth-child(2)');
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+        button.textContent = 'Свернуть';
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+            button.textContent = 'Во весь экран';
+        }
+    }
+}
+</script>
+</body>
+</html>

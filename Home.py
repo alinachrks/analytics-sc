@@ -259,9 +259,17 @@ def app():
             components.html(map_html, height=1300, scrolling=True)
 
 
+    # Добавляем новую кнопку для велодорожек
+    if col11.button("Благоустройство | Абаттандыру", key="btn11"):
+        st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
+        with open("components/new_buildings.html", "r", encoding='utf-8') as f:
+            map_html = f.read()
+            components.html(map_html, height=1300, scrolling=True)
+
+
 
     # Добавляем новую кнопку для отелей
-    if col11.button("Гостиницы | .. ", key="btn11"):
+    if col12.button("Гостиницы | .. ", key="btn12"):
         st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
         with open("components/hotels.html", "r", encoding='utf-8') as f:
             map_html = f.read()

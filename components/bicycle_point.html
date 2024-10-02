@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Show bike parking information on click</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
+<style>
+    body { margin: 0; padding: 0; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    .calculation-box {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background-color: rgba(255, 255, 255, 0.72);
+        padding: 6px;
+        border-radius: 5px;
+        font-size: 14px;
+        max-width: 300px;
+    }
+    .button-container {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        z-index: 1;
+    }
+    .button {
+        padding: 8px 16px;
+        background-color: rgba(128, 128, 128, 0.5);
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    .button:hover {
+        background-color: rgba(128, 128, 128, 0.8);
+    }
+    #color-column {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1;
+        width: 200px;
+        background-color: rgba(255, 255, 255, 0.75);
+        padding: 5px;
+        border-radius: 5px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="calculation-box" id="sidebar"></div>
+<div class="button-container">
+    <button class="button" onclick="resetMap()">Reset</button>
+    <button class="button" onclick="toggleFullScreen()">Full Screen</button>
+</div>
+<select id="color-column" onchange="updatePointColors()">
+    <option value="Все">Все</option>
+    <option value="Текущие">Текущие</option>
+    <option value="Рекомендуемые">Рекомендуемые</option>
+</select>
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoiYWxpbmFjaCIsImEiOiJjbGlpcnZpaTgwMTZ4M2twaGo1NjRsNHhhIn0.9jw_R_D1i1nqOtaolld-dQ';
+const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/alinach/cly3sycrp007v01pf9secfdmr',
+    center: [76.879751, 43.24517], 
+    zoom: 12
+});
+
+map.on('load', () => {
+    const geojsonUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/bycycle_point.geojson';
+
+    map.addSource('custom-data', {
+        'type': 'geojson',
+        'data': geojsonUrl
+    });
+
+    map.addLayer({
+        'id': 'custom-data-layer',
+        'type': 'circle',
+        'source': 'custom-data',
+        'paint': {
+            'circle-color': ['match', ['get', 'Статус'], 'Текущие', '#1E90FF', 'Рекомендуемые', '#FFD700', '#CCCCCC'], // Цвета: синий для текущих, жёлтый для рекомендаций
+            'circle-radius': 6
+        }
+    });
+
+    document.getElementById('color-column').value = 'Все'; 
+    updatePointColors();
+
+    const popup = new mapboxgl.Popup({
+        closeButton: false,
+        closeOnClick: true,
+        offset: 15
+    });
+
+    map.on('click', 'custom-data-layer', (e) => {
+        const coordinates = e.lngLat;
+        const properties = e.features[0].properties;
+
+        popup
+            .setLngLat(coordinates)
+            .setHTML(`
+                <div>
+                    <h3>${properties['zone_name']}</h3>
+                    <p><strong>Статус:</strong> ${properties['Статус']}</p>
+                    <p><strong>Адрес:</strong> ${properties['Адрес']}</p>
+                    <p><strong>Тип:</strong> ${properties['Тип']}</p>
+                </div>
+            `)
+            .addTo(map);
+    });
+
+    map.on('mouseenter', 'custom-data-layer', () => {
+        map.getCanvas().style.cursor = 'pointer';
+    });
+
+    map.on('mouseleave', 'custom-data-layer', () => {
+        map.getCanvas().style.cursor = '';
+    });
+});
+
+function resetMap() {
+    map.flyTo({
+        center: [76.879751, 43.24517],
+        zoom: 12,
+        essential: true
+    });
+}
+
+function toggleFullScreen() {
+    var button = document.querySelector('.button-container .button:nth-child(2)');
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+        button.textContent = 'Exit Full Screen';
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+            button.textContent = 'Full Screen';
+        }
+    }
+}
+
+function updatePointColors() {
+    const selectedStatus = document.getElementById('color-column').value;
+
+    if (selectedStatus === 'Все') {
+        // Отображаем все точки
+        map.setFilter('custom-data-layer', null);
+    } else {
+        // Фильтруем по статусу
+        map.setFilter('custom-data-layer', ['==', ['get', 'Статус'], selectedStatus]);
+    }
+}
+</script>
+</body>
+</html>

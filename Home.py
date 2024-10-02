@@ -199,59 +199,69 @@ def app():
         st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
         with open("components/infra.html", "r", encoding='utf-8') as f:
             map_html = f.read()
-            components.html(map_html, height=1000, scrolling=True)
+            components.html(map_html, height=1300, scrolling=True)
 
     if col2.button("Жильё | Тұрғын үй", key="btn2"):
         st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
         with open("components/residential.html", "r", encoding='utf-8') as f:
             map_html = f.read()
-            components.html(map_html, height=1000, scrolling=True)
+            components.html(map_html, height=1300, scrolling=True)
 
     if col3.button("Бизнес | Бизнес", key="btn3"):
         st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
         with open("components/business.html", "r", encoding='utf-8') as f:
             map_html = f.read()
-            components.html(map_html, height=1000, scrolling=True)
+            components.html(map_html, height=1300, scrolling=True)
 
     if col4.button("Реновация участков | Реновация", key="btn4"):
         st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
         with open("components/renovation.html", "r", encoding='utf-8') as f:
             map_html = f.read()
-            components.html(map_html, height=1000, scrolling=True)
+            components.html(map_html, height=1300, scrolling=True)
 
     if col5.button("Плотность населения| Тығыздық", key="btn5"):
         st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
         with open("components/density.html", "r", encoding='utf-8') as f:
             map_html = f.read()
-            components.html(map_html, height=1000, scrolling=True)
+            components.html(map_html, height=1300, scrolling=True)
 
     if col6.button("Демография | Демография", key="btn6"):
         st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
         with open("components/demographics.html", "r", encoding='utf-8') as f:
             map_html = f.read()
-            components.html(map_html, height=1000, scrolling=True)
+            components.html(map_html, height=1300, scrolling=True)
 
     if col7.button("Спрос и предложение | Сұраныс пен ұсыныс", key="btn7"):
         st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
         with open("components/supply_demand.html", "r", encoding='utf-8') as f:
             map_html = f.read()
-            components.html(map_html, height=1000, scrolling=True)
+            components.html(map_html, height=1300, scrolling=True)
 
     if col8.button("Привлекательность участков | Тартымдылық", key="btn8"):
         st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
         with open("components/attractiveness.html", "r", encoding='utf-8') as f:
             map_html = f.read()
-            components.html(map_html, height=1000, scrolling=True)
+            components.html(map_html, height=1300, scrolling=True)
 
     # Добавляем новую кнопку для велодорожек
     if col9.button("Велодорожки | Велосипедные дорожки", key="btn9"):
         st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
         with open("components/bicycle_lanes.html", "r", encoding='utf-8') as f:
             map_html = f.read()
-            components.html(map_html, height=1000, scrolling=True)
+            components.html(map_html, height=1300, scrolling=True)
+
+
+    # Добавляем новую кнопку для велодорожек
+    if col10.button("Парковки | Велосипедные парковки", key="btn10"):
+        st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
+        with open("components/bicycle_point.html", "r", encoding='utf-8') as f:
+            map_html = f.read()
+            components.html(map_html, height=1300, scrolling=True)
+
+
 
     # Добавляем новую кнопку для отелей
-    if col10.button("Гостиницы | .. ", key="btn10"):
+    if col11.button("Гостиницы | .. ", key="btn11"):
         st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
         with open("components/hotels.html", "r", encoding='utf-8') as f:
             map_html = f.read()

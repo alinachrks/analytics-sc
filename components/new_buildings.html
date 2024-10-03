@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="utf-8">
-    <title>Новостройки в Алматы</title>
+    <title>Шаговая доступность к зелёным зонам</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
@@ -43,6 +43,7 @@
             transform: translateY(0);
         }
 
+        /* Стили для легенды */
         .legend {
             background-color: white;
             border-radius: 3px;
@@ -52,31 +53,42 @@
             position: absolute;
             z-index: 1;
             right: 10px;
-            width: 150px;
+            width: 200px;
             font-family: 'Open Sans', 'Arial Unicode MS', sans-serif;
+            font-size: 14px;
         }
 
         .legend h4 {
             margin: 0 0 12px;
-            font-size: 0.7vw;
+            font-size: 14px;
             font-weight: bold;
             color: #333;
             text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
         .legend div {
             display: flex;
             align-items: center;
-            font-size: 0.7vw;
+            font-size: 12px;
         }
 
         .legend div span {
             display: inline-block;
             height: 15px;
             width: 15px;
-            margin-right: 12px;
+            margin-right: 8px;
+        }
+
+        .legend .red { background-color: rgba(139, 0, 0, 0.8); }
+        .legend .green { background-color: rgba(0, 100, 0, 0.8); }
+
+        /* Градиент для насыщенности */
+        .legend .gradient {
+            background: linear-gradient(to right, rgba(255, 182, 193, 0.8), rgba(139, 0, 0, 0.8));
+            height: 15px;
+            width: 100px;
+            margin-right: 8px;
+            border-radius: 3px;
         }
     </style>
 </head>
@@ -87,54 +99,144 @@
     <button class="button" onclick="toggleFullScreen()">Во весь экран</button>
 </div>
 
+<!-- Легенда -->
+<div class="legend">
+    <h4>Шаговая доступность к зелёным зонам</h4>
+    <div>
+        <span class="red"></span> Вне шаговой доступности 
+    </div>
+    <div>
+        <span class="green"></span> В шаговой доступности
+    </div>
+    <div style="display: flex; align-items: center;">
+        <span class="gradient"></span> Численность населения
+    </div>
+</div>
+
 <script>
 mapboxgl.accessToken = 'pk.eyJ1IjoiYWxpbmFjaCIsImEiOiJjbGlpcnZpaTgwMTZ4M2twaGo1NjRsNHhhIn0.9jw_R_D1i1nqOtaolld-dQ';
 const map = new mapboxgl.Map({
     container: 'map',
-    style: 'mapbox://styles/alinach/cm1j0n58p00jq01qp98m35mrk',  // Используйте корректный стиль Mapbox
-    center: [76.945, 43.255], // Центр карты для Алматы
+    style: 'mapbox://styles/alinach/cm1j0n58p00jq01qp98m35mrk',  
+    center: [76.945, 43.255], 
     zoom: 12
 });
 
 map.on('load', () => {
     const geojsonUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/krisha_new_builds_.geojson';
+    const greenZonesUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/refs/heads/main/access_green_zones.geojson';
 
+    // Добавление источника для новостроек
     map.addSource('new-builds', {
         'type': 'geojson',
         'data': geojsonUrl
     });
 
-    // Добавление слоя для отображения новостроек
+    // Перемещаем слой новостроек на передний план (аналог z-index)
+    map.moveLayer('new-builds-layer');
+
+    // Добавление источника для зелёных зон
+    map.addSource('green-zones', {
+        'type': 'geojson',
+        'data': greenZonesUrl
+    });
+
+    // Добавление слоя для зелёных и красных зон с градиентом насыщенности цвета
     map.addLayer({
-        'id': 'new-builds-layer',
-        'type': 'circle',
-        'source': 'new-builds',
+        'id': 'green-zones-layer',
+        'type': 'fill',
+        'source': 'green-zones',
         'paint': {
-            'circle-radius': [
-                'interpolate',
-                ['linear'],
-                ['zoom'],
-                10, 10,
-                14, 20
+            'fill-color': [
+                'match',
+                ['get', 'type'],
+                'red', [
+                    'interpolate',
+                    ['linear'],
+                    ['get', 'Кол-во горожан'],
+                    0, 'rgba(255, 182, 193, 0.5)',  // Слабый розовый для минимального значения
+                    500, 'rgba(139, 0, 0, 0.8)'  // Насыщенный тёмно-красный для максимального значения
+                ],
+                'green', [
+                    'interpolate',
+                    ['linear'],
+                    ['get', 'Кол-во горожан'],
+                    50, 'rgba(144, 238, 144, 0.5)',  // Светло-зелёный для минимального значения
+                    500, 'rgba(0, 100, 0, 0.8)'  // Насыщенный тёмно-зелёный для максимального значения
+                ],
+                'rgba(128, 128, 128, 0.5)'  // Серый цвет по умолчанию
             ],
-            'circle-color': '#1E90FF', // Устанавливаем все точки синего цвета
-            'circle-stroke-width': 1,
-            'circle-stroke-color': '#ffffff'
+            'fill-opacity': 0.5
         }
     });
 
-    // Всплывающее окно для отображения информации о новостройке
+    // Добавление слоя для контуров (линий) зелёных и красных зон
+    map.addLayer({
+        'id': 'green-zones-outline',
+        'type': 'line',
+        'source': 'green-zones',
+        'paint': {
+            'line-color': [
+                'match',
+                ['get', 'type'],
+                'red', [
+                    'interpolate',
+                    ['linear'],
+                    ['get', 'Кол-во горожан'],
+                    0, 'rgba(255, 182, 193, 0.5)',  // Светло-красный контур для минимального значения
+                    500, 'rgba(139, 0, 0, 0.9)'  // Тёмно-красный контур для максимального значения
+                ],
+                'green', [
+                    'interpolate',
+                    ['linear'],
+                    ['get', 'Кол-во горожан'],
+                    50, 'rgba(144, 238, 144, 0.8)',  // Светло-зелёный контур для минимального значения
+                    500, 'rgba(0, 100, 0, 0.9)'  // Тёмно-зелёный контур для максимального значения
+                ],
+                'rgba(128, 128, 128, 0.7)'  // Серый цвет по умолчанию
+            ],
+            'line-width': [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                12, 0.5,   // Толщина 0.5 при маленьком zoom (12)
+                14, 2    // Толщина 2 при большом zoom (14)
+            ]
+        }
+    });
+
+    // // Добавление слоя для новостроек с серыми точками
+    // map.addLayer({
+    //     'id': 'new-builds-layer',
+    //     'type': 'circle',
+    //     'source': 'new-builds',
+    //     'paint': {
+    //         'circle-radius': [
+    //             'interpolate',
+    //             ['linear'],
+    //             ['zoom'],
+    //             10, 10,
+    //             14, 20
+    //         ],
+    //         'circle-color': '#808080',  // Серый цвет для точек новостроек
+    //         'circle-stroke-width': 1,
+    //         'circle-stroke-color': '#ffffff'
+    //     }
+    // });
+
+
+    // Всплывающее окно для новостроек и зелёных зон
     const popup = new mapboxgl.Popup({
         closeButton: false,
         closeOnClick: true,
         offset: 15
     });
 
+    // Обработчик кликов по новостройкам
     map.on('click', 'new-builds-layer', (e) => {
         const coordinates = e.lngLat;
         const properties = e.features[0].properties;
 
-        // Отображаем все поля, доступные в GeoJSON
         popup
             .setLngLat(coordinates)
             .setHTML(`
@@ -167,11 +269,44 @@ map.on('load', () => {
         });
     });
 
+    // Обработчик кликов по зелёным зонам
+    map.on('click', 'green-zones-layer', (e) => {
+        const coordinates = e.lngLat;
+        const properties = e.features[0].properties;
+
+        popup
+            .setLngLat(coordinates)
+            .setHTML(`
+                <div style="font-family: Arial, sans-serif; padding: 10px;">
+                    <h3 style="font-size: 14px; margin: 0 0 10px 0; font-weight: bold;">${properties['Наименование']}</h3>
+                    <p style="font-size: 12px; margin: 0;">
+                        <strong>Количество горожан:</strong> ${properties['Кол-во горожан']}
+                    </p>
+                </div>
+            `)
+            .addTo(map);
+
+        map.flyTo({
+            center: coordinates,
+            zoom: 16,
+            pitch: 65,
+            essential: true
+        });
+    });
+
     map.on('mouseenter', 'new-builds-layer', () => {
         map.getCanvas().style.cursor = 'pointer';
     });
 
     map.on('mouseleave', 'new-builds-layer', () => {
+        map.getCanvas().style.cursor = '';
+    });
+
+    map.on('mouseenter', 'green-zones-layer', () => {
+        map.getCanvas().style.cursor = 'pointer';
+    });
+
+    map.on('mouseleave', 'green-zones-layer', () => {
         map.getCanvas().style.cursor = '';
     });
 });

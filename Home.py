@@ -25,17 +25,22 @@ def set_background(png_file):
 
     st.markdown(page_bg_img, unsafe_allow_html=True)
 
+# Caching HTML files for performance
+@st.cache_data
+def load_map_html(file_path):
+    with open(file_path, "r", encoding='utf-8') as f:
+        return f.read()
+
 def app():
     st.set_page_config(page_title="Analytics SC", page_icon="🏙️", layout="wide", initial_sidebar_state="collapsed")
 
-    # Load background image
-    with open("images/fotor-ai-2024070273312.jpg", "rb") as image_file:
-        encoded_background = base64.b64encode(image_file.read()).decode()
+    # Set background image
+    set_background("images/fotor-ai-2024070273312.jpg")  # Применяем загруженный вами фон
 
+    # Styling of the page
     page_element = """
     <style>
     [data-testid="stAppViewContainer"]{
-        background-image: url("https://i.ibb.co.com/N17SRVN/back.png");
         background-size: cover;
         padding-top: 0;
     }
@@ -45,11 +50,10 @@ def app():
     }
     [data-testid="stToolbar"]{
         right: 2rem;
-        background-image: url("https://cdn.iconscout.com/icon/free/png-256/hamburger-menu-462145.png");
         background-size: cover;
     }
     .st-title-container {
-        margin-top: 0;
+        margin-top: -50px;  /* Поднимем заголовок выше */
         padding-left: 20px;
         padding-right: 20px;
     }
@@ -86,89 +90,9 @@ def app():
         transform: translateY(-5px);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
     }
-    .stButton > button[data-tooltip]:hover::after {
-        content: attr(data-tooltip);
-        position: absolute;
-        bottom: 120%;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: #333;
-        color: #fff;
-        padding: 5px 10px;
-        border-radius: 5px;
-        white-space: nowrap;
-        opacity: 1;
-        visibility: visible;
-        transition: opacity 0.3s ease, visibility 0.3s ease;
-    }
-    .stButton > button[data-tooltip]::after {
-        opacity: 0;
-        visibility: hidden;
-    }
-    .footer-container {
-        margin-top: 50px;
-        padding: 20px;
-        background-color: rgba(0,0,0,0);
-    }
-    .footer-button {
-        text-align: center;
-        margin-top: 20px;
-    }
-    .footer-button a {
-        text-decoration: none;
-    }
-    .footer-button button {
-        color: #FFFFFF !important;
-        background: rgba(0, 102, 204, 0.2);
-        border: none;
-        padding: 15px 30px;
-        border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        font-size: 18px;
-        transition: all 0.3s ease;
-    }
-    .footer-button button:hover {
-        background: rgba(0, 85, 187, 0.5);
-        transform: translateY(-5px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-    }
     </style>
     """
     st.markdown(page_element, unsafe_allow_html=True)
-
-    # Custom CSS for styling
-    st.markdown("""
-        <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #2E3B4E;
-        }
-        .css-1d391kg {
-            padding-top: 0 !important;
-            padding-bottom: 0 !important;
-            padding-left: 0 !important;
-            padding-right: 0 !important;
-        }
-        .sidebar .sidebar-content {
-            background-color: #2E3B4E;
-        }
-        .sidebar .sidebar-content .element-container {
-            color: #FFFFFF;
-        }
-        .css-1lcbmhc {
-            color: #FFFFFF !important;
-        }
-        .css-qbe2hs {
-            background-color: #FFFFFF !important;
-            color: #2E3B4E !important;
-        }
-        .stMarkdown {
-            padding: 10px;
-            border-radius: 5px;
-        }
-        </style>
-    """, unsafe_allow_html=True)
 
     # Page header
     st.markdown('<div class="st-title-container"><h1>Социально-экономический портрет города</h1></div>', unsafe_allow_html=True)
@@ -177,117 +101,93 @@ def app():
     st.markdown("""
     <div class="st-description">
     Приложение предоставляет удобные инструменты для анализа и прогнозирования
-    различных аспектов городской среды в Алматы. Приложение позволяет анализировать 
-    распределение инфраструктуры и бизнеса, рассчитывать показатели плотности населения 
-    и необходимых инфраструктурных объектов на участке. Оно также позволяет определить 
-    привлекательность территории для конкретного типа бизнеса и проводить геоаналитику 
-    для более эффективного планирования и развития городской инфраструктуры. 
-    Приложение предоставляет интерактивные карты, инструменты для анализа и удобный интерфейс 
-    для пользователей, интересующихся инвестициями и принятием решений в области городского развития.
+    различных аспектов городской среды в Алматы. Оно помогает пользователям анализировать 
+    распределение инфраструктуры, бизнеса, плотности населения и других ключевых параметров.
     </div>
     """, unsafe_allow_html=True)
 
-    st.header(" ")
+    # Tabs for maps with new order
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11, tab12 = st.tabs(
+        ["Благоустройство", "Велодорожки", "Парковки для самокатов", "Инфраструктура", 
+         "Жильё", "Бизнес", "Реновация", "Плотность населения", "Демография", 
+         "Спрос и предложение", "Привлекательность", "Гостиницы"]
+    )
 
-   # Добавление кнопок и отображение карт
-    col1, col2, col3, col4 = st.columns(4)
-    col5, col6, col7, col8 = st.columns(4)
-    col9, col10, col11, col12 = st.columns(4)  # Новые колонки для дополнительной кнопки, если нужно
+    # Display maps and comments within each tab
+    with tab1:
+        st.subheader("Благоустройство | Абаттандыру")
+        st.write("Карта показывает благоустройство городских территорий.")
+        map_html = load_map_html("components/new_buildings.html")
+        components.html(map_html, height=1000, scrolling=True)
 
-    # Существующие кнопки остаются без изменений
-    if col1.button("Инфраструктура | Инфрақұрылым", key="btn1"):
-        st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
-        with open("components/infra.html", "r", encoding='utf-8') as f:
-            map_html = f.read()
-            components.html(map_html, height=1300, scrolling=True)
+    with tab2:
+        st.subheader("Велодорожки | Велосипедные дорожки")
+        st.write("Карта отображает текущую сеть велодорожек города.")
+        map_html = load_map_html("components/bicycle_lanes.html")
+        components.html(map_html, height=1000, scrolling=True)
 
-    if col2.button("Жильё | Тұрғын үй", key="btn2"):
-        st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
-        with open("components/residential.html", "r", encoding='utf-8') as f:
-            map_html = f.read()
-            components.html(map_html, height=1300, scrolling=True)
+    with tab3:
+        st.subheader("Парковки для самокатов | Велосипедные парковки")
+        st.write("Карта отображает текущие парковки для самокатов и велосипедов в городе.")
+        map_html = load_map_html("components/bicycle_point.html")
+        components.html(map_html, height=1000, scrolling=True)
 
-    if col3.button("Бизнес | Бизнес", key="btn3"):
-        st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
-        with open("components/business.html", "r", encoding='utf-8') as f:
-            map_html = f.read()
-            components.html(map_html, height=1300, scrolling=True)
+    with tab4:
+        st.subheader("Инфраструктура | Инфрақұрылым")
+        st.write("Эта карта отображает инфраструктурные объекты, доступные в городе.")
+        map_html = load_map_html("components/infra.html")
+        components.html(map_html, height=1000, scrolling=True)
 
-    if col4.button("Реновация участков | Реновация", key="btn4"):
-        st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
-        with open("components/renovation.html", "r", encoding='utf-8') as f:
-            map_html = f.read()
-            components.html(map_html, height=1300, scrolling=True)
+    with tab5:
+        st.subheader("Жильё | Тұрғын үй")
+        st.write("Карта показывает распределение жилых объектов по всему городу.")
+        map_html = load_map_html("components/residential.html")
+        components.html(map_html, height=1000, scrolling=True)
 
-    if col5.button("Плотность населения| Тығыздық", key="btn5"):
-        st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
-        with open("components/density.html", "r", encoding='utf-8') as f:
-            map_html = f.read()
-            components.html(map_html, height=1300, scrolling=True)
+    with tab6:
+        st.subheader("Бизнес | Бизнес")
+        st.write("Карта показывает расположение бизнес-центров и других объектов деловой активности.")
+        map_html = load_map_html("components/business.html")
+        components.html(map_html, height=1000, scrolling=True)
 
-    if col6.button("Демография | Демография", key="btn6"):
-        st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
-        with open("components/demographics.html", "r", encoding='utf-8') as f:
-            map_html = f.read()
-            components.html(map_html, height=1300, scrolling=True)
+    with tab7:
+        st.subheader("Реновация участков | Реновация")
+        st.write("Интерактивная карта, показывающая информацию о реновации участков.")
+        map_html = load_map_html("components/renovation.html")
+        components.html(map_html, height=1000, scrolling=True)
 
-    if col7.button("Спрос и предложение | Сұраныс пен ұсыныс", key="btn7"):
-        st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
-        with open("components/supply_demand.html", "r", encoding='utf-8') as f:
-            map_html = f.read()
-            components.html(map_html, height=1300, scrolling=True)
+    with tab8:
+        st.subheader("Плотность населения | Тығыздық")
+        st.write("Карта плотности населения в различных районах города.")
+        map_html = load_map_html("components/density.html")
+        components.html(map_html, height=1000, scrolling=True)
 
-    if col8.button("Привлекательность участков | Тартымдылық", key="btn8"):
-        st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
-        with open("components/attractiveness.html", "r", encoding='utf-8') as f:
-            map_html = f.read()
-            components.html(map_html, height=1300, scrolling=True)
+    with tab9:
+        st.subheader("Демография | Демография")
+        st.write("Карта показывает демографические данные по районам.")
+        map_html = load_map_html("components/demographics.html")
+        components.html(map_html, height=1000, scrolling=True)
 
-    # Добавляем новую кнопку для велодорожек
-    if col9.button("Велодорожки | Велосипедные дорожки", key="btn9"):
-        st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
-        with open("components/bicycle_lanes.html", "r", encoding='utf-8') as f:
-            map_html = f.read()
-            components.html(map_html, height=1300, scrolling=True)
+    with tab10:
+        st.subheader("Спрос и предложение | Сұраныс пен ұсыныс")
+        st.write("Карта спроса и предложения на определённые виды недвижимости и услуг.")
+        map_html = load_map_html("components/supply_demand.html")
+        components.html(map_html, height=1000, scrolling=True)
 
+    with tab11:
+        st.subheader("Привлекательность участков | Тартымдылық")
+        st.write("Информация о привлекательности участков для бизнеса и инвестиций.")
+        map_html = load_map_html("components/attractiveness.html")
+        components.html(map_html, height=1000, scrolling=True)
 
-    # Добавляем новую кнопку для велодорожек
-    if col10.button("Парковки | Велосипедные парковки", key="btn10"):
-        st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
-        with open("components/bicycle_point.html", "r", encoding='utf-8') as f:
-            map_html = f.read()
-            components.html(map_html, height=1300, scrolling=True)
+    with tab12:
+        st.subheader("Гостиницы | Гостиничные комплексы")
+        st.write("Карта отображает расположение гостиниц и других туристических объектов.")
+        map_html = load_map_html("components/hotels.html")
+        components.html(map_html, height=1000, scrolling=True)
 
-
-    # Добавляем новую кнопку для велодорожек
-    if col11.button("Благоустройство | Абаттандыру", key="btn11"):
-        st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
-        with open("components/new_buildings.html", "r", encoding='utf-8') as f:
-            map_html = f.read()
-            components.html(map_html, height=1300, scrolling=True)
-
-
-
-    # Добавляем новую кнопку для отелей
-    if col12.button("Гостиницы | .. ", key="btn12"):
-        st.markdown("<style>.css-1y4p8pa {width: 100% !important; margin: 0 !important;}</style>", unsafe_allow_html=True)
-        with open("components/hotels.html", "r", encoding='utf-8') as f:
-            map_html = f.read()
-            components.html(map_html, height=1300, scrolling=True)
-
-
-    # Добавление футера остается без изменений
-    st.markdown('<div class="footer-container"></div>', unsafe_allow_html=True)
-    st.markdown('<div class="footer-container"></div>', unsafe_allow_html=True)
-
-    # Кнопка футера с ссылкой на Ситуационный центр
+    # Footer button with link
     st.markdown('<div class="footer-button"><a href="https://demo.opendata.smartalmaty.kz/" target="_blank"><button>Ситуационный центр</button></a></div>', unsafe_allow_html=True)
-
-    # Сайдбар остается без изменений
-    with st.sidebar:
-        with open("data/comp.json", "r", errors='ignore') as f:
-            data = json.load(f)
-        st_lottie(data)
 
 if __name__ == "__main__":
     app()

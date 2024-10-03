@@ -87,16 +87,6 @@
     <button class="button" onclick="toggleFullScreen()">Во весь экран</button>
 </div>
 
-<!-- Легенда -->
-<div class="legend">
-    <h4>Цены новостроек</h4>
-    <div><span style="background-color:#bddcf0;"></span> менее 50 млн</div>
-    <div><span style="background-color:#9bcbe8;"></span> 50 - 100 млн</div>
-    <div><span style="background-color:#56a6d0;"></span> 100 - 150 млн</div>
-    <div><span style="background-color:#1081b8;"></span> 150 - 200 млн</div>
-    <div><span style="background-color:#1071a1;"></span> более 200 млн</div>
-</div>
-
 <script>
 mapboxgl.accessToken = 'pk.eyJ1IjoiYWxpbmFjaCIsImEiOiJjbGlpcnZpaTgwMTZ4M2twaGo1NjRsNHhhIn0.9jw_R_D1i1nqOtaolld-dQ';
 const map = new mapboxgl.Map({
@@ -107,7 +97,7 @@ const map = new mapboxgl.Map({
 });
 
 map.on('load', () => {
-    const geojsonUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/krisha_new_builds.geojson';
+    const geojsonUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/krisha_new_builds_.geojson';
 
     map.addSource('new-builds', {
         'type': 'geojson',
@@ -127,16 +117,7 @@ map.on('load', () => {
                 10, 10,
                 14, 20
             ],
-            'circle-color': [
-                'interpolate',
-                ['linear'],
-                ['get', 'price_numeric'], // Предполагается, что цены находятся в столбце 'price_numeric'
-                50000000, '#bddcf0',
-                100000000, '#9bcbe8',
-                150000000, '#56a6d0',
-                200000000, '#1081b8',
-                250000000, '#1071a1'
-            ],
+            'circle-color': '#1E90FF', // Устанавливаем все точки синего цвета
             'circle-stroke-width': 1,
             'circle-stroke-color': '#ffffff'
         }
@@ -153,19 +134,26 @@ map.on('load', () => {
         const coordinates = e.lngLat;
         const properties = e.features[0].properties;
 
+        // Отображаем все поля, доступные в GeoJSON
         popup
             .setLngLat(coordinates)
             .setHTML(`
                 <div style="font-family: Arial, sans-serif; padding: 10px;">
-                    <h3 style="font-size: 18px; margin: 0 0 10px 0; font-weight: bold;">${properties['address']}</h3>
+                    <h3 style="font-size: 18px; margin: 0 0 10px 0; font-weight: bold;">Адрес: ${properties['address']}</h3>
                     <p style="font-size: 16px; margin: 0 0 5px 0;">
                         <strong>Описание:</strong> ${properties['short_description']}
+                    </p>
+                    <p style="font-size: 16px; margin: 0;">
+                        <strong>Район:</strong> ${properties['district']}
+                    </p>
+                    <p style="font-size: 16px; margin: 0;">
+                        <strong>Улица:</strong> ${properties['street']}
                     </p>
                     <p style="font-size: 16px; margin: 0;">
                         <strong>Цена:</strong> ${properties['price_numeric']}
                     </p>
                     <p style="font-size: 16px; margin: 0;">
-                        <strong>Необходимое благоустройство:</strong> ${properties['Необходимое благоустройство']}
+                        <strong>Статус благоустройства:</strong> ${properties['Статус']}
                     </p>
                 </div>
             `)

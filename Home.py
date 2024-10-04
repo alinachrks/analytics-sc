@@ -90,6 +90,38 @@ def app():
         transform: translateY(-5px);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
     }
+
+    /* Style for the Situation Center Button */
+    .footer-button a {
+        text-decoration: none;
+    }
+
+    .footer-button button {
+        position: relative;
+        color: #FFFFFF;
+        background: linear-gradient(135deg, #ff9800, #ff5722);
+        border: none;
+        padding: 15px 40px;
+        border-radius: 12px;
+        font-size: 18px;
+        font-weight: bold;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .footer-button button:hover {
+        background: linear-gradient(135deg, #ff6f00, #e65100);
+        transform: translateY(-5px);
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.4);
+    }
+
+    .footer-button button:active {
+        background: linear-gradient(135deg, #e65100, #bf360c);
+        transform: translateY(0);
+        box-shadow: none;
+    }
+
     </style>
     """
     st.markdown(page_element, unsafe_allow_html=True)
@@ -116,19 +148,20 @@ def app():
     # Display maps and comments within each tab
     with tab1:
         st.subheader("Благоустройство | Абаттандыру")
-        st.write("Карта показывает благоустройство городских территорий.")
+        st.markdown("Карта показывает шаговую доступность к зелёным зонам и зонам рекреации и рекомендации по развитию инфраструктуры")
         map_html = load_map_html("components/new_buildings.html")
         components.html(map_html, height=1000, scrolling=True)
 
+
     with tab2:
         st.subheader("Велодорожки | Велосипедные дорожки")
-        st.write("Карта отображает текущую сеть велодорожек города.")
+        st.write("Карта отображает текущую сеть велодорожек города и рекомендации по развитию")
         map_html = load_map_html("components/bicycle_lanes.html")
         components.html(map_html, height=1000, scrolling=True)
 
     with tab3:
         st.subheader("Парковки для самокатов | Велосипедные парковки")
-        st.write("Карта отображает текущие парковки для самокатов и велосипедов в городе.")
+        st.write("Карта отображает текущие парковки (онлайн) для макромобильного транспорта и рекомендации по разметкее")
         map_html = load_map_html("components/bicycle_point.html")
         components.html(map_html, height=1000, scrolling=True)
 
@@ -186,7 +219,7 @@ def app():
         map_html = load_map_html("components/hotels.html")
         components.html(map_html, height=1000, scrolling=True)
 
-    # Footer button with link
+    # Footer button with link and new style
     st.markdown('<div class="footer-button"><a href="https://demo.opendata.smartalmaty.kz/" target="_blank"><button>Ситуационный центр</button></a></div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":

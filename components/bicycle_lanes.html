@@ -220,8 +220,8 @@ map.on('load', () => {
         const marking = properties['Marking'] ? `<p><strong>Разметка:</strong> ${properties['Marking']}</p>` : '';
         const coloured = properties['Coloured'] ? `<p><strong>Цвет:</strong> ${properties['Coloured']}</p>` : '';
         const comment = properties['Comment'] ? `<p><strong>Комментарий:</strong> ${properties['Comment']}</p>` : '';
-        const width = properties['Width'] ? `<p><strong>Ширина:</strong> ${properties['Width']}</p>` : '';
-        const length = properties['Length'] ? `<p><strong>Длина:</strong> ${properties['Length']}</p>` : '';
+        const width = properties['Width'] ? `<p><strong>Ширина:</strong> ${properties['Width']} м</p>` : '';
+        const length = properties['Length'] ? `<p><strong>Длина:</strong> ${properties['Length']} км</p>` : '';
         const repair = properties['Repair'] ? `<p><strong>Ремонт:</strong> ${properties['Repair']}</p>` : '';
 
         const popupContent = `

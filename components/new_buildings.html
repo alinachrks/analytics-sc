@@ -7,8 +7,30 @@
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
     <style>
-        body { margin: 0; padding: 0; }
-        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        body { margin: 0; padding: 0; display: flex; height: 100vh; }
+        #map { flex: 1; }
+        .sidebar {
+            width: 250px;
+            padding: 20px;
+            background-color: rgba(19, 26, 48, 0.75); /* Полупрозрачный тёмно-синий фон */
+            color: white; /* Белый цвет текста */
+            font-family: 'Arial', sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            overflow-y: auto; /* Добавим прокрутку на случай если список длинный */
+        }
+        .sidebar h3 {
+            color: white; /* Белый цвет заголовков */
+            margin-bottom: 10px;
+        }
+        .sidebar ul {
+            padding-left: 20px;
+            list-style-type: disc; /* Списки с маркерами */
+        }
+        .sidebar ul li {
+            margin-bottom: 8px;
+        }
+
         .button-container {
             position: absolute;
             bottom: 10px;
@@ -93,7 +115,33 @@
     </style>
 </head>
 <body>
+<div class="sidebar">
+    <h3>Зоны рекреации</h3>
+    <ul>
+        <li>Баскетбольная площадка</li>
+        <li>Волейбольная площадка</li>
+        <li>Площадка для воркаута</li>
+        <li>Спортивная площадка</li>
+        <li>Теннисный корт</li>
+        <li>Футбольное поле</li>
+    </ul>
+
+    <h3>Зелёные зоны</h3>
+    <ul>
+        <li>Аллея</li>
+        <li>Благоустроенный участок</li>
+        <li>Бульвар</li>
+        <li>Зеленая зона</li>
+        <li>Набережная</li>
+        <li>Парк</li>
+        <li>Роща</li>
+        <li>Сквер</li>
+        <li>Терренкур</li>
+    </ul>
+</div>
+
 <div id="map"></div>
+
 <div class="button-container">
     <button class="button" onclick="resetMap()">Сбросить</button>
     <button class="button" onclick="toggleFullScreen()">Во весь экран</button>
@@ -204,26 +252,6 @@ map.on('load', () => {
             ]
         }
     });
-
-    // // Добавление слоя для новостроек с серыми точками
-    // map.addLayer({
-    //     'id': 'new-builds-layer',
-    //     'type': 'circle',
-    //     'source': 'new-builds',
-    //     'paint': {
-    //         'circle-radius': [
-    //             'interpolate',
-    //             ['linear'],
-    //             ['zoom'],
-    //             10, 10,
-    //             14, 20
-    //         ],
-    //         'circle-color': '#808080',  // Серый цвет для точек новостроек
-    //         'circle-stroke-width': 1,
-    //         'circle-stroke-color': '#ffffff'
-    //     }
-    // });
-
 
     // Всплывающее окно для новостроек и зелёных зон
     const popup = new mapboxgl.Popup({

@@ -56,12 +56,17 @@ def app():
         margin-top: -50px;  /* Поднимем заголовок выше */
         padding-left: 20px;
         padding-right: 20px;
+        font-size: 48px;  /* Увеличенный размер заголовка */
+        font-weight: bold;
+        color: #FFFFFF;
     }
     .st-description {
         text-align: justify;
         color: white;
         padding-left: 20px;
         padding-right: 20px;
+        font-size: 20px;  /* Увеличенный размер текста описания */
+        line-height: 1.6;
         margin-top: 0;
     }
     .button-container {
@@ -122,21 +127,19 @@ def app():
         box-shadow: none;
     }
 
+    /* Menu and tabs text styling */
+    .stTabs .tab-container {
+        font-size: 22px;  /* Увеличенный размер текста вкладок */
+        font-weight: bold;
+        color: white;
+        background: rgba(0, 0, 0, 0.5);  /* Прозрачный темный фон для вкладок */
+    }
     </style>
     """
     st.markdown(page_element, unsafe_allow_html=True)
 
     # Page header
     st.markdown('<div class="st-title-container"><h1>Социально-экономический портрет города</h1></div>', unsafe_allow_html=True)
-
-    # App description
-    st.markdown("""
-    <div class="st-description">
-    Приложение предоставляет удобные инструменты для анализа и прогнозирования
-    различных аспектов городской среды в Алматы. Оно помогает пользователям анализировать 
-    распределение инфраструктуры, бизнеса, плотности населения и других ключевых параметров.
-    </div>
-    """, unsafe_allow_html=True)
 
     # Tabs for maps with new order
     tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11, tab12 = st.tabs(
@@ -151,7 +154,6 @@ def app():
         st.markdown("Карта показывает шаговую доступность к зелёным зонам и зонам рекреации и рекомендации по развитию инфраструктуры")
         map_html = load_map_html("components/new_buildings.html")
         components.html(map_html, height=1000, scrolling=True)
-
 
     with tab2:
         st.subheader("Велодорожки | Велосипедные дорожки")

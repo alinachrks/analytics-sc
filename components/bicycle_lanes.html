@@ -2,23 +2,13 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Show line information on click</title>
+<title>Карта велодорожек Алматы</title>
 <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
 <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
 <style>
     body { margin: 0; padding: 0; }
     #map { position: absolute; top: 0; bottom: 0; width: 100%; }
-    .calculation-box {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        background-color: rgba(255, 255, 255, 0.72);
-        padding: 6px;
-        border-radius: 5px;
-        font-size: 14px;
-        max-width: 300px;
-    }
     .button-container {
         position: absolute;
         bottom: 10px;
@@ -28,40 +18,63 @@
         gap: 10px;
         z-index: 1;
     }
+
     .button {
-        padding: 8px 16px;
-        background-color: rgba(128, 128, 128, 0.5);
+        padding: 12px 20px;
+        background-color: #0a4e97;
         color: white;
         border: none;
-        border-radius: 3px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-    }
-    .button:hover {
-        background-color: rgba(128, 128, 128, 0.8);
-    }
-    #color-column {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        z-index: 1;
-        width: 200px;
-        background-color: rgba(255, 255, 255, 0.75);
-        padding: 5px;
         border-radius: 5px;
-        font-size: 14px;
+        font-size: 16px;
+        font-weight: bold;
         cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .button:hover {
+        background-color: #0056b3;
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .button:active {
+        background-color: #003f7f;
+        transform: translateY(0);
+    }
+
+    .legend {
+        position: absolute;
+        bottom: 30px;
+        right: 10px;
+        background: white;
+        padding: 10px;
+        font-size: 12px;
+        border-radius: 3px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        line-height: 18px;
+        color: #555;
+    }
+    .legend div {
+        display: flex;
+        align-items: center;
+        font-size: 12px;
+    }
+    .legend div span {
+        display: inline-block;
+        width: 15px;
+        height: 15px;
+        margin-right: 5px;
     }
 </style>
 </head>
 <body>
 <div id="map"></div>
-<div class="calculation-box" id="sidebar"></div>
 <div class="button-container">
-    <button class="button" onclick="resetMap()">Reset</button>
-    <button class="button" onclick="toggleFullScreen()">Full Screen</button>
+    <button class="button" onclick="resetMap()">Сбросить</button>
+    <button class="button" onclick="toggleFullScreen()">Полный экран</button>
 </div>
-<select id="color-column" onchange="updateLineColors()">
+<select id="color-column" onchange="updateLineColors()" style="position: absolute; top: 10px; right: 10px; z-index: 1;">
     <option value="2024">2024</option>
     <option value="2025">2025</option>
     <option value="2026">2026</option>
@@ -73,6 +86,14 @@
     <option value="2040">2040</option>
     <option value="sum">Все до 2040</option>
 </select>
+<div class="legend" id="legend">
+    <h4 style="font-size: 18px;">Легенда</h4> <!-- Увеличенный размер заголовка -->
+    <div style="font-size: 16px;"><span style="background-color: #ffd700"></span> Велодорожки текущего года</div>
+    <div style="font-size: 16px;"><span style="background-color: #1E90FF"></span> Велодорожки предыдущих лет</div>
+    <div style="font-size: 16px;"><span style="background-color: rgba(210, 214, 210, 0.2)"></span> Будущие велодорожки</div>
+</div>
+
+
 <script>
 mapboxgl.accessToken = 'pk.eyJ1IjoiYWxpbmFjaCIsImEiOiJjbGlpcnZpaTgwMTZ4M2twaGo1NjRsNHhhIn0.9jw_R_D1i1nqOtaolld-dQ';
 const map = new mapboxgl.Map({
@@ -83,7 +104,7 @@ const map = new mapboxgl.Map({
 });
 
 map.on('load', () => {
-    const geojsonUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/bicycle_roads.geojson';
+    const geojsonUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/bicycle_roads_.geojson';
 
     map.addSource('custom-data', {
         'type': 'geojson',
@@ -105,25 +126,36 @@ map.on('load', () => {
 
     map.on('click', 'custom-data-layer', (e) => {
         const properties = e.features[0].properties;
-        let sidebarContent = '<div style="width: 100%;">';
-        for (const key in properties) {
-            if (properties.hasOwnProperty(key) && properties[key] != null && properties[key] !== '') {
-                sidebarContent += `<p><strong>${key}:</strong> ${properties[key]}</p>`;
-            }
+        const name = properties['Name'] ? `<p><strong>Название:</strong> ${properties['Name']}</p>` : '';
+        const year = properties['Year'] ? `<p><strong>Год создания:</strong> ${properties['Year']}</p>` : '';
+        const cycleway = properties['Cycleway'] ? `<p><strong>Тип велодорожки:</strong> ${properties['Cycleway']}</p>` : '';
+        const location = properties['Location'] ? `<p><strong>Расположение:</strong> ${properties['Location']}</p>` : '';
+        const separated = properties['Separated'] ? `<p><strong>Разделение:</strong> ${properties['Separated']}</p>` : '';
+        const directions = properties['Directions'] ? `<p><strong>Направления:</strong> ${properties['Directions']}</p>` : '';
+
+        const popupContent = `
+            <div style="font-family: Arial, sans-serif; padding: 10px;">
+                ${name}
+                ${year}
+                ${cycleway}
+                ${location}
+                ${separated}
+                ${directions}
+            </div>
+        `;
+
+        if (popupContent.trim()) {
+            const popup = new mapboxgl.Popup()
+                .setLngLat(e.lngLat)
+                .setHTML(popupContent)
+                .addTo(map);
+
+            map.flyTo({
+                center: e.lngLat,
+                zoom: 16,
+                essential: true
+            });
         }
-        sidebarContent += '</div>';
-        document.getElementById('sidebar').innerHTML = sidebarContent;
-
-        map.setFeatureState(
-            { source: 'custom-data', id: e.features[0].id },
-            { highlight: true }
-        );
-
-        map.flyTo({
-            center: e.lngLat,
-            zoom: 16,
-            essential: true
-        });
     });
 
     map.on('mouseenter', 'custom-data-layer', () => {
@@ -141,18 +173,17 @@ function resetMap() {
         zoom: 12,
         essential: true
     });
-    document.getElementById('sidebar').innerHTML = '';
 }
 
 function toggleFullScreen() {
     var button = document.querySelector('.button-container .button:nth-child(2)');
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen();
-        button.textContent = 'Exit Full Screen';
+        button.textContent = 'Выйти из полноэкранного режима';
     } else {
         if (document.exitFullscreen) {
             document.exitFullscreen();
-            button.textContent = 'Full Screen';
+            button.textContent = 'Полный экран';
         }
     }
 }
@@ -161,11 +192,10 @@ function updateLineColors() {
     const selectedOption = document.getElementById('color-column').value;
 
     if (selectedOption === 'sum') {
-        // Градиентная окраска для всех линий по сумме
         map.setPaintProperty('custom-data-layer', 'line-color', [
             'interpolate',
             ['linear'],
-            ['to-number', ['get', 'Year']], // Преобразование в число
+            ['to-number', ['get', 'Year']],
             2024, '#c7cfd4',  // Серый для самого раннего
             2040, '#ffd700'  // Ярко-желтый для самого позднего
         ]);
@@ -174,13 +204,9 @@ function updateLineColors() {
 
         map.setPaintProperty('custom-data-layer', 'line-color', [
             'case',
-            // Желтый цвет для дорожек, которые появились в выбранном году
             ['==', ['to-number', ['get', 'Year']], year], '#ffd700',
-            // Синий цвет для дорожек, которые были построены до выбранного года
             ['<=', ['to-number', ['get', 'Year']], year], '#1E90FF',
-            // Полупрозрачный для дорожек, которые будут построены после выбранного года
             ['>', ['to-number', ['get', 'Year']], year], 'rgba(210, 214, 210, 0.2)',
-            // Если значение не определено
             'transparent'
         ]);
     }

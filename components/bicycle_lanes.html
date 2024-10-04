@@ -7,8 +7,9 @@
 <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
 <style>
-    body { margin: 0; padding: 0; }
+    body { margin: 0; padding: 0; font-family: 'Arial', sans-serif; }
     #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+
     .button-container {
         position: absolute;
         bottom: 10px;
@@ -24,12 +25,13 @@
         background-color: #0a4e97;
         color: white;
         border: none;
-        border-radius: 5px;
+        border-radius: 10px;
         font-size: 16px;
         font-weight: bold;
         cursor: pointer;
         transition: all 0.3s ease;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        font-family: 'Arial', sans-serif;
     }
 
     .button:hover {
@@ -47,25 +49,97 @@
         position: absolute;
         bottom: 30px;
         right: 10px;
-        background: white;
-        padding: 10px;
-        font-size: 12px;
-        border-radius: 3px;
+        background: rgba(240, 244, 248, 0.8); /* Прозрачный фон */
+        padding: 15px;
+        font-size: 16px;
+        border-radius: 10px;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-        line-height: 18px;
+        line-height: 26px;
         color: #555;
+        font-family: 'Arial', sans-serif;
     }
+
     .legend div {
         display: flex;
         align-items: center;
-        font-size: 12px;
+        font-size: 16px;
     }
+
     .legend div span {
         display: inline-block;
-        width: 15px;
-        height: 15px;
-        margin-right: 5px;
+        width: 20px;
+        height: 20px;
+        margin-right: 10px;
+        border-radius: 50%;
     }
+
+    .legend-gradient {
+        margin-top: 10px;
+        width: 180px;
+        height: 20px;
+        background: linear-gradient(to right, #fffacd, #ffd700); /* Градиент от бледно-жёлтого к ярко-жёлтому */
+        border-radius: 4px;
+        position: relative;
+    }
+
+    .legend-gradient::before {
+        content: '2024';
+        position: absolute;
+        left: 0;
+        top: 18px;
+        bottom: 30px;
+        font-size: 14px;
+        color: #555;
+    }
+
+    .legend-gradient::after {
+        content: '2040';
+        position: absolute;
+        right: 0;
+        top: 18px;
+        bottom: 30px;
+        font-size: 14px;
+        color: #555;
+    }
+
+    #color-column {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1;
+        padding: 8px 12px;
+        background-color: rgba(240, 244, 248, 0.8); /* Прозрачный фон */
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-family: 'Arial', sans-serif;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    #color-column:focus {
+        outline: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .mapboxgl-popup-content {
+        background-color: rgba(240, 244, 248, 0.8); /* Прозрачный фон */
+        border-radius: 10px;
+        font-family: 'Arial', sans-serif;
+        padding: 15px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        font-size: 16px;
+        color: #333;
+    }
+
+    .mapboxgl-popup-content p {
+        margin: 8px 0;
+    }
+
+    .mapboxgl-popup-close-button {
+        font-size: 16px;
+        color: #555;
+    }
+
 </style>
 </head>
 <body>
@@ -74,7 +148,8 @@
     <button class="button" onclick="resetMap()">Сбросить</button>
     <button class="button" onclick="toggleFullScreen()">Полный экран</button>
 </div>
-<select id="color-column" onchange="updateLineColors()" style="position: absolute; top: 10px; right: 10px; z-index: 1;">
+
+<select id="color-column" onchange="updateLineColors()">
     <option value="2024">2024</option>
     <option value="2025">2025</option>
     <option value="2026">2026</option>
@@ -86,13 +161,14 @@
     <option value="2040">2040</option>
     <option value="sum">Все до 2040</option>
 </select>
-<div class="legend" id="legend">
-    <h4 style="font-size: 18px;">Легенда</h4> <!-- Увеличенный размер заголовка -->
-    <div style="font-size: 16px;"><span style="background-color: #ffd700"></span> Велодорожки текущего года</div>
-    <div style="font-size: 16px;"><span style="background-color: #1E90FF"></span> Велодорожки предыдущих лет</div>
-    <div style="font-size: 16px;"><span style="background-color: rgba(210, 214, 210, 0.2)"></span> Будущие велодорожки</div>
-</div>
 
+<div class="legend" id="legend">
+    <!-- <h4 style="font-size: 12px; margin-top: 0;">Легенда</h4> -->
+    <div><span style="background-color: #ffd700"></span> Велодорожки текущего года</div>
+    <div><span style="background-color: #1E90FF"></span> Велодорожки предыдущих лет</div>
+    <div><span style="background-color: rgba(89, 89, 89, 0.9)"></span> Будущие велодорожки</div>
+    <div class="legend-gradient"></div>
+</div>
 
 <script>
 mapboxgl.accessToken = 'pk.eyJ1IjoiYWxpbmFjaCIsImEiOiJjbGlpcnZpaTgwMTZ4M2twaGo1NjRsNHhhIn0.9jw_R_D1i1nqOtaolld-dQ';
@@ -116,8 +192,15 @@ map.on('load', () => {
         'type': 'line',
         'source': 'custom-data',
         'paint': {
-            'line-color': '#000000', // Placeholder color, updated dynamically
-            'line-width': 3
+            'line-color': '#000000',
+            'line-width': [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                10, 2,
+                14, 6,
+                18, 10
+            ]
         }
     });
 
@@ -126,26 +209,41 @@ map.on('load', () => {
 
     map.on('click', 'custom-data-layer', (e) => {
         const properties = e.features[0].properties;
-        const name = properties['Name'] ? `<p><strong>Название:</strong> ${properties['Name']}</p>` : '';
+
+        const name = properties['Name'] ? `<p><strong>${properties['Name']}</strong></p>` : '';
         const year = properties['Year'] ? `<p><strong>Год создания:</strong> ${properties['Year']}</p>` : '';
         const cycleway = properties['Cycleway'] ? `<p><strong>Тип велодорожки:</strong> ${properties['Cycleway']}</p>` : '';
         const location = properties['Location'] ? `<p><strong>Расположение:</strong> ${properties['Location']}</p>` : '';
         const separated = properties['Separated'] ? `<p><strong>Разделение:</strong> ${properties['Separated']}</p>` : '';
         const directions = properties['Directions'] ? `<p><strong>Направления:</strong> ${properties['Directions']}</p>` : '';
+        const condition = properties['Condition'] ? `<p><strong>Состояние:</strong> ${properties['Condition']}</p>` : '';
+        const marking = properties['Marking'] ? `<p><strong>Разметка:</strong> ${properties['Marking']}</p>` : '';
+        const coloured = properties['Coloured'] ? `<p><strong>Цвет:</strong> ${properties['Coloured']}</p>` : '';
+        const comment = properties['Comment'] ? `<p><strong>Комментарий:</strong> ${properties['Comment']}</p>` : '';
+        const width = properties['Width'] ? `<p><strong>Ширина:</strong> ${properties['Width']}</p>` : '';
+        const length = properties['Length'] ? `<p><strong>Длина:</strong> ${properties['Length']}</p>` : '';
+        const repair = properties['Repair'] ? `<p><strong>Ремонт:</strong> ${properties['Repair']}</p>` : '';
 
         const popupContent = `
-            <div style="font-family: Arial, sans-serif; padding: 10px;">
+            <div style="padding: 10px;">
                 ${name}
                 ${year}
                 ${cycleway}
                 ${location}
                 ${separated}
                 ${directions}
+                ${condition}
+                ${marking}
+                ${coloured}
+                ${comment}
+                ${width}
+                ${length}
+                ${repair}
             </div>
         `;
 
         if (popupContent.trim()) {
-            const popup = new mapboxgl.Popup()
+            new mapboxgl.Popup()
                 .setLngLat(e.lngLat)
                 .setHTML(popupContent)
                 .addTo(map);
@@ -176,7 +274,7 @@ function resetMap() {
 }
 
 function toggleFullScreen() {
-    var button = document.querySelector('.button-container .button:nth-child(2)');
+    const button = document.querySelector('.button-container .button:nth-child(2)');
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen();
         button.textContent = 'Выйти из полноэкранного режима';
@@ -196,8 +294,8 @@ function updateLineColors() {
             'interpolate',
             ['linear'],
             ['to-number', ['get', 'Year']],
-            2024, '#c7cfd4',  // Серый для самого раннего
-            2040, '#ffd700'  // Ярко-желтый для самого позднего
+            2024, '#c7cfd4',
+            2040, '#ffd700'
         ]);
     } else {
         const year = parseInt(selectedOption);

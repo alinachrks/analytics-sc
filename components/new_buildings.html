@@ -144,6 +144,31 @@
     </style>
 </head>
 <body>
+<div class="sidebar">
+    <h3>Зоны рекреации</h3>
+    <ul>
+        <li>Баскетбольная площадка</li>
+        <li>Волейбольная площадка</li>
+        <li>Площадка для воркаута</li>
+        <li>Спортивная площадка</li>
+        <li>Теннисный корт</li>
+        <li>Футбольное поле</li>
+    </ul>
+
+    <h3>Зелёные зоны</h3>
+    <ul>
+        <li>Аллея</li>
+        <li>Благоустроенный участок</li>
+        <li>Бульвар</li>
+        <li>Зелёная зона</li>
+        <li>Набережная</li>
+        <li>Парк</li>
+        <li>Роща</li>
+        <li>Сквер</li>
+        <li>Терренкур</li>
+    </ul>
+</div>
+
 <div id="map"></div>
 
 <!-- Кнопка "Применить благоустройство" -->
@@ -260,7 +285,7 @@ async function loadData() {
         'source': 'new-zones',
         'paint': {
             'fill-color': 'rgba(0, 255, 0, 0.5)',  // Новые зоны будут зелёными
-            'fill-opacity': 0.7
+            'fill-opacity': 0.6
         },
         'layout': {
             'visibility': 'none'  // Скрываем новые зоны по умолчанию
@@ -273,8 +298,8 @@ async function loadData() {
         'type': 'line',
         'source': 'new-zones',
         'paint': {
-            'line-color': 'rgba(0, 100, 0, 1)',  // Тёмно-зелёный цвет для контура
-            'line-width': 3  // Толщина контура
+            'line-color': 'rgba(0, 100, 0, 0.5)',  // Тёмно-зелёный цвет для контура
+            'line-width': 1  // Толщина контура
         },
         'layout': {
             'visibility': 'none'  // Скрываем контур новых зон по умолчанию
@@ -286,18 +311,39 @@ async function loadData() {
 function applyRecommendations() {
     // Пройти по всем точкам рекомендаций и обновить шаговую доступность
     map.setLayoutProperty('new-zones-layer', 'visibility', 'visible');
+    map.setLayoutProperty('new-zones-outline', 'visibility', 'visible');  // Показываем контур новых зон
     map.removeLayer('recommendations-layer');  // Убираем рекомендации после применения
 }
 
 // Сброс карты
 function resetMap() {
     map.flyTo({
-        center: [76.945, 43.255],
-        zoom: 12,
-        pitch: 0,
+        center: [76.945, 43.255], // Исходный центр карты
+        zoom: 12, // Исходный масштаб
+        pitch: 0, // Исходный угол
         essential: true
     });
+
+    // Скрыть новые зоны и контуры
+    map.setLayoutProperty('new-zones-layer', 'visibility', 'none');
+    map.setLayoutProperty('new-zones-outline', 'visibility', 'none');
+
+    // Убедимся, что рекомендации снова отображаются, если они были удалены
+    if (!map.getLayer('recommendations-layer')) {
+        map.addLayer({
+            'id': 'recommendations-layer',
+            'type': 'circle',
+            'source': 'recommendations',
+            'paint': {
+                'circle-radius': 6,
+                'circle-color': '#FF4500',
+                'circle-stroke-color': '#FFFFFF',
+                'circle-stroke-width': 2
+            }
+        });
+    }
 }
+
 
 // Функция для переключения во весь экран
 function toggleFullScreen() {

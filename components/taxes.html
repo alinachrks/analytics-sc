@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Show polygon information on click</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
+<style>
+    body { margin: 0; padding: 0; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    .calculation-box {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background-color: rgba(255, 255, 255, 0.72);
+        padding: 6px;
+        border-radius: 5px;
+        font-size: 14px;
+        max-width: 300px;
+    }
+    .button-container {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        z-index: 1;
+    }
+    .button {
+        padding: 8px 16px;
+        background-color: rgba(128, 128, 128, 0.5);
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    .button:hover {
+        background-color: rgba(128, 128, 128, 0.8);
+    }
+    #color-column {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1;
+        width: 250px;
+        background-color: rgba(255, 255, 255, 0.75);
+        padding: 5px;
+        border-radius: 5px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+    /* Legend styling */
+    .legend {
+        position: absolute;
+        bottom: 30px;
+        left: 10px;
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 14px;
+        width: 150px;
+    }
+    .legend h4 {
+        margin: 0 0 5px;
+        font-size: 16px;
+    }
+    .legend div {
+        display: flex;
+        align-items: center;
+        margin-bottom: 4px;
+    }
+    .legend span {
+        display: inline-block;
+        width: 20px;
+        height: 10px;
+        margin-right: 8px;
+    }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="calculation-box" id="sidebar"></div>
+<div class="button-container">
+    <button class="button" onclick="resetMap()">Сбросить</button>
+    <button class="button" onclick="toggleFullScreen()">Во весь экран</button>
+</div>
+<select id="color-column" onchange="updatePolygonColors()">
+    <option value="Всего">Всего</option>
+    <option value="Hалог на имущество физических лиц">Налог на имущество физических лиц</option>
+    <option value="Hалог на транспортные средства с физических лиц">Налог на транспортные средства с физических лиц</option>
+    <option value="Hалог на транспортные средства с юридических лиц">Налог на транспортные средства с юридических лиц</option>
+    <option value="Земельный налог">Земельный налог</option>
+    <option value="Налог на имущество юридических лиц и индивидуальных предпринимателей">Налог на имущество юридических лиц и индивидуальных предпринимателей</option>
+    <option value="Плата за пользование земельными участками">Плата за пользование земельными участками</option>
+</select>
+
+<div class="legend" id="legend">
+    <h4>Легенда:</h4>
+</div>
+
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoiYWxpbmFjaCIsImEiOiJjbGlpcnZpaTgwMTZ4M2twaGo1NjRsNHhhIn0.9jw_R_D1i1nqOtaolld-dQ';
+const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/alinach/cly3sycrp007v01pf9secfdmr',
+    center: [76.879751, 43.24517],
+    zoom: 12
+});
+
+let geoData = null;
+
+map.on('load', () => {
+    const geojsonUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/hexa_taxes_9.geojson';
+
+    map.addSource('custom-data', {
+        'type': 'geojson',
+        'data': geojsonUrl
+    });
+
+    map.addLayer({
+        'id': 'custom-data-layer',
+        'type': 'fill',
+        'source': 'custom-data',
+        'paint': {
+            'fill-color': 'rgba(241, 196, 15, 0.5)',
+            'fill-outline-color': 'rgba(151, 161, 169, 0.6)'
+        }
+    });
+
+    map.addLayer({
+        'id': 'highlighted-polygon-outline',
+        'type': 'line',
+        'source': 'custom-data',
+        'filter': ['==', 'id', ''],
+        'paint': {
+            'line-color': 'rgba(0, 0, 0, 1)',
+            'line-width': 2
+        }
+    });
+
+    fetch(geojsonUrl)
+        .then(response => response.json())
+        .then(data => {
+            geoData = data;
+            updatePolygonColors();
+        });
+
+    map.on('click', 'custom-data-layer', (e) => {
+        const properties = e.features[0].properties;
+        let sidebarContent = '<div style="width: 100%;"><h3>Суммы налогов:</h3>';
+        for (const [key, value] of Object.entries(properties)) {
+            sidebarContent += `<p><span style="font-weight: bold;">${key}:</span> ${value.toLocaleString()} тенге</p>`;
+        }
+        sidebarContent += '</div>';
+        document.getElementById('sidebar').innerHTML = sidebarContent;
+    });
+});
+
+function resetMap() {
+    map.setFilter('highlighted-polygon-outline', ['==', 'id', '']);
+    map.flyTo({
+        center: [76.879751, 43.24517],
+        zoom: 12,
+        essential: true
+    });
+    document.getElementById('sidebar').innerHTML = '';
+}
+
+function toggleFullScreen() {
+    const button = document.querySelector('.button-container .button:nth-child(2)');
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+        button.textContent = 'Свернуть';
+    } else {
+        document.exitFullscreen();
+        button.textContent = 'Во весь экран';
+    }
+}
+
+function updatePolygonColors() {
+    const colorProperty = document.getElementById('color-column').value;
+    let minValue = Infinity;
+    let maxValue = -Infinity;
+
+    if (geoData) {
+        geoData.features.forEach(feature => {
+            const value = feature.properties[colorProperty];
+            if (typeof value === 'number' && !isNaN(value)) {
+                minValue = Math.min(minValue, value);
+                maxValue = Math.max(maxValue, value);
+            }
+        });
+    }
+
+
+    
+    // Подробная шкала градиента от minValue до maxValue с увеличенным числом промежуточных значений
+    map.setPaintProperty('custom-data-layer', 'fill-color', [
+    'interpolate',
+    ['exponential', 0.8],  // Используем экспоненциальную интерполяцию с базой 0.8
+    ['get', colorProperty],
+    
+    // Очень детализированная шкала от minValue до maxValue с шагом 2%
+    minValue, 'rgba(173, 216, 230, 0.4)',                      // Очень светло-голубой
+    minValue + (maxValue - minValue) * 0.02, 'rgba(165, 211, 235, 0.5)', // 2%
+    minValue + (maxValue - minValue) * 0.04, 'rgba(158, 210, 240, 0.5)', // 4%
+    minValue + (maxValue - minValue) * 0.06, 'rgba(148, 205, 245, 0.55)', // 6%
+    minValue + (maxValue - minValue) * 0.08, 'rgba(135, 206, 250, 0.6)', // 8%
+    minValue + (maxValue - minValue) * 0.1, 'rgba(120, 195, 250, 0.6)',  // 10%
+    minValue + (maxValue - minValue) * 0.12, 'rgba(100, 179, 250, 0.65)', // 12%
+    minValue + (maxValue - minValue) * 0.14, 'rgba(85, 160, 240, 0.65)', // 14%
+    minValue + (maxValue - minValue) * 0.16, 'rgba(70, 130, 180, 0.7)',  // 16%
+    minValue + (maxValue - minValue) * 0.18, 'rgba(60, 120, 170, 0.7)',  // 18%
+    minValue + (maxValue - minValue) * 0.2, 'rgba(50, 100, 150, 0.75)',  // 20%
+    minValue + (maxValue - minValue) * 0.22, 'rgba(40, 90, 140, 0.75)',  // 22%
+    minValue + (maxValue - minValue) * 0.24, 'rgba(30, 80, 130, 0.8)',   // 24%
+    minValue + (maxValue - minValue) * 0.26, 'rgba(20, 70, 120, 0.8)',   // 26%
+    minValue + (maxValue - minValue) * 0.28, 'rgba(10, 60, 110, 0.85)',  // 28%
+    minValue + (maxValue - minValue) * 0.3, 'rgba(0, 50, 100, 0.85)',    // 30%
+    minValue + (maxValue - minValue) * 0.32, 'rgba(50, 100, 200, 0.85)', // 32%
+    minValue + (maxValue - minValue) * 0.34, 'rgba(80, 100, 210, 0.85)', // 34%
+    minValue + (maxValue - minValue) * 0.36, 'rgba(100, 120, 230, 0.85)',// 36%
+    minValue + (maxValue - minValue) * 0.38, 'rgba(120, 140, 250, 0.85)',// 38%
+    minValue + (maxValue - minValue) * 0.4, 'rgba(140, 160, 255, 0.85)', // 40%
+    minValue + (maxValue - minValue) * 0.42, 'rgba(160, 180, 255, 0.85)',// 42%
+    minValue + (maxValue - minValue) * 0.44, 'rgba(180, 200, 255, 0.85)',// 44%
+    minValue + (maxValue - minValue) * 0.46, 'rgba(200, 220, 255, 0.85)',// 46%
+    minValue + (maxValue - minValue) * 0.48, 'rgba(220, 240, 255, 0.85)',// 48%
+    minValue + (maxValue - minValue) * 0.5, 'rgba(250, 255, 255, 0.85)', // 50%
+    minValue + (maxValue - minValue) * 0.52, 'rgba(255, 240, 230, 0.85)',// 52%
+    minValue + (maxValue - minValue) * 0.54, 'rgba(255, 220, 200, 0.85)',// 54%
+    minValue + (maxValue - minValue) * 0.56, 'rgba(255, 200, 180, 0.85)',// 56%
+    minValue + (maxValue - minValue) * 0.58, 'rgba(255, 180, 160, 0.85)',// 58%
+    minValue + (maxValue - minValue) * 0.6, 'rgba(255, 160, 140, 0.85)', // 60%
+    minValue + (maxValue - minValue) * 0.62, 'rgba(255, 140, 120, 0.85)',// 62%
+    minValue + (maxValue - minValue) * 0.64, 'rgba(255, 120, 100, 0.85)',// 64%
+    minValue + (maxValue - minValue) * 0.66, 'rgba(255, 100, 80, 0.85)', // 66%
+    minValue + (maxValue - minValue) * 0.68, 'rgba(255, 80, 60, 0.85)',  // 68%
+    minValue + (maxValue - minValue) * 0.7, 'rgba(255, 60, 40, 0.85)',   // 70%
+    minValue + (maxValue - minValue) * 0.72, 'rgba(255, 40, 20, 0.9)',   // 72%
+    minValue + (maxValue - minValue) * 0.74, 'rgba(255, 20, 10, 0.9)',   // 74%
+    minValue + (maxValue - minValue) * 0.76, 'rgba(255, 10, 5, 0.9)',    // 76%
+    minValue + (maxValue - minValue) * 0.78, 'rgba(255, 5, 0, 0.9)',     // 78%
+    minValue + (maxValue - minValue) * 0.8, 'rgba(200, 0, 0, 0.9)',      // 80%
+    minValue + (maxValue - minValue) * 0.82, 'rgba(150, 0, 0, 0.9)',     // 82%
+    minValue + (maxValue - minValue) * 0.84, 'rgba(100, 0, 0, 0.9)',     // 84%
+    minValue + (maxValue - minValue) * 0.86, 'rgba(80, 0, 0, 0.9)',      // 86%
+    minValue + (maxValue - minValue) * 0.88, 'rgba(60, 0, 0, 0.9)',      // 88%
+    minValue + (maxValue - minValue) * 0.9, 'rgba(40, 0, 0, 0.9)',       // 90%
+    minValue + (maxValue - minValue) * 0.92, 'rgba(30, 0, 0, 0.9)',      // 92%
+    minValue + (maxValue - minValue) * 0.94, 'rgba(20, 0, 0, 0.9)',      // 94%
+    minValue + (maxValue - minValue) * 0.96, 'rgba(10, 0, 0, 0.9)',      // 96%
+    minValue + (maxValue - minValue) * 0.98, 'rgba(5, 0, 0, 0.95)',      // 98%
+    maxValue, 'rgba(139, 0, 0, 0.95)'                                    // Темно-красный 100%
+]);
+
+
+
+    updateLegend(minValue, maxValue);
+}
+
+function updateLegend(minValue, maxValue) {
+    const legend = document.getElementById('legend');
+    legend.innerHTML = `
+        <h4>Легенда:</h4>
+        <div><span style="background-color: rgba(173, 216, 230, 0.4);"></span>${minValue.toLocaleString()}</div>
+        <div><span style="background-color: rgba(135, 206, 250, 0.7);"></span>${(minValue + (maxValue - minValue) * 0.25).toLocaleString()}</div>
+                <div><span style="background-color: rgba(70, 130, 180, 0.7);"></span>${(minValue + (maxValue - minValue) * 0.5).toLocaleString()}</div>
+        <div><span style="background-color: rgba(255, 140, 0, 0.7);"></span>${(minValue + (maxValue - minValue) * 0.75).toLocaleString()}</div>
+        <div><span style="background-color: rgba(139, 0, 0, 0.7);"></span>${maxValue.toLocaleString()}</div>
+    `;
+}
+</script>
+</body>
+</html>
+

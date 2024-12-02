@@ -153,7 +153,8 @@ def app():
     with tab0:
         st.subheader("Налоги")
         st.markdown(""" Учтены только те данные, которые находятся в общем доступе  
-
+                        __________________________________________________________
+                        
                         - Налог на имущество юридических лиц и индивидуальных предпринимателей  
                         - Налог на имущество физических лиц  
                         - Налог на транспортные средства с юридических лиц  
@@ -163,80 +164,80 @@ def app():
                         - Единый земельный налог""")
 
         map_html = load_map_html("components/taxes.html")
-        components.html(map_html, height=1000, scrolling=True)
+        components.html(map_html, height=800, scrolling=True)
 
 
     with tab1:
         st.subheader("Благоустройство | Абаттандыру")
         st.markdown("Карта показывает шаговую доступность к зелёным зонам и зонам рекреации и рекомендации по развитию инфраструктуры")
         map_html = load_map_html("components/new_buildings.html")
-        components.html(map_html, height=1000, scrolling=True)
+        components.html(map_html, height=800, scrolling=True)
 
     with tab2:
         st.subheader("Велодорожки | Велосипедные дорожки")
         st.write("Карта отображает текущую сеть велодорожек города и рекомендации по развитию")
         map_html = load_map_html("components/bicycle_lanes.html")
-        components.html(map_html, height=1000, scrolling=True)
+        components.html(map_html, height=800, scrolling=True)
 
     with tab3:
         st.subheader("Парковки для самокатов | Велосипедные парковки")
         st.write("Карта отображает текущие парковки (онлайн) для макромобильного транспорта и рекомендации по разметкее")
         map_html = load_map_html("components/bicycle_point.html")
-        components.html(map_html, height=1000, scrolling=True)
+        components.html(map_html, height=800, scrolling=True)
 
     with tab4:
         st.subheader("Инфраструктура | Инфрақұрылым")
         st.write("Эта карта отображает инфраструктурные объекты, доступные в городе.")
         map_html = load_map_html("components/infra.html")
-        components.html(map_html, height=1000, scrolling=True)
+        components.html(map_html, height=10800, scrolling=True)
 
     with tab5:
         st.subheader("Жильё | Тұрғын үй")
         st.write("Карта показывает распределение жилых объектов по всему городу.")
         map_html = load_map_html("components/residential.html")
-        components.html(map_html, height=1000, scrolling=True)
+        components.html(map_html, height=800, scrolling=True)
 
     with tab6:
         st.subheader("Бизнес | Бизнес")
         st.write("Карта показывает расположение бизнес-центров и других объектов деловой активности.")
         map_html = load_map_html("components/business.html")
-        components.html(map_html, height=1000, scrolling=True)
+        components.html(map_html, height=800, scrolling=True)
 
     with tab7:
         st.subheader("Реновация участков | Реновация")
         st.write("Интерактивная карта, показывающая информацию о реновации участков.")
         map_html = load_map_html("components/renovation.html")
-        components.html(map_html, height=1000, scrolling=True)
+        components.html(map_html, height=800, scrolling=True)
 
     with tab8:
         st.subheader("Плотность населения | Тығыздық")
         st.write("Карта плотности населения в различных районах города.")
         map_html = load_map_html("components/density.html")
-        components.html(map_html, height=1000, scrolling=True)
+        components.html(map_html, height=800, scrolling=True)
 
     with tab9:
         st.subheader("Демография | Демография")
         st.write("Карта показывает демографические данные по районам.")
         map_html = load_map_html("components/demographics.html")
-        components.html(map_html, height=1000, scrolling=True)
+        components.html(map_html, height=800, scrolling=True)
 
     with tab10:
         st.subheader("Спрос и предложение | Сұраныс пен ұсыныс")
         st.write("Карта спроса и предложения на определённые виды недвижимости и услуг.")
         map_html = load_map_html("components/supply_demand.html")
-        components.html(map_html, height=1000, scrolling=True)
+        components.html(map_html, height=1800, scrolling=True)
 
     with tab11:
         st.subheader("Привлекательность участков | Тартымдылық")
         st.write("Информация о привлекательности участков для бизнеса и инвестиций.")
         map_html = load_map_html("components/attractiveness.html")
-        components.html(map_html, height=1000, scrolling=True)
+        components.html(map_html, height=800, scrolling=True)
 
     with tab12:
         st.subheader("Гостиницы | Гостиничные комплексы")
         st.write("Карта отображает расположение гостиниц и других туристических объектов.")
         map_html = load_map_html("components/hotels.html")
-        components.html(map_html, height=1000, scrolling=True)
+        components.html(map_html, height=800, scrolling=True)
 
     # Footer button with link and new style
     st.markdown('<div class="footer-button"><a href="https://demo.opendata.smartalmaty.kz/" target="_blank"><button>Ситуационный центр</button></a></div>', unsafe_allow_html=True)

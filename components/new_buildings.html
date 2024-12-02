@@ -201,7 +201,7 @@ const map = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/alinach/cm1j0n58p00jq01qp98m35mrk',  
     center: [76.945, 43.255], 
-    zoom: 12
+    zoom: 11
 });
 
 let greenZonesData, recommendationsData, newZonesData;
@@ -209,8 +209,8 @@ let greenZonesData, recommendationsData, newZonesData;
 // Функция для загрузки данных о зелёных зонах, рекомендациях и новых зонах
 async function loadData() {
     const greenZonesUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/refs/heads/main/access_green_zones.geojson';
-    const recommendationsUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/refs/heads/main/optimized_red_zone_bluos.geojson';
-    const newZonesUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/refs/heads/main/new_zone.geojson';
+    const recommendationsUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/refs/heads/main/rec_green_zones.geojson';
+    const newZonesUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/refs/heads/main/new_green_ac.geojson';
 
     // Загрузка данных о зелёных зонах и рекомендациях
     const greenZonesResponse = await fetch(greenZonesUrl);

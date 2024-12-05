@@ -7,360 +7,498 @@
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
     <style>
-        body { margin: 0; padding: 0; display: flex; height: 100vh; }
-        #map { flex: 1; }
-        .sidebar {
-            width: 250px;
-            padding: 20px;
-            background-color: rgba(19, 26, 48, 0.75);
-            color: white;
+       /* Общие стили */
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
             font-family: 'Arial', sans-serif;
-            font-size: 14px;
-            line-height: 1.6;
+            background-color: #eaeaea; /* Нежный светло-серый фон */
+            color: #333;
+        }
+
+        #map {
+            flex: 1;
+        }
+
+        /* Сайдбар */
+        .sidebar {
+            width: 280px; /* Чуть шире для удобства */
+            padding: 25px;
+            background: linear-gradient(145deg, #142136, #1c2a4a); /* Градиент для глубины */
+            color: #fdfdfd;
+            font-size: 15px;
+            line-height: 1.8;
             overflow-y: auto;
+            box-shadow: 2px 0 6px rgba(0, 0, 0, 0.25); /* Чёткая тень */
         }
+
         .sidebar h3 {
-            color: white;
-            margin-bottom: 10px;
+            font-size: 20px;
+            color: #4de1ff; /* Акцентный светлый голубой */
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* Тонкая линия */
+            padding-bottom: 5px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
         }
+
         .sidebar ul {
-            padding-left: 20px;
             list-style-type: disc;
+            margin-top: 10px;
+            padding-left: 20px;
         }
+
         .sidebar ul li {
             margin-bottom: 8px;
+            color: #dfe8ff; /* Светлый оттенок текста */
+            font-size: 14px;
         }
 
+        /* Кнопки */
         .button-container {
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
+            position: fixed; /* Фиксированное положение */
+            bottom: 25px; /* Расстояние от нижнего края */
+            left: 50%; /* Центрирование */
             transform: translateX(-50%);
             display: flex;
-            gap: 10px;
-            z-index: 1;
+            gap: 15px; /* Расстояние между кнопками */
+            z-index: 3;
         }
 
-        .button {
-            padding: 12px 20px;
-            background-color: #0a4e97;
+        /* Общий стиль кнопок */
+        .button, .apply-button {
+            padding: 14px 28px; /* Просторнее */
+            background: linear-gradient(145deg, #007bff, #0056b3); /* Объёмный градиент */
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 12px; /* Мягкие края */
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Глубокая тень */
         }
 
-        .button:hover {
-            background-color: #0056b3;
-            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
-            transform: translateY(-2px);
+        .button:hover, .apply-button:hover {
+            background: linear-gradient(145deg, #0056b3, #003f7f); /* Градиент при наведении */
+            transform: scale(1.05); /* Увеличение при наведении */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); /* Более выраженная тень */
         }
 
-        .button:active {
-            background-color: #003f7f;
-            transform: translateY(0);
+        .button:active, .apply-button:active {
+            transform: scale(0.95); /* Эффект нажатия */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Уменьшение тени */
         }
 
+        /* Кнопки в верхнем углу */
         .apply-button-container {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 2;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 15px;
+            z-index: 3;
         }
 
-        .apply-button {
-            padding: 12px 20px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .apply-button:hover {
-            background-color: #218838;
-            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
-            transform: translateY(-2px);
-        }
-
-        .apply-button:active {
-            background-color: #1e7e34;
-            transform: translateY(0);
-        }
-
+        /* Легенда */
         .legend {
-            background-color: white;
-            border-radius: 3px;
-            bottom: 30px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-            padding: 10px;
-            position: absolute;
-            z-index: 1;
-            right: 10px;
-            width: 200px;
-            font-family: 'Open Sans', 'Arial Unicode MS', sans-serif;
-            font-size: 14px;
+            background: linear-gradient(145deg, #ffffff, #e4e4e4); /* Лёгкий градиент */
+            border-radius: 15px; /* Мягкие края */
+            padding: 15px;
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 250px; /* Удобная ширина */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Приятная тень */
+            z-index: 3;
+            font-size: 15px;
+            font-family: 'Arial', sans-serif;
         }
 
         .legend h4 {
-            margin: 0 0 12px;
-            font-size: 14px;
+            font-size: 16px;
+            color: #444;
+            margin-bottom: 15px;
             font-weight: bold;
-            color: #333;
             text-align: center;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
         }
 
         .legend div {
             display: flex;
             align-items: center;
-            font-size: 12px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #666;
         }
 
         .legend div span {
             display: inline-block;
             height: 15px;
             width: 15px;
-            margin-right: 8px;
+            margin-right: 10px;
+            border-radius: 4px; /* Квадраты со слегка скруглёнными углами */
         }
 
-        .legend .red { background-color: rgba(139, 0, 0, 0.8); }
-        .legend .green { background-color: rgba(0, 100, 0, 0.8); }
+        .legend .red {
+            background-color: rgba(200, 50, 50, 0.8);
+        }
+
+        .legend .green {
+            background-color: rgba(50, 200, 50, 0.8);
+        }
 
         .legend .gradient {
             background: linear-gradient(to right, rgba(255, 182, 193, 0.8), rgba(139, 0, 0, 0.8));
             height: 15px;
             width: 100px;
-            margin-right: 8px;
-            border-radius: 3px;
+            border-radius: 5px;
         }
+
+        /* Всплывающие подсказки */
+        .custom-popup .mapboxgl-popup-content {
+            font-size: 16px;
+            background: rgba(40, 40, 40, 0.95); /* Тёмный фон с акцентом */
+            color: white;
+            border-radius: 12px;
+            padding: 12px 16px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); /* Глубокая тень */
+            text-align: center;
+        }
+
+        .custom-popup .mapboxgl-popup-tip {
+            border-top-color: rgba(40, 40, 40, 0.95);
+        }
+
+        /* Эффекты на карте */
+        .mapboxgl-popup-close-button {
+            color: white; /* Белая кнопка закрытия */
+            font-size: 18px; /* Чуть крупнее */
+            opacity: 0.8; /* Лёгкая прозрачность */
+            transition: opacity 0.2s ease;
+        }
+
+        .mapboxgl-popup-close-button:hover {
+            opacity: 1; /* Полная видимость при наведении */
+        }
+
     </style>
 </head>
 <body>
-<div class="sidebar">
-    <h3>Зоны рекреации</h3>
-    <ul>
-        <li>Баскетбольная площадка</li>
-        <li>Волейбольная площадка</li>
-        <li>Площадка для воркаута</li>
-        <li>Спортивная площадка</li>
-        <li>Теннисный корт</li>
-        <li>Футбольное поле</li>
-    </ul>
-
-    <h3>Зелёные зоны</h3>
-    <ul>
-        <li>Аллея</li>
-        <li>Благоустроенный участок</li>
-        <li>Бульвар</li>
-        <li>Зелёная зона</li>
-        <li>Набережная</li>
-        <li>Парк</li>
-        <li>Роща</li>
-        <li>Сквер</li>
-        <li>Терренкур</li>
-    </ul>
-</div>
-
-<div id="map"></div>
-
-<!-- Кнопка "Применить благоустройство" -->
-<div class="apply-button-container">
-    <button class="apply-button" onclick="applyRecommendations()">Применить благоустройство</button>
-</div>
-
-<div class="button-container">
-    <button class="button" onclick="resetMap()">Сбросить</button>
-    <button class="button" onclick="toggleFullScreen()">Во весь экран</button>
-</div>
-
-<!-- Легенда -->
-<div class="legend">
-    <h4>Шаговая доступность к зелёным зонам</h4>
-    <div>
-        <span class="red"></span> Вне шаговой доступности 
+    <div class="sidebar">
+        <h3>Зоны рекреации</h3>
+        <ul>
+            <li>Баскетбольная площадка</li>
+            <li>Волейбольная площадка</li>
+            <li>Площадка для воркаута</li>
+            <li>Спортивная площадка</li>
+            <li>Теннисный корт</li>
+            <li>Футбольное поле</li>
+        </ul>
+        <h3>Зелёные зоны</h3>
+        <ul>
+            <li>Аллея</li>
+            <li>Благоустроенный участок</li>
+            <li>Бульвар</li>
+            <li>Зелёная зона</li>
+            <li>Набережная</li>
+            <li>Парк</li>
+            <li>Роща</li>
+            <li>Сквер</li>
+            <li>Терренкур</li>
+        </ul>
     </div>
-    <div>
-        <span class="green"></span> В шаговой доступности
+    
+    <div id="map"></div>
+    
+    <div class="apply-button-container">
+        <button class="apply-button" id="apply-800" onclick="applyAccessibility(800)">Прогноз шаговой доступности на 800 м</button>
+        <button class="apply-button" id="apply-1500" onclick="applyAccessibility(1500)">Прогноз шаговой доступности на 1500 м</button>
     </div>
-    <div style="display: flex; align-items: center;">
-        <span class="gradient"></span> Численность населения
+    
+    <div class="button-container">
+        <button class="button" onclick="resetMap()">Сбросить</button>
+        <button class="button" onclick="toggleFullScreen()">Во весь экран</button>
     </div>
-</div>
-
-<script>
-mapboxgl.accessToken = 'pk.eyJ1IjoiYWxpbmFjaCIsImEiOiJjbGlpcnZpaTgwMTZ4M2twaGo1NjRsNHhhIn0.9jw_R_D1i1nqOtaolld-dQ';
-const map = new mapboxgl.Map({
-    container: 'map',
-    style: 'mapbox://styles/alinach/cm1j0n58p00jq01qp98m35mrk',  
-    center: [76.945, 43.255], 
-    zoom: 11
-});
-
-let greenZonesData, recommendationsData, newZonesData;
-
-// Функция для загрузки данных о зелёных зонах, рекомендациях и новых зонах
-async function loadData() {
-    const greenZonesUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/refs/heads/main/access_green_zones.geojson';
-    const recommendationsUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/refs/heads/main/rec_green_zones.geojson';
-    const newZonesUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/refs/heads/main/new_green_ac.geojson';
-
-    // Загрузка данных о зелёных зонах и рекомендациях
-    const greenZonesResponse = await fetch(greenZonesUrl);
-    greenZonesData = await greenZonesResponse.json();
-
-    const recommendationsResponse = await fetch(recommendationsUrl);
-    recommendationsData = await recommendationsResponse.json();
-
-    const newZonesResponse = await fetch(newZonesUrl);
-    newZonesData = await newZonesResponse.json();
-
-    // Добавляем зелёные зоны на карту
-    map.addSource('green-zones', {
-        'type': 'geojson',
-        'data': greenZonesData
+    
+    <div class="legend">
+        <h4>Шаговая доступность к зелёным зонам</h4>
+        <div>
+            <span class="red"></span> Вне шаговой доступности 
+        </div>
+        <div>
+            <span class="green"></span> В шаговой доступности
+        </div>
+        <div style="display: flex; align-items: center;">
+            <span class="gradient"></span> Численность населения
+        </div>
+    </div>
+    
+    <script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoiYWxpbmFjaCIsImEiOiJjbGlpcnZpaTgwMTZ4M2twaGo1NjRsNHhhIn0.9jw_R_D1i1nqOtaolld-dQ';
+    
+    const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/alinach/cm1j0n58p00jq01qp98m35mrk',
+        center: [76.945, 43.255],
+        zoom: 11
     });
-    map.addLayer({
-        'id': 'green-zones-layer',
-        'type': 'fill',
-        'source': 'green-zones',
-        'paint': {
-            'fill-color': [
-                'match',
-                ['get', 'type'],
-                'red', [
-                    'interpolate',
-                    ['linear'],
-                    ['get', 'Кол-во горожан'],
-                    0, 'rgba(255, 182, 193, 0.5)',  
-                    500, 'rgba(139, 0, 0, 0.8)'  
-                ],
-                'green', [
-                    'interpolate',
-                    ['linear'],
-                    ['get', 'Кол-во горожан'],
-                    50, 'rgba(144, 238, 144, 0.5)',  
-                    500, 'rgba(0, 100, 0, 0.8)'  
-                ],
-                'rgba(128, 128, 128, 0.5)'  
-            ],
-            'fill-opacity': 0.5
-        }
-    });
+    
+    let greenZonesData, recommendationsData, newZonesData, newZonesData1500;
+    
+    // Загрузка данных
+    async function loadData() {
+        try {
+            const greenZonesUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/access_green_zones.geojson';
+            const recommendationsUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/rec_green_zones.geojson';
+            const newZonesUrl800 = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/new_green_ac.geojson';
+            const newZonesUrl1500 = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/new_green_1.5.geojson';
+    
+            greenZonesData = await (await fetch(greenZonesUrl)).json();
+            recommendationsData = await (await fetch(recommendationsUrl)).json();
+            newZonesData = await (await fetch(newZonesUrl800)).json();
+            newZonesData1500 = await (await fetch(newZonesUrl1500)).json();
+    
 
-    // Добавляем точки с рекомендациями на карту
-    map.addSource('recommendations', {
-        'type': 'geojson',
-        'data': recommendationsData
-    });
-    map.addLayer({
-        'id': 'recommendations-layer',
-        'type': 'circle',
-        'source': 'recommendations',
-        'paint': {
-            'circle-radius': 6,
-            'circle-color': '#FF4500',  
-            'circle-stroke-color': '#FFFFFF',
-            'circle-stroke-width': 2
-        }
-    });
+            // Добавляем зелёные зоны на карту
+            map.addSource('green-zones', {
+                'type': 'geojson',
+                'data': greenZonesData
+            });
+            map.addLayer({
+                'id': 'green-zones-layer',
+                'type': 'fill',
+                'source': 'green-zones',
+                'paint': {
+                    'fill-color': [
+                        'match',
+                        ['get', 'type'],
+                        'red', [
+                            'interpolate',
+                            ['linear'],
+                            ['get', 'Кол-во горожан'],
+                            0, 'rgba(255, 182, 193, 0.5)',  
+                            500, 'rgba(139, 0, 0, 0.8)'  
+                        ],
+                        'green', [
+                            'interpolate',
+                            ['linear'],
+                            ['get', 'Кол-во горожан'],
+                            50, 'rgba(144, 238, 144, 0.5)',  
+                            500, 'rgba(0, 100, 0, 0.8)'  
+                        ],
+                        'rgba(128, 128, 128, 0.5)'  
+                    ],
+                    'fill-opacity': 0.5
+                }
+            });
 
-    // Добавляем слой для новых зелёных зон
-    map.addSource('new-zones', {
-        'type': 'geojson',
-        'data': newZonesData
-    });
+            // Добавляем точки с рекомендациями
+            map.addSource('recommendations', {
+                'type': 'geojson',
+                'data': recommendationsData
+            });
 
-    // Добавляем слой для заливки новых зелёных зон
-    map.addLayer({
-        'id': 'new-zones-layer',
-        'type': 'fill',
-        'source': 'new-zones',
-        'paint': {
-            'fill-color': 'rgba(0, 255, 0, 0.5)',  // Новые зоны будут зелёными
-            'fill-opacity': 0.6
-        },
-        'layout': {
-            'visibility': 'none'  // Скрываем новые зоны по умолчанию
-        }
-    });
+            map.addLayer({
+                'id': 'recommendations-layer',
+                'type': 'circle',
+                'source': 'recommendations',
+                'paint': {
+                    'circle-radius': 8,
+                    'circle-color': 'rgba(255, 69, 0, 0.9)', // Яркий оранжевый
+                    'circle-stroke-color': '#FFFFFF', // Белая обводка
+                    'circle-stroke-width': 2,
+                    'circle-opacity': 1 // Полностью непрозрачные по умолчанию
+                }
+            });
 
-    // Добавляем слой для контура новых зелёных зон
-    map.addLayer({
-        'id': 'new-zones-outline',
-        'type': 'line',
-        'source': 'new-zones',
-        'paint': {
-            'line-color': 'rgba(0, 100, 0, 0.5)',  // Тёмно-зелёный цвет для контура
-            'line-width': 1  // Толщина контура
-        },
-        'layout': {
-            'visibility': 'none'  // Скрываем контур новых зон по умолчанию
-        }
-    });
-}
+            // Переместим слой 'recommendations-layer' поверх всех других
+            map.on('load', () => {
+                if (map.getLayer('recommendations-layer')) {
+                    map.moveLayer('recommendations-layer');
+                }
+            });
 
-// Функция для применения благоустройства
-function applyRecommendations() {
-    // Пройти по всем точкам рекомендаций и обновить шаговую доступность
-    map.setLayoutProperty('new-zones-layer', 'visibility', 'visible');
-    map.setLayoutProperty('new-zones-outline', 'visibility', 'visible');  // Показываем контур новых зон
-    map.removeLayer('recommendations-layer');  // Убираем рекомендации после применения
-}
 
-// Сброс карты
-function resetMap() {
-    map.flyTo({
-        center: [76.945, 43.255], // Исходный центр карты
-        zoom: 12, // Исходный масштаб
-        pitch: 0, // Исходный угол
-        essential: true
-    });
+            // Отслеживаем активные точки и текущую всплывающую подсказку
+            let activePoints = [];
+            let currentPopup = null;
 
-    // Скрыть новые зоны и контуры
-    map.setLayoutProperty('new-zones-layer', 'visibility', 'none');
-    map.setLayoutProperty('new-zones-outline', 'visibility', 'none');
+            // Обновление прозрачности точек
+            function updatePointOpacity(featureId) {
+                if (!activePoints.includes(featureId)) {
+                    activePoints.push(featureId);
 
-    // Убедимся, что рекомендации снова отображаются, если они были удалены
-    if (!map.getLayer('recommendations-layer')) {
-        map.addLayer({
-            'id': 'recommendations-layer',
-            'type': 'circle',
-            'source': 'recommendations',
-            'paint': {
-                'circle-radius': 6,
-                'circle-color': '#FF4500',
-                'circle-stroke-color': '#FFFFFF',
-                'circle-stroke-width': 2
+                    if (activePoints.length > 2) {
+                        // Делаем первую точку менее прозрачной
+                        const removedFeatureId = activePoints.shift();
+                        map.setPaintProperty('recommendations-layer', 'circle-opacity', [
+                            'case',
+                            ['==', ['get', 'id'], removedFeatureId], 0.4, 1
+                        ]);
+                    }
+
+                    // Устанавливаем полную прозрачность для новых активных точек
+                    map.setPaintProperty('recommendations-layer', 'circle-opacity', [
+                        'case',
+                        ['==', ['get', 'id'], featureId], 1, 0.4
+                    ]);
+                }
             }
-        });
-    }
-}
+
+            /// Обработка кликов по точкам
+            map.on('click', 'recommendations-layer', (e) => {
+                const coordinates = e.features[0].geometry.coordinates.slice();
+                const name = e.features[0].properties['Наименование'] || 'Без названия';
+
+                // Удаление предыдущей всплывающей подсказки
+                if (currentPopup) {
+                    currentPopup.remove();
+                }
+
+                // Создание новой фиксированной всплывающей подсказки
+                currentPopup = new mapboxgl.Popup({
+                    closeButton: true, // Включаем кнопку закрытия
+                    closeOnClick: false, // Подсказка остаётся при клике в другое место
+                    className: 'custom-popup'
+                })
+                    .setLngLat(coordinates)
+                    .setHTML(`<strong>${name}</strong>`)
+                    .addTo(map);
+            });
+
+            let hoverPopup = null; // Для временной подсказки при наведении
+            let clickPopup = null; // Для фиксированной подсказки при клике
+
+            // Наведение на точку
+            map.on('mouseenter', 'recommendations-layer', (e) => {
+                map.getCanvas().style.cursor = 'pointer';
+
+                const coordinates = e.features[0].geometry.coordinates.slice();
+                const name = e.features[0].properties['Наименование'] || 'Без названия';
+
+                // Удаляем предыдущую временную подсказку
+                if (hoverPopup) {
+                    hoverPopup.remove();
+                    hoverPopup = null;
+                }
+
+                // Создаём временную подсказку
+                hoverPopup = new mapboxgl.Popup({
+                    closeButton: false,
+                    closeOnClick: false,
+                    className: 'custom-popup'
+                })
+                    .setLngLat(coordinates)
+                    .setHTML(`<strong>${name}</strong>`)
+                    .addTo(map);
+            });
+
+            // Уход курсора с точки
+            map.on('mouseleave', 'recommendations-layer', () => {
+                map.getCanvas().style.cursor = '';
+
+                // Удаляем временную подсказку
+                if (hoverPopup) {
+                    hoverPopup.remove();
+                    hoverPopup = null;
+                }
+            });
+
+            // Обработка кликов по точкам
+            map.on('click', 'recommendations-layer', (e) => {
+                const coordinates = e.features[0].geometry.coordinates.slice();
+                const name = e.features[0].properties['Наименование'] || 'Без названия';
+
+                // Удаляем предыдущую фиксированную подсказку
+                if (clickPopup) {
+                    clickPopup.remove();
+                    clickPopup = null;
+                }
+
+                // Создаём фиксированную подсказку
+                clickPopup = new mapboxgl.Popup({
+                    closeButton: true, // Включаем кнопку закрытия
+                    closeOnClick: false, // Подсказка остаётся при клике в другое место
+                    className: 'custom-popup'
+                })
+                    .setLngLat(coordinates)
+                    .setHTML(`<strong>${name}</strong>`)
+                    .addTo(map);
+            });
 
 
-// Функция для переключения во весь экран
-function toggleFullScreen() {
-    var button = document.querySelector('.button-container .button:nth-child(2)');
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen();
-        button.textContent = 'Свернуть';
-    } else {
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-            button.textContent = 'Во весь экран';
+            // Добавляем зоны доступности
+            map.addSource('new-zones', { type: 'geojson', data: newZonesData });
+            map.addLayer({
+                id: 'new-zones-layer',
+                type: 'fill',
+                source: 'new-zones',
+                paint: { 
+                    'fill-color': 'rgba(0, 255, 0, 0.5)', // Зелёный цвет по умолчанию
+                    'fill-opacity': 0.6 // Прозрачность по умолчанию
+                },
+                layout: { visibility: 'none' }
+            });
+
+            map.addSource('new-zones-1500', { type: 'geojson', data: newZonesData1500 });
+            map.addLayer({
+                id: 'new-zones-1500-layer',
+                type: 'fill',
+                source: 'new-zones-1500',
+                paint: { 
+                    'fill-color': 'rgba(0, 100, 255, 0.5)', // Синий цвет по умолчанию
+                    'fill-opacity': 0.6 // Прозрачность по умолчанию
+                },
+                layout: { visibility: 'none' }
+            });
+
+
+    // Управление видимостью слоёв (независимая активация с изменением прозрачности и цвета)
+    function toggleAccessibility(layer) {
+        const otherLayer = layer === 'new-zones-layer' ? 'new-zones-1500-layer' : 'new-zones-layer';
+
+        // Получаем текущее состояние видимости слоя
+        const currentVisibility = map.getLayoutProperty(layer, 'visibility');
+
+        if (currentVisibility === 'none') {
+            // Активируем слой
+            map.setLayoutProperty(layer, 'visibility', 'visible');
+            map.setPaintProperty(layer, 'fill-color', 'rgba(255, 165, 0, 0.5)'); // Новый цвет (оранжевый)
+            map.setPaintProperty(otherLayer, 'fill-opacity', 0.3); // Уменьшаем прозрачность другого слоя
+        } else {
+            // Деактивируем слой
+            map.setLayoutProperty(layer, 'visibility', 'none');
+            map.setPaintProperty(otherLayer, 'fill-opacity', 0.6); // Восстанавливаем прозрачность другого слоя
         }
     }
-}
 
-map.on('load', loadData);
+    // Связываем кнопки с независимыми слоями
+    document.getElementById('apply-800').addEventListener('click', () => toggleAccessibility('new-zones-layer'));
+    document.getElementById('apply-1500').addEventListener('click', () => toggleAccessibility('new-zones-1500-layer'));
 
-</script>
-</body>
-</html>
+
+
+    // Сброс карты
+    function resetMap() {
+        map.flyTo({ center: [76.945, 43.255], zoom: 11 });
+        map.setLayoutProperty('new-zones-layer', 'visibility', 'none');
+        map.setLayoutProperty('new-zones-1500-layer', 'visibility', 'none');
+    }
+
+    // Полноэкранный режим
+    function toggleFullScreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+        } else {
+            if (document.exitFullscreen) document.exitFullscreen();
+        }
+    }
+        
+    map.on('load', loadData);
+    </script>
+    </body>
+    </html>

@@ -5,9 +5,10 @@
     <title>Шаговая доступность к зелёным зонам</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
     <style>
-       /* Общие стили */
+        /* Общие стили */
         body {
             margin: 0;
             padding: 0;
@@ -56,60 +57,14 @@
             font-size: 14px;
         }
 
-        /* Кнопки */
-        .button-container {
-            position: fixed; /* Фиксированное положение */
-            bottom: 25px; /* Расстояние от нижнего края */
-            left: 50%; /* Центрирование */
-            transform: translateX(-50%);
-            display: flex;
-            gap: 15px; /* Расстояние между кнопками */
-            z-index: 3;
-        }
-
-        /* Общий стиль кнопок */
-        .button, .apply-button {
-            padding: 14px 28px; /* Просторнее */
-            background: linear-gradient(145deg, #007bff, #0056b3); /* Объёмный градиент */
-            color: white;
-            border: none;
-            border-radius: 12px; /* Мягкие края */
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Глубокая тень */
-        }
-
-        .button:hover, .apply-button:hover {
-            background: linear-gradient(145deg, #0056b3, #003f7f); /* Градиент при наведении */
-            transform: scale(1.05); /* Увеличение при наведении */
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); /* Более выраженная тень */
-        }
-
-        .button:active, .apply-button:active {
-            transform: scale(0.95); /* Эффект нажатия */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Уменьшение тени */
-        }
-
-        /* Кнопки в верхнем углу */
-        .apply-button-container {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            display: flex;
-            gap: 15px;
-            z-index: 3;
-        }
-
         /* Легенда */
         .legend {
             background: linear-gradient(145deg, #ffffff, #e4e4e4); /* Лёгкий градиент */
             border-radius: 15px; /* Мягкие края */
             padding: 15px;
             position: fixed;
-            bottom: 25px;
-            right: 25px;
+            top: 15px; /* Верхний край */
+            right: 15px; /* Правый край */
             width: 250px; /* Удобная ширина */
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Приятная тень */
             z-index: 3;
@@ -148,7 +103,7 @@
         }
 
         .legend .green {
-            background-color: rgba(50, 200, 50, 0.8);
+            background-color: rgba(13, 70, 13, 0.8);
         }
 
         .legend .gradient {
@@ -156,6 +111,129 @@
             height: 15px;
             width: 100px;
             border-radius: 5px;
+        }
+
+        /* Кнопки */
+        .button-container-left {
+            position: fixed; /* Фиксированное положение */
+            bottom: 25px; /* Расстояние от нижнего края */
+            left: 25px; /* Расстояние от левого края */
+            display: flex;
+            gap: 15px; /* Расстояние между кнопками */
+            z-index: 3;
+        }
+
+        .button-container-right {
+            position: fixed; /* Фиксированное положение */
+            bottom: 25px; /* Расстояние от нижнего края */
+            right: 25px; /* Расстояние от правого края */
+            display: flex;
+            gap: 15px; /* Расстояние между кнопками */
+            z-index: 3;
+        }
+
+        .button, .apply-button {
+            padding: 14px 28px; /* Просторнее */
+            background: linear-gradient(145deg, #7b9cc0, #2e4359); /* Объёмный градиент */
+            color: white;
+            border: none;
+            border-radius: 12px; /* Мягкие края */
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Глубокая тень */
+        }
+
+        .button:hover, .apply-button:hover {
+            background: linear-gradient(145deg, #5f7691, #253d54); /* Градиент при наведении */
+            transform: scale(1.05); /* Увеличение при наведении */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); /* Более выраженная тень */
+        }
+
+        .button:active, .apply-button:active {
+            transform: scale(0.95); /* Эффект нажатия */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Уменьшение тени */
+        }
+
+        button.apply-button, button.button {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 50px;
+            height: 50px;
+            font-size: 20px; /* Размер иконки */
+            padding: 0;
+        }
+
+        button.apply-button:hover::after, button.button:hover::after {
+            content: attr(title); /* Текст подсказки из атрибута title */
+            position: absolute;
+            bottom: 60px; /* Расстояние от кнопки */
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            white-space: nowrap;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            animation: fadeIn 0.3s forwards;
+        }
+
+        /* Скрытая боковая панель */
+        .sidebar.collapsed {
+            width: 0;
+            padding: 0;
+            overflow: hidden;
+            transition: width 0.3s ease, padding 0.3s ease;
+        }
+
+        /* Кнопка управления боковой панелью */
+        .toggle-sidebar {
+            position: fixed;
+            top: 20px;
+            left: 280px; /* Расположение кнопки у края панели */
+            z-index: 4;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(145deg, #7b9cc0, #2e4359); /* Градиент */
+            color: white;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+            transition: left 0.3s ease, background 0.2s ease;
+        }
+
+        .toggle-sidebar:hover {
+            background: linear-gradient(145deg, #5f7691, #253d54); /* Градиент при наведении */
+        }
+
+        .toggle-sidebar.collapsed {
+            left: 0; /* Сдвигаем кнопку, когда панель скрыта */
+        }
+
+        .toggle-sidebar i {
+            font-size: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-sidebar.collapsed i {
+            transform: rotate(180deg); /* Поворачиваем стрелку */
+        }
+
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
         }
 
         /* Всплывающие подсказки */
@@ -185,10 +263,11 @@
             opacity: 1; /* Полная видимость при наведении */
         }
 
-    </style>
+</style>
+
 </head>
 <body>
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
         <h3>Зоны рекреации</h3>
         <ul>
             <li>Баскетбольная площадка</li>
@@ -212,17 +291,12 @@
         </ul>
     </div>
     
+    <button class="toggle-sidebar" id="toggleSidebar" title="Скрыть панель">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+    
+    
     <div id="map"></div>
-    
-    <div class="apply-button-container">
-        <button class="apply-button" id="apply-800" onclick="applyAccessibility(800)">Прогноз шаговой доступности на 800 м</button>
-        <button class="apply-button" id="apply-1500" onclick="applyAccessibility(1500)">Прогноз шаговой доступности на 1500 м</button>
-    </div>
-    
-    <div class="button-container">
-        <button class="button" onclick="resetMap()">Сбросить</button>
-        <button class="button" onclick="toggleFullScreen()">Во весь экран</button>
-    </div>
     
     <div class="legend">
         <h4>Шаговая доступность к зелёным зонам</h4>
@@ -236,6 +310,25 @@
             <span class="gradient"></span> Численность населения
         </div>
     </div>
+    
+    <div class="button-container-left">
+        <button class="button" onclick="resetMap()" title="Сбросить карту">
+            <i class="fas fa-undo"></i>
+        </button>
+    </div>
+    
+    <div class="button-container-right">
+        <button class="apply-button" id="apply-800" onclick="applyAccessibility(800)" title="Прогноз шаговой доступности на 800 м">
+            <i class="fas fa-walking"></i>
+        </button>
+        <button class="apply-button" id="apply-1500" onclick="applyAccessibility(1500)" title="Прогноз шаговой доступности на 1500 м">
+            <i class="fas fa-map-marker-alt"></i>
+        </button>
+        <button class="button" onclick="toggleFullScreen()" title="Во весь экран">
+            <i class="fas fa-expand"></i>
+        </button>
+    </div>
+    
     
     <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoiYWxpbmFjaCIsImEiOiJjbGlpcnZpaTgwMTZ4M2twaGo1NjRsNHhhIn0.9jw_R_D1i1nqOtaolld-dQ';
@@ -256,12 +349,11 @@
             const recommendationsUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/rec_green_zones.geojson';
             const newZonesUrl800 = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/new_green_ac.geojson';
             const newZonesUrl1500 = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/new_green_1.5.geojson';
-    
+
             greenZonesData = await (await fetch(greenZonesUrl)).json();
             recommendationsData = await (await fetch(recommendationsUrl)).json();
             newZonesData = await (await fetch(newZonesUrl800)).json();
             newZonesData1500 = await (await fetch(newZonesUrl1500)).json();
-    
 
             // Добавляем зелёные зоны на карту
             map.addSource('green-zones', {
@@ -280,17 +372,17 @@
                             'interpolate',
                             ['linear'],
                             ['get', 'Кол-во горожан'],
-                            0, 'rgba(255, 182, 193, 0.5)',  
-                            500, 'rgba(139, 0, 0, 0.8)'  
+                            0, 'rgba(255, 182, 193, 0.5)',
+                            500, 'rgba(139, 0, 0, 0.8)'
                         ],
                         'green', [
                             'interpolate',
                             ['linear'],
                             ['get', 'Кол-во горожан'],
-                            50, 'rgba(144, 238, 144, 0.5)',  
-                            500, 'rgba(0, 100, 0, 0.8)'  
+                            50, 'rgba(144, 238, 144, 0.5)',
+                            500, 'rgba(0, 100, 0, 0.8)'
                         ],
-                        'rgba(128, 128, 128, 0.5)'  
+                        'rgba(128, 128, 128, 0.5)'
                     ],
                     'fill-opacity': 0.5
                 }
@@ -307,7 +399,7 @@
                 'type': 'circle',
                 'source': 'recommendations',
                 'paint': {
-                    'circle-radius': 8,
+                    'circle-radius': 6,
                     'circle-color': 'rgba(255, 69, 0, 0.9)', // Яркий оранжевый
                     'circle-stroke-color': '#FFFFFF', // Белая обводка
                     'circle-stroke-width': 2,
@@ -322,34 +414,7 @@
                 }
             });
 
-
-            // Отслеживаем активные точки и текущую всплывающую подсказку
-            let activePoints = [];
-            let currentPopup = null;
-
-            // Обновление прозрачности точек
-            function updatePointOpacity(featureId) {
-                if (!activePoints.includes(featureId)) {
-                    activePoints.push(featureId);
-
-                    if (activePoints.length > 2) {
-                        // Делаем первую точку менее прозрачной
-                        const removedFeatureId = activePoints.shift();
-                        map.setPaintProperty('recommendations-layer', 'circle-opacity', [
-                            'case',
-                            ['==', ['get', 'id'], removedFeatureId], 0.4, 1
-                        ]);
-                    }
-
-                    // Устанавливаем полную прозрачность для новых активных точек
-                    map.setPaintProperty('recommendations-layer', 'circle-opacity', [
-                        'case',
-                        ['==', ['get', 'id'], featureId], 1, 0.4
-                    ]);
-                }
-            }
-
-            /// Обработка кликов по точкам
+            // Обработка кликов по точкам
             map.on('click', 'recommendations-layer', (e) => {
                 const coordinates = e.features[0].geometry.coordinates.slice();
                 const name = e.features[0].properties['Наименование'] || 'Без названия';
@@ -366,7 +431,7 @@
                     className: 'custom-popup'
                 })
                     .setLngLat(coordinates)
-                    .setHTML(`<strong>${name}</strong>`)
+                    .setHTML(`<strong>${name}</strong>`) // Исправление: используем обратные кавычки для шаблонной строки
                     .addTo(map);
             });
 
@@ -393,7 +458,7 @@
                     className: 'custom-popup'
                 })
                     .setLngLat(coordinates)
-                    .setHTML(`<strong>${name}</strong>`)
+                    .setHTML(`<strong>${name}</strong>`) // Исправление: используем обратные кавычки
                     .addTo(map);
             });
 
@@ -408,37 +473,14 @@
                 }
             });
 
-            // Обработка кликов по точкам
-            map.on('click', 'recommendations-layer', (e) => {
-                const coordinates = e.features[0].geometry.coordinates.slice();
-                const name = e.features[0].properties['Наименование'] || 'Без названия';
-
-                // Удаляем предыдущую фиксированную подсказку
-                if (clickPopup) {
-                    clickPopup.remove();
-                    clickPopup = null;
-                }
-
-                // Создаём фиксированную подсказку
-                clickPopup = new mapboxgl.Popup({
-                    closeButton: true, // Включаем кнопку закрытия
-                    closeOnClick: false, // Подсказка остаётся при клике в другое место
-                    className: 'custom-popup'
-                })
-                    .setLngLat(coordinates)
-                    .setHTML(`<strong>${name}</strong>`)
-                    .addTo(map);
-            });
-
-
             // Добавляем зоны доступности
             map.addSource('new-zones', { type: 'geojson', data: newZonesData });
             map.addLayer({
                 id: 'new-zones-layer',
                 type: 'fill',
                 source: 'new-zones',
-                paint: { 
-                    'fill-color': 'rgba(0, 255, 0, 0.5)', // Зелёный цвет по умолчанию
+                paint: {
+                    'fill-color': 'rgba(21, 102, 31, 0.9)', // Зелёный цвет по умолчанию
                     'fill-opacity': 0.6 // Прозрачность по умолчанию
                 },
                 layout: { visibility: 'none' }
@@ -449,12 +491,16 @@
                 id: 'new-zones-1500-layer',
                 type: 'fill',
                 source: 'new-zones-1500',
-                paint: { 
-                    'fill-color': 'rgba(0, 100, 255, 0.5)', // Синий цвет по умолчанию
+                paint: {
+                    'fill-color': 'rgba(198, 222, 18, 0.9)', // Синий цвет по умолчанию
                     'fill-opacity': 0.6 // Прозрачность по умолчанию
                 },
                 layout: { visibility: 'none' }
             });
+        } catch (error) {
+            console.error('Ошибка загрузки данных:', error);
+        }
+    }
 
 
     // Управление видимостью слоёв (независимая активация с изменением прозрачности и цвета)
@@ -467,12 +513,12 @@
         if (currentVisibility === 'none') {
             // Активируем слой
             map.setLayoutProperty(layer, 'visibility', 'visible');
-            map.setPaintProperty(layer, 'fill-color', 'rgba(255, 165, 0, 0.5)'); // Новый цвет (оранжевый)
-            map.setPaintProperty(otherLayer, 'fill-opacity', 0.3); // Уменьшаем прозрачность другого слоя
+            map.setPaintProperty(layer, 'fill-color', 'rgba(26, 112, 20, 0.9)');
+            map.setPaintProperty(otherLayer, 'fill-opacity', 0.6);
         } else {
             // Деактивируем слой
             map.setLayoutProperty(layer, 'visibility', 'none');
-            map.setPaintProperty(otherLayer, 'fill-opacity', 0.6); // Восстанавливаем прозрачность другого слоя
+            map.setPaintProperty(otherLayer, 'fill-opacity', 0.3);
         }
     }
 
@@ -480,6 +526,18 @@
     document.getElementById('apply-800').addEventListener('click', () => toggleAccessibility('new-zones-layer'));
     document.getElementById('apply-1500').addEventListener('click', () => toggleAccessibility('new-zones-1500-layer'));
 
+    document.getElementById('toggleSidebar').addEventListener('click', function () {
+        const sidebar = document.getElementById('sidebar');
+        const toggleButton = document.getElementById('toggleSidebar');
+
+        // Переключаем класс `collapsed`
+        sidebar.classList.toggle('collapsed');
+        toggleButton.classList.toggle('collapsed');
+
+        // Обновляем tooltip и направление стрелки
+        const isCollapsed = sidebar.classList.contains('collapsed');
+        toggleButton.setAttribute('title', isCollapsed ? 'Развернуть панель' : 'Скрыть панель');
+    });
 
 
     // Сброс карты
@@ -497,8 +555,10 @@
             if (document.exitFullscreen) document.exitFullscreen();
         }
     }
-        
+
     map.on('load', loadData);
+
+
     </script>
     </body>
     </html>

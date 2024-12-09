@@ -434,8 +434,8 @@
     <div class="infographic" id="infographic">
         <h4>Инфографика</h4>
         <ul>
-            <li>В шаговой доступности: <span id="accessible-count">500</span> зон</li>
-            <li>Вне доступности: <span id="inaccessible-count">1200</span> зон</li>
+            <li>Для <span id="accessible-count">758 539</span> жителей</li>
+            <li>Для <span id="inaccessible-count">1 667 307</span> жителей</li>
         </ul>
     </div>
     
@@ -473,7 +473,7 @@
     </div>
     
 
-    
+
 <!-- ------------------------------------------------------------------------------------------------------------------------------------ -->
 
     <script>
@@ -491,7 +491,7 @@
     // Загрузка данных
     async function loadData() {
         try {
-            const greenZonesUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/access_green_zones.geojson';
+            const greenZonesUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/area_.geojson';
             const recommendationsUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/rec_green_zones.geojson';
             const newZonesUrl800 = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/new_green_ac.geojson';
             const newZonesUrl1500 = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/new_green_1.5.geojson';
@@ -650,20 +650,31 @@
 
 
     // Управление видимостью слоёв
-    // Управление видимостью слоя
     function toggleLayerVisibility(layer) {
         const visibility = map.getLayoutProperty(layer, 'visibility');
         const newVisibility = visibility === 'none' ? 'visible' : 'none';
+        
+        // Если слой становится видимым, анимируем его появление
+        if (newVisibility === 'visible') {
+            animateLayerTransition(layer, 0.6, 1000); // Плавное появление с opacity = 0.6
+        } else {
+            animateLayerTransition(layer, 0, 1000); // Плавное исчезновение
+        }
 
-        // Изменяем видимость слоя
         map.setLayoutProperty(layer, 'visibility', newVisibility);
-
         console.log(`${layer} visibility: ${newVisibility}`);
     }
 
     // Управление кнопками для независимых слоёв
-    document.getElementById('apply-800').addEventListener('click', () => toggleNewLayer('new-zones-layer'));
-    document.getElementById('apply-1500').addEventListener('click', () => toggleNewLayer('new-zones-1500-layer'));
+    document.getElementById('apply-800').addEventListener('click', () => {
+        toggleNewLayer('new-zones-layer');
+        animateLayerTransition('green-zones-layer', 0.3, 1000); // Полупрозрачность green-zones
+    });
+
+    document.getElementById('apply-1500').addEventListener('click', () => {
+        toggleNewLayer('new-zones-1500-layer');
+        animateLayerTransition('green-zones-layer', 0.3, 1000); // Полупрозрачность green-zones
+    });
 
     // Управление кнопкой "Скрыть зелёные зоны"
     document.getElementById('hide-green-zones').addEventListener('click', () => {
@@ -681,18 +692,21 @@
 
     // Функция управления видимостью нового слоя
     function toggleNewLayer(layerId) {
-        // Применяем фильтр для green-zones-layer: скрываем только объекты с type = "red"
-        const filter = ['!=', ['get', 'type'], 'red'];
-        map.setFilter('green-zones-layer', filter);
-
-        // Переключаем видимость нового слоя
         const currentVisibility = map.getLayoutProperty(layerId, 'visibility');
         const newVisibility = currentVisibility === 'none' ? 'visible' : 'none';
-
         map.setLayoutProperty(layerId, 'visibility', newVisibility);
+
+        if (newVisibility === 'visible') {
+            animateLayerTransition('green-zones-layer', 0.3, 1000); // Уменьшение непрозрачности
+            map.setFilter('green-zones-layer', ['!=', ['get', 'type'], 'red']); // Фильтруем "red"
+        } else {
+            animateLayerTransition('green-zones-layer', 0.6, 1000); // Восстановление прозрачности
+            map.setFilter('green-zones-layer', null); // Убираем фильтр
+        }
 
         console.log(`${layerId} visibility: ${newVisibility}`);
     }
+
 
     // Управление боковой панелью
     document.getElementById('toggleSidebar').addEventListener('click', function () {
@@ -719,8 +733,8 @@
     function updateInfographic() {
         try {
             // Пример данных; замените на реальные вычисления
-            const accessibleCount = greenZonesData.features?.length || 500; // Считаем зоны
-            const inaccessibleCount = recommendationsData.features?.length || 1200; // Считаем рекомендации
+            const accessibleCount = greenZonesData.features?.length || 758539; // Считаем зоны
+            const inaccessibleCount = recommendationsData.features?.length || 150000; // Считаем рекомендации
 
             // Обновляем текст
             document.getElementById('accessible-count').innerText = accessibleCount;
@@ -733,7 +747,7 @@
         }
     }
 
-    updateChart(500, 1200); // Тестовые данные
+    updateChart(758539, 1400000); // Тестовые данные
 
     // Изменение прозрачности слоёв
     document.getElementById('opacity-slider').addEventListener('input', (e) => {
@@ -747,20 +761,29 @@
         console.log(`Opacity set to: ${opacity}`);
     });
 
-    // Сброс карты к изначальному виду
+    // Сброс карты к изначальному виду с анимацией
     function resetMap() {
-        // Центруем карту и устанавливаем масштаб
+        // Центрируем карту и устанавливаем масштаб
         map.flyTo({ center: [76.945, 43.255], zoom: 11 });
 
-        // Сбрасываем видимость новых слоёв
-        map.setLayoutProperty('new-zones-layer', 'visibility', 'none');
-        map.setLayoutProperty('new-zones-1500-layer', 'visibility', 'none');
+        // Сбрасываем видимость новых слоёв с анимацией исчезновения
+        if (map.getLayoutProperty('new-zones-layer', 'visibility') === 'visible') {
+            animateLayerTransition('new-zones-layer', 0, 1000);
+            setTimeout(() => map.setLayoutProperty('new-zones-layer', 'visibility', 'none'), 1000);
+        }
+        if (map.getLayoutProperty('new-zones-1500-layer', 'visibility') === 'visible') {
+            animateLayerTransition('new-zones-1500-layer', 0, 1000);
+            setTimeout(() => map.setLayoutProperty('new-zones-1500-layer', 'visibility', 'none'), 1000);
+        }
 
         // Убираем фильтр с green-zones-layer (показываем все объекты)
         map.setFilter('green-zones-layer', null);
 
-        // Устанавливаем green-zones-layer как видимый
-        map.setLayoutProperty('green-zones-layer', 'visibility', 'visible');
+        // Устанавливаем green-zones-layer как видимый с анимацией
+        if (map.getLayoutProperty('green-zones-layer', 'visibility') !== 'visible') {
+            map.setLayoutProperty('green-zones-layer', 'visibility', 'visible');
+        }
+        animateLayerTransition('green-zones-layer', 0.6, 1000);
 
         // Обновляем иконку кнопки "Скрыть зелёные зоны" на состояние "скрыть"
         const buttonIcon = document.querySelector('#hide-green-zones i');
@@ -769,6 +792,49 @@
         // Логируем сброс (для отладки)
         console.log('Map reset to initial state');
     }
+
+    // Анимация для плавного изменения прозрачности слоя
+    function animateLayerTransition(layerId, targetOpacity, duration) {
+        let startTime;
+        const initialOpacity = map.getPaintProperty(layerId, 'fill-opacity') || 0.6;
+
+        function step(timestamp) {
+            if (!startTime) startTime = timestamp;
+            const progress = Math.min((timestamp - startTime) / duration, 1);
+            const newOpacity = initialOpacity + (targetOpacity - initialOpacity) * progress;
+            map.setPaintProperty(layerId, 'fill-opacity', newOpacity);
+
+            if (progress < 1) {
+                requestAnimationFrame(step);
+            } else {
+                console.log(`${layerId} animation complete.`);
+            }
+        }
+
+        requestAnimationFrame(step);
+    }
+
+
+    function animateLayerTransition(layerId, targetOpacity, duration) {
+        let startTime;
+        const initialOpacity = map.getPaintProperty(layerId, 'fill-opacity') || 1;
+
+        function step(timestamp) {
+            if (!startTime) startTime = timestamp;
+            const progress = Math.min((timestamp - startTime) / duration, 1);
+            const newOpacity = initialOpacity + (targetOpacity - initialOpacity) * progress;
+            map.setPaintProperty(layerId, 'fill-opacity', newOpacity);
+
+            if (progress < 1) {
+                requestAnimationFrame(step);
+            } else {
+                console.log(`${layerId} animation complete.`);
+            }
+        }
+
+        requestAnimationFrame(step);
+    }
+
 
 
     // Полноэкранный режим
@@ -779,7 +845,6 @@
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen()
                 .then(() => {
-                    // Изменяем иконку на "свернуть", обновляем заголовок и логируем
                     fullscreenButton.className = 'fas fa-compress';
                     fullscreenButtonContainer.setAttribute('title', 'Свернуть экран');
                     console.log('Entered fullscreen mode');
@@ -790,7 +855,6 @@
         } else {
             document.exitFullscreen()
                 .then(() => {
-                    // Изменяем иконку на "развернуть", обновляем заголовок и логируем
                     fullscreenButton.className = 'fas fa-expand';
                     fullscreenButtonContainer.setAttribute('title', 'Во весь экран');
                     console.log('Exited fullscreen mode');
@@ -812,9 +876,10 @@
 
     map.on('load', loadData);
 
+    // Функция обновления диаграммы
     function updateChart(accessible, inaccessible) {
         const ctx = document.getElementById('infographic-chart').getContext('2d');
-        console.log('Initializing chart with data:', accessible, inaccessible);
+        console.log(`Updating chart with: ${accessible} accessible, ${inaccessible} inaccessible`);
 
         const chartData = {
             labels: ['В шаговой доступности', 'Вне доступности'],
@@ -822,14 +887,16 @@
                 label: 'Доступность зон',
                 data: [accessible, inaccessible],
                 backgroundColor: ['rgba(13, 70, 13, 0.8)', 'rgba(200, 50, 50, 0.8)'],
-                hoverOffset: 4
+                hoverOffset: 6
             }]
         };
 
         if (window.infographicChart) {
+            // Обновляем данные существующей диаграммы
             window.infographicChart.data = chartData;
             window.infographicChart.update();
         } else {
+            // Создаём новую диаграмму, если она ещё не создана
             window.infographicChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: chartData,
@@ -847,11 +914,11 @@
                         },
                         tooltip: {
                             callbacks: {
-                                label: function(tooltipItem) {
+                                label: function (tooltipItem) {
                                     const value = tooltipItem.raw;
                                     const total = chartData.datasets[0].data.reduce((a, b) => a + b, 0);
                                     const percentage = ((value / total) * 100).toFixed(2);
-                                    return `${tooltipItem.label}: ${value} (${percentage}%)`;
+                                    return `${tooltipItem.label}: ${value.toLocaleString()} (${percentage}%)`;
                                 }
                             }
                         }
@@ -860,6 +927,16 @@
             });
         }
     }
+
+    // Привязываем обработчики событий к кнопкам
+    document.getElementById('new-zones-800-layer').addEventListener('click', () => {
+        updateChart(758539, 1300000); // Данные для 800 зон
+    });
+
+    document.getElementById('new-zones-1500-layer').addEventListener('click', () => {
+        updateChart(1400000, 900000); // Данные для 1500 зон
+    });
+
 
     </script>
 

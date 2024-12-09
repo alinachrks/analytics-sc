@@ -266,7 +266,7 @@
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            background: #007bff;
+            background: #506d8c;
             cursor: pointer;
         }
 
@@ -374,7 +374,7 @@
             padding: 20px;
             z-index: 5;
             display: none; /* Скрываем по умолчанию */
-            justify-content: center;
+            justify-content: left;
             align-items: center;
         }
 
@@ -545,10 +545,10 @@
                 'type': 'circle',
                 'source': 'recommendations',
                 'paint': {
-                    'circle-radius': 6,
+                    'circle-radius': 4,
                     'circle-color': 'rgba(255, 69, 0, 0.9)', // Яркий оранжевый
                     'circle-stroke-color': '#FFFFFF', // Белая обводка
-                    'circle-stroke-width': 2,
+                    'circle-stroke-width': 1,
                     'circle-opacity': 1 // Полностью непрозрачные по умолчанию
                 }
             });
@@ -626,8 +626,8 @@
                 type: 'fill',
                 source: 'new-zones',
                 paint: {
-                    'fill-color': 'rgba(21, 102, 31, 0.7)', // Зелёный цвет по умолчанию
-                    'fill-opacity': 0.6 // Прозрачность по умолчанию
+                    'fill-color': 'rgba(21, 102, 31, 0.8)', // Зелёный цвет по умолчанию
+                    'fill-opacity': 0.7 // Прозрачность по умолчанию
                 },
                 layout: { visibility: 'none' }
             });
@@ -638,8 +638,8 @@
                 type: 'fill',
                 source: 'new-zones-1500',
                 paint: {
-                    'fill-color': 'rgba(198, 222, 18, 0.7)', // Синий цвет по умолчанию
-                    'fill-opacity': 0.6 // Прозрачность по умолчанию
+                    'fill-color': 'rgba(198, 222, 18, 0.8)', // Синий цвет по умолчанию
+                    'fill-opacity': 0.7 // Прозрачность по умолчанию
                 },
                 layout: { visibility: 'none' }
             });
@@ -668,13 +668,16 @@
     // Управление кнопками для независимых слоёв
     document.getElementById('apply-800').addEventListener('click', () => {
         toggleNewLayer('new-zones-layer');
-        animateLayerTransition('green-zones-layer', 0.3, 1000); // Полупрозрачность green-zones
+        updateChart(758539, 1300000);
+        animateLayerTransition('green-zones-layer', 0.4, 1000); // Полупрозрачность green-zones
     });
 
     document.getElementById('apply-1500').addEventListener('click', () => {
         toggleNewLayer('new-zones-1500-layer');
-        animateLayerTransition('green-zones-layer', 0.3, 1000); // Полупрозрачность green-zones
+        updateChart(1400000, 900000);
+        animateLayerTransition('green-zones-layer', 0.4, 1000); // Полупрозрачность green-zones
     });
+
 
     // Управление кнопкой "Скрыть зелёные зоны"
     document.getElementById('hide-green-zones').addEventListener('click', () => {
@@ -728,24 +731,31 @@
         console.log(`Sidebar ${isCollapsed ? 'collapsed' : 'expanded'}, infographic ${isCollapsed ? 'shown' : 'hidden'}`);
     });
 
-
-    // Обновление инфографики
+    // подсчёта количества жителей
     function updateInfographic() {
         try {
-            // Пример данных; замените на реальные вычисления
-            const accessibleCount = greenZonesData.features?.length || 758539; // Считаем зоны
-            const inaccessibleCount = recommendationsData.features?.length || 150000; // Считаем рекомендации
+            // Проверяем, загружены ли данные
+            if (!greenZonesData || !recommendationsData) {
+                throw new Error("Данные для инфографики ещё не загружены.");
+            }
 
-            // Обновляем текст
+            // Считаем количество объектов с type === 'green'
+            const accessibleCount = greenZonesData.features.filter(feature => feature.properties.type === 'green').length;
+
+            // Считаем количество объектов с type === 'red'
+            const inaccessibleCount = recommendationsData.features.filter(feature => feature.properties.type === 'red').length;
+
+            // Обновляем текст в инфографике
             document.getElementById('accessible-count').innerText = accessibleCount;
             document.getElementById('inaccessible-count').innerText = inaccessibleCount;
 
-            // Логируем обновления (для отладки)
+            // Логируем результаты (для отладки)
             console.log(`Infographic updated: ${accessibleCount} accessible, ${inaccessibleCount} inaccessible`);
         } catch (error) {
             console.error('Ошибка обновления инфографики:', error);
         }
     }
+
 
     updateChart(758539, 1400000); // Тестовые данные
 
@@ -882,7 +892,7 @@
         console.log(`Updating chart with: ${accessible} accessible, ${inaccessible} inaccessible`);
 
         const chartData = {
-            labels: ['В шаговой доступности', 'Вне доступности'],
+            labels: ['Имеет доступ', 'Не имеет доступа'],
             datasets: [{
                 label: 'Доступность зон',
                 data: [accessible, inaccessible],
@@ -928,14 +938,7 @@
         }
     }
 
-    // Привязываем обработчики событий к кнопкам
-    document.getElementById('new-zones-800-layer').addEventListener('click', () => {
-        updateChart(758539, 1300000); // Данные для 800 зон
-    });
 
-    document.getElementById('new-zones-1500-layer').addEventListener('click', () => {
-        updateChart(1400000, 900000); // Данные для 1500 зон
-    });
 
 
     </script>

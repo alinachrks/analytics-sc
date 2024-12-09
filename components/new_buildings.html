@@ -447,16 +447,21 @@
     </div>
     
     <div class="button-container-right">
-        <button class="apply-button" id="apply-800" onclick="applyAccessibility(800)" title="Прогноз шаговой доступности на 800 м">
+        <button class="apply-button" id="hide-green-zones" title="Скрыть зелёные зоны">
+            <i class="fas fa-eye-slash"></i>
+        </button>
+        <button class="apply-button" id="apply-800" title="Прогноз шаговой доступности на 800 м">
             <i class="fas fa-walking"></i>
         </button>
-        <button class="apply-button" id="apply-1500" onclick="applyAccessibility(1500)" title="Прогноз шаговой доступности на 1500 м">
+        <button class="apply-button" id="apply-1500" title="Прогноз шаговой доступности на 1500 м">
             <i class="fas fa-map-marker-alt"></i>
         </button>
-        <button class="button" onclick="toggleFullScreen()" title="Во весь экран">
+        <button class="button" id="fullscreen-toggle" onclick="toggleFullScreen()" title="Во весь экран">
             <i class="fas fa-expand"></i>
         </button>
     </div>
+    
+    
     
     <div class="infographic-chart-container">
         <canvas id="infographic-chart"></canvas>
@@ -466,6 +471,8 @@
         <label for="opacity-slider">Прозрачность слоя</label>
         <input id="opacity-slider" type="range" min="0" max="1" step="0.1" value="0.6">
     </div>
+    
+
     
 <!-- ------------------------------------------------------------------------------------------------------------------------------------ -->
 
@@ -643,6 +650,7 @@
 
 
     // Управление видимостью слоёв
+    // Управление видимостью слоя
     function toggleLayerVisibility(layer) {
         const visibility = map.getLayoutProperty(layer, 'visibility');
         const newVisibility = visibility === 'none' ? 'visible' : 'none';
@@ -650,13 +658,41 @@
         // Изменяем видимость слоя
         map.setLayoutProperty(layer, 'visibility', newVisibility);
 
-        // Логируем изменения (для отладки)
         console.log(`${layer} visibility: ${newVisibility}`);
     }
 
     // Управление кнопками для независимых слоёв
-    document.getElementById('apply-800').addEventListener('click', () => toggleLayerVisibility('new-zones-layer'));
-    document.getElementById('apply-1500').addEventListener('click', () => toggleLayerVisibility('new-zones-1500-layer'));
+    document.getElementById('apply-800').addEventListener('click', () => toggleNewLayer('new-zones-layer'));
+    document.getElementById('apply-1500').addEventListener('click', () => toggleNewLayer('new-zones-1500-layer'));
+
+    // Управление кнопкой "Скрыть зелёные зоны"
+    document.getElementById('hide-green-zones').addEventListener('click', () => {
+        const currentVisibility = map.getLayoutProperty('green-zones-layer', 'visibility');
+        const newVisibility = currentVisibility === 'none' ? 'visible' : 'none';
+
+        map.setLayoutProperty('green-zones-layer', 'visibility', newVisibility);
+
+        // Меняем иконку кнопки
+        const buttonIcon = document.querySelector('#hide-green-zones i');
+        buttonIcon.className = newVisibility === 'none' ? 'fas fa-eye' : 'fas fa-eye-slash';
+
+        console.log(`Green zones layer visibility: ${newVisibility}`);
+    });
+
+    // Функция управления видимостью нового слоя
+    function toggleNewLayer(layerId) {
+        // Применяем фильтр для green-zones-layer: скрываем только объекты с type = "red"
+        const filter = ['!=', ['get', 'type'], 'red'];
+        map.setFilter('green-zones-layer', filter);
+
+        // Переключаем видимость нового слоя
+        const currentVisibility = map.getLayoutProperty(layerId, 'visibility');
+        const newVisibility = currentVisibility === 'none' ? 'visible' : 'none';
+
+        map.setLayoutProperty(layerId, 'visibility', newVisibility);
+
+        console.log(`${layerId} visibility: ${newVisibility}`);
+    }
 
     // Управление боковой панелью
     document.getElementById('toggleSidebar').addEventListener('click', function () {
@@ -675,7 +711,6 @@
         // Показываем или скрываем диаграмму
         infographic.style.display = isCollapsed ? 'flex' : 'none';
 
-        // Логируем для отладки
         console.log(`Sidebar ${isCollapsed ? 'collapsed' : 'expanded'}, infographic ${isCollapsed ? 'shown' : 'hidden'}`);
     });
 
@@ -712,27 +747,68 @@
         console.log(`Opacity set to: ${opacity}`);
     });
 
-    // Сброс карты
+    // Сброс карты к изначальному виду
     function resetMap() {
-        // Центруем карту и скрываем слои
+        // Центруем карту и устанавливаем масштаб
         map.flyTo({ center: [76.945, 43.255], zoom: 11 });
+
+        // Сбрасываем видимость новых слоёв
         map.setLayoutProperty('new-zones-layer', 'visibility', 'none');
         map.setLayoutProperty('new-zones-1500-layer', 'visibility', 'none');
 
+        // Убираем фильтр с green-zones-layer (показываем все объекты)
+        map.setFilter('green-zones-layer', null);
+
+        // Устанавливаем green-zones-layer как видимый
+        map.setLayoutProperty('green-zones-layer', 'visibility', 'visible');
+
+        // Обновляем иконку кнопки "Скрыть зелёные зоны" на состояние "скрыть"
+        const buttonIcon = document.querySelector('#hide-green-zones i');
+        buttonIcon.className = 'fas fa-eye-slash';
+
         // Логируем сброс (для отладки)
-        console.log('Map reset');
+        console.log('Map reset to initial state');
     }
+
 
     // Полноэкранный режим
     function toggleFullScreen() {
+        const fullscreenButton = document.querySelector('#fullscreen-toggle i');
+        const fullscreenButtonContainer = document.querySelector('#fullscreen-toggle');
+
         if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen();
-            console.log('Entered fullscreen mode');
+            document.documentElement.requestFullscreen()
+                .then(() => {
+                    // Изменяем иконку на "свернуть", обновляем заголовок и логируем
+                    fullscreenButton.className = 'fas fa-compress';
+                    fullscreenButtonContainer.setAttribute('title', 'Свернуть экран');
+                    console.log('Entered fullscreen mode');
+                })
+                .catch((err) => {
+                    console.error(`Failed to enter fullscreen mode: ${err.message}`);
+                });
         } else {
-            document.exitFullscreen();
-            console.log('Exited fullscreen mode');
+            document.exitFullscreen()
+                .then(() => {
+                    // Изменяем иконку на "развернуть", обновляем заголовок и логируем
+                    fullscreenButton.className = 'fas fa-expand';
+                    fullscreenButtonContainer.setAttribute('title', 'Во весь экран');
+                    console.log('Exited fullscreen mode');
+                })
+                .catch((err) => {
+                    console.error(`Failed to exit fullscreen mode: ${err.message}`);
+                });
         }
     }
+
+
+
+    function resetGreenZonesButton() {
+        map.setLayoutProperty('green-zones-layer', 'visibility', 'none');
+        document.querySelector('#hide-green-zones i').className = 'fas fa-eye';
+        console.log('Green zones layer hidden');
+    }
+
 
     map.on('load', loadData);
 

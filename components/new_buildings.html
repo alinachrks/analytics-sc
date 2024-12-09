@@ -136,6 +136,7 @@
             z-index: 3;
         }
 
+
         .button, .apply-button {
             padding: 14px 28px; /* Просторнее */
             background: linear-gradient(145deg, #7b9cc0, #2e4359); /* Объёмный градиент */
@@ -537,6 +538,38 @@
                 }
             });
 
+
+            // Добавляем слой плотности населения
+            map.addSource('population-density', {
+                'type': 'geojson',
+                'data': greenZonesData
+            });
+
+            map.addLayer({
+                'id': 'population-density-layer',
+                'type': 'fill',
+                'source': 'population-density',
+                'paint': {
+                    'fill-color': [
+                        'interpolate',
+                        ['linear'],
+                        ['get', 'dencity'], // Используем столбец dencity
+                        0, 'rgba(220, 237, 247, 0.5)',   // Очень светло-голубой
+                        1000, 'rgba(173, 216, 230, 0.6)', // Светло-голубой
+                        3500, 'rgba(135, 206, 250, 0.65)', // Голубой
+                        8000, 'rgba(70, 130, 180, 0.75)',  // Стальной синий
+                        15000, 'rgba(30, 144, 255, 0.8)',  // Яркий синий
+                        30000, 'rgba(0, 0, 139, 0.85)'     // Тёмно-синий
+                    ],
+                'fill-opacity': 0.8
+                },
+                'layout': {
+                    'visibility': 'none' // Изначально слой скрыт
+                }
+            });
+
+
+
             // Добавляем точки с рекомендациями
             map.addSource('recommendations', {
                 'type': 'geojson',
@@ -607,7 +640,7 @@
                     className: 'custom-popup'
                 })
                     .setLngLat(coordinates)
-                    .setHTML(`<strong>${name}</strong>`) // Исправление: используем обратные кавычки
+                    .setHTML(`<strong>${name}</strong>`) 
                     .addTo(map);
             });
 
@@ -680,6 +713,16 @@
         updateChart(1400000, 900000);
         animateLayerTransition('green-zones-layer', 0.4, 1000); // Полупрозрачность green-zones
     });
+
+// _____________________________________________________________________________________
+
+    // Добавляем кнопку для включения/выключения слоя плотности населения
+    const densityButton = document.createElement("button");
+    densityButton.className = "apply-button";
+    densityButton.title = "Показать/скрыть плотность населения";
+    densityButton.innerHTML = '<i class="fas fa-layer-group"></i>';
+    densityButton.onclick = () => toggleLayerVisibility('population-density-layer');
+    document.querySelector(".button-container-right").appendChild(densityButton);
 
 
     // Управление кнопкой "Скрыть зелёные зоны"
@@ -886,6 +929,39 @@
     }
 
 
+    // Добавление слоя плотности населения
+    async function addPopulationDensityLayer() {
+        // Проверяем, если источник уже добавлен, чтобы избежать дублирования
+        if (!map.getSource('population-density')) {
+            // Используем тот же GeoJSON источник, что и для green-zones
+            map.addSource('population-density', {
+                type: 'geojson',
+                data: greenZonesData,
+            });
+
+            // Добавляем слой с плотностью населения
+            map.addLayer({
+                id: 'population-density-layer',
+                type: 'fill',
+                source: 'population-density',
+                paint: {
+                    'fill-color': [
+                        'interpolate',
+                        ['linear'],
+                        ['get', 'dencity'], // Используем столбец dencity для визуализации
+                        0, 'rgba(255, 255, 204, 0.6)',
+                        200, 'rgba(255, 204, 153, 0.6)',
+                        400, 'rgba(255, 153, 102, 0.6)',
+                        600, 'rgba(255, 102, 102, 0.6)',
+                        800, 'rgba(204, 0, 0, 0.6)',
+                    ],
+                    'fill-opacity': 0.7,
+                },
+                layout: { visibility: 'none' }, // Изначально слой скрыт
+            });
+        }
+    }
+
     // Переменная для хранения текущей подсказки
     let polygonPopup = null;
 
@@ -897,13 +973,12 @@
 
         // Формирование содержимого всплывающего окна
         const popupContent = `
-            <strong>Информация об участке:</strong><br>
-            Место: ${properties['Наименование'] || "Не указано"}<br>
+            <strong>Информация:</strong><br>
+            Участок: ${properties['Наименование'] || "Не указано"}<br>
             Тип: ${properties.type || "Не указан"}<br>
             Население: ${properties.population || "Не указано"} человек <br>
-            Площадь: ${properties.area_km2 || "Не указана"} км²
+            Площадь: ${properties.area_km2 || "Не указана"} км² <br>
             Плотность: ${properties.dencity || "Не указана"} чел./км²
-
         `;
 
 

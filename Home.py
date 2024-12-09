@@ -142,13 +142,20 @@ def app():
     st.markdown('<div class="st-title-container"><h1>Социально-экономический портрет города</h1></div>', unsafe_allow_html=True)
 
     # Tabs for maps with new order
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11, tab12, tab13 = st.tabs(
-        ["Благоустройство", "Велодорожки", "Парковки для самокатов", "Инфраструктура", 
+    tab0, tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11, tab12, tab13 = st.tabs(
+        ["Качество жизни", "Благоустройство", "Велодорожки", "Парковки для самокатов", "Инфраструктура", 
          "Жильё", "Бизнес", "Реновация", "Плотность населения", "Демография", 
          "Спрос и предложение", "Привлекательность", "Гостиницы", "Налоги"]
     )
 
     # Display maps and comments within each tab
+
+    with tab0:
+        st.subheader("Индикаторы качества жизни по районам")
+        st.markdown("Карта показывает динамуку развития районов по качеству жизни")
+        map_html = load_map_html("components/indicators.html")
+        components.html(map_html, height=800, scrolling=True)
+
 
     with tab1:
         st.subheader("Благоустройство | Абаттандыру")

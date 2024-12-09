@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <title>Индекс качества жизни</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        #map {
+            flex: 1;
+        }
+        .sidebar {
+            width: 300px;
+            padding: 20px;
+            background: #f4f4f4;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+            overflow-y: auto;
+        }
+        .sidebar h3 {
+            margin: 0 0 10px;
+        }
+        .sidebar p {
+            margin: 0 0 10px;
+            line-height: 1.5;
+        }
+        .info {
+            font-size: 14px;
+            margin-top: 20px;
+            background: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <h3>Индекс качества жизни</h3>
+        <p>Наведите или нажмите на район, чтобы увидеть его данные.</p>
+        <div class="info" id="info">
+            <strong>Данные района:</strong>
+            <p id="district-info">Нет данных</p>
+        </div>
+    </div>
+    <div id="map"></div>
+
+    <script>
+        // Токен Mapbox
+        mapboxgl.accessToken = 'pk.eyJ1IjoiYWxpbmFjaCIsImEiOiJjbGlpcnZpaTgwMTZ4M2twaGo1NjRsNHhhIn0.9jw_R_D1i1nqOtaolld-dQ';
+
+        // Создание карты
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v11',
+            center: [76.945, 43.255], // Центр карты
+            zoom: 10 // Уровень приближения
+        });
+
+        // Загрузка данных GeoJSON
+        const geojsonUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/refs/heads/main/quality_of_life_by_districts.geojson';
+
+        map.on('load', async () => {
+            const response = await fetch(geojsonUrl);
+            const data = await response.json();
+
+            // Добавление источника данных
+            map.addSource('districts', {
+                type: 'geojson',
+                data: data
+            });
+
+            // Добавление слоя для визуализации
+            map.addLayer({
+                id: 'districts-layer',
+                type: 'fill',
+                source: 'districts',
+                paint: {
+                    'fill-color': [
+                        'interpolate',
+                        ['linear'],
+                        ['get', 'Q'], // Используем значение индекса Q
+                        0, '#f8d5cc', // Низкое значение
+                        1, '#1a9641'  // Высокое значение
+                    ],
+                    'fill-opacity': 0.7
+                }
+            });
+
+            // Событие клика на район
+            map.on('click', 'districts-layer', (e) => {
+                const properties = e.features[0].properties;
+
+                // Получение данных с проверкой на существование
+                const districtName = properties.district_name || "Неизвестный район";
+                const qValue = properties.Q !== undefined ? properties.Q.toFixed(2) : "Нет данных";
+                const indicatorDate = properties.indicator_date || "Нет данных";
+                const quarterYear = properties.quarter_year || "Нет данных";
+
+                // Обновление информации в панели
+                const info = `
+                    <strong>Район:</strong> ${districtName}<br>
+                    <strong>Индекс Q:</strong> ${qValue}<br>
+                    <strong>Дата индикатора:</strong> ${indicatorDate}<br>
+                    <strong>Квартал и год:</strong> ${quarterYear}
+                `;
+                document.getElementById('district-info').innerHTML = info;
+            });
+
+
+                // Обновление информации в панели
+                const info = `
+                    <strong>Район:</strong> ${districtName}<br>
+                    <strong>Индекс Q:</strong> ${qValue}<br>
+                    <strong>Дата индикатора:</strong> ${indicatorDate}<br>
+                    <strong>Квартал и год:</strong> ${quarterYear}
+                `;
+                document.getElementById('district-info').innerHTML = info;
+            });
+
+
+            // Изменение курсора при наведении на район
+            map.on('mouseenter', 'districts-layer', () => {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+
+            map.on('mouseleave', 'districts-layer', () => {
+                map.getCanvas().style.cursor = '';
+            });
+    </script>
+</body>
+</html>

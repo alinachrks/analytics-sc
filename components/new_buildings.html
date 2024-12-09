@@ -8,6 +8,9 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+
     <style>
         /* Общие стили */
         body {
@@ -491,7 +494,7 @@
     // Загрузка данных
     async function loadData() {
         try {
-            const greenZonesUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/area_.geojson';
+            const greenZonesUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/grid_with_area.geojson';
             const recommendationsUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/rec_green_zones.geojson';
             const newZonesUrl800 = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/new_green_ac.geojson';
             const newZonesUrl1500 = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/new_green_1.5.geojson';
@@ -517,14 +520,14 @@
                         'red', [
                             'interpolate',
                             ['linear'],
-                            ['get', 'Кол-во горожан'],
+                            ['get', 'population'],
                             0, 'rgba(255, 182, 193, 0.5)',
                             500, 'rgba(139, 0, 0, 0.8)'
                         ],
                         'green', [
                             'interpolate',
                             ['linear'],
-                            ['get', 'Кол-во горожан'],
+                            ['get', 'population'],
                             50, 'rgba(144, 238, 144, 0.5)',
                             500, 'rgba(0, 100, 0, 0.8)'
                         ],
@@ -876,12 +879,57 @@
     }
 
 
-
     function resetGreenZonesButton() {
         map.setLayoutProperty('green-zones-layer', 'visibility', 'none');
         document.querySelector('#hide-green-zones i').className = 'fas fa-eye';
         console.log('Green zones layer hidden');
     }
+
+
+    // Переменная для хранения текущей подсказки
+    let polygonPopup = null;
+
+    // Функция для обработки кликов по полигонам
+    map.on("click", "green-zones-layer", (e) => {
+        // Получение данных полигона
+        const coordinates = e.lngLat;
+        const properties = e.features[0].properties;
+
+        // Формирование содержимого всплывающего окна
+        const popupContent = `
+            <strong>Информация об участке:</strong><br>
+            Место: ${properties['Наименование'] || "Не указано"}<br>
+            Тип: ${properties.type || "Не указан"}<br>
+            Население: ${properties.population || "Не указано"} человек <br>
+            Площадь: ${properties.area_km2 || "Не указана"} км²
+            Плотность: ${properties.dencity || "Не указана"} чел./км²
+
+        `;
+
+
+        // Удаление предыдущего всплывающего окна
+        if (polygonPopup) {
+            polygonPopup.remove();
+        }
+
+        // Создание нового всплывающего окна
+        polygonPopup = new mapboxgl.Popup({
+            closeButton: true,
+            closeOnClick: false,
+        })
+            .setLngLat([coordinates.lng, coordinates.lat])
+            .setHTML(popupContent)
+            .addTo(map);
+    });
+
+    // Изменение курсора при наведении на полигон
+    map.on("mouseenter", "green-zones-layer", () => {
+        map.getCanvas().style.cursor = "pointer";
+    });
+
+    map.on("mouseleave", "green-zones-layer", () => {
+        map.getCanvas().style.cursor = "";
+    });
 
 
     map.on('load', loadData);

@@ -7,6 +7,7 @@
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* Общие стили */
         body {
@@ -25,7 +26,7 @@
 
         /* Сайдбар */
         .sidebar {
-            width: 280px; /* Чуть шире для удобства */
+            width: 260px; /* Чуть шире для удобства */
             padding: 25px;
             background: linear-gradient(145deg, #142136, #1c2a4a); /* Градиент для глубины */
             color: #fdfdfd;
@@ -229,6 +230,55 @@
             transform: rotate(180deg); /* Поворачиваем стрелку */
         }
 
+        .transparency-container {
+            position: fixed;
+            bottom: 120px;
+            right: 25px;
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 10px 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 3;
+            font-family: 'Arial', sans-serif;
+            font-size: 14px;
+        }
+
+        .transparency-container label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .transparency-container input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            background: #ddd;
+            height: 6px;
+            border-radius: 5px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .transparency-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #007bff;
+            cursor: pointer;
+        }
+
+        .transparency-container input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #6481a0;
+            cursor: pointer;
+        }
+
+
 
         @keyframes fadeIn {
             to {
@@ -263,7 +313,77 @@
             opacity: 1; /* Полная видимость при наведении */
         }
 
+        /* Инфографика */
+        .infographic {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: linear-gradient(145deg, #ffffff, #e4e4e4);
+            border-radius: 15px;
+            padding: 15px;
+            width: 250px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            z-index: 3;
+            display: none; /* Скрываем по умолчанию */
+            font-family: 'Arial', sans-serif;
+            font-size: 15px;
+        }
+
+        .infographic h4 {
+            font-size: 16px;
+            color: #444;
+            margin-bottom: 10px;
+            font-weight: bold;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .infographic ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .infographic ul li {
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .sidebar.collapsed {
+            width: 0;
+            padding: 0;
+            overflow: hidden;
+            transition: width 0.3s ease, padding 0.3s ease;
+        }
+
+        .toggle-sidebar.collapsed {
+            left: 0; /* Сдвигаем кнопку */
+        }
+
+        .infographic-chart-container {
+            position: fixed;
+            top: 50%;
+            right: 15px; /* Располагаем диаграмму справа */
+            transform: translateY(-50%); /* Центрирование только по вертикали */
+            width: 240px;
+            height: 340px;
+            background: linear-gradient(145deg, #ffffff, #e4e4e4); /* Лёгкий градиент */
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            z-index: 5;
+            display: none; /* Скрываем по умолчанию */
+            justify-content: center;
+            align-items: center;
+        }
+
+
+
+
 </style>
+
+<!-- ------------------------------------------------------------------------------------------------------------------------------------ -->
 
 </head>
 <body>
@@ -310,6 +430,15 @@
             <span class="gradient"></span> Численность населения
         </div>
     </div>
+
+    <div class="infographic" id="infographic">
+        <h4>Инфографика</h4>
+        <ul>
+            <li>В шаговой доступности: <span id="accessible-count">500</span> зон</li>
+            <li>Вне доступности: <span id="inaccessible-count">1200</span> зон</li>
+        </ul>
+    </div>
+    
     
     <div class="button-container-left">
         <button class="button" onclick="resetMap()" title="Сбросить карту">
@@ -329,7 +458,17 @@
         </button>
     </div>
     
+    <div class="infographic-chart-container">
+        <canvas id="infographic-chart"></canvas>
+    </div>
     
+    <div class="transparency-container">
+        <label for="opacity-slider">Прозрачность слоя</label>
+        <input id="opacity-slider" type="range" min="0" max="1" step="0.1" value="0.6">
+    </div>
+    
+<!-- ------------------------------------------------------------------------------------------------------------------------------------ -->
+
     <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoiYWxpbmFjaCIsImEiOiJjbGlpcnZpaTgwMTZ4M2twaGo1NjRsNHhhIn0.9jw_R_D1i1nqOtaolld-dQ';
     
@@ -480,7 +619,7 @@
                 type: 'fill',
                 source: 'new-zones',
                 paint: {
-                    'fill-color': 'rgba(21, 102, 31, 0.9)', // Зелёный цвет по умолчанию
+                    'fill-color': 'rgba(21, 102, 31, 0.7)', // Зелёный цвет по умолчанию
                     'fill-opacity': 0.6 // Прозрачность по умолчанию
                 },
                 layout: { visibility: 'none' }
@@ -492,7 +631,7 @@
                 type: 'fill',
                 source: 'new-zones-1500',
                 paint: {
-                    'fill-color': 'rgba(198, 222, 18, 0.9)', // Синий цвет по умолчанию
+                    'fill-color': 'rgba(198, 222, 18, 0.7)', // Синий цвет по умолчанию
                     'fill-opacity': 0.6 // Прозрачность по умолчанию
                 },
                 layout: { visibility: 'none' }
@@ -503,62 +642,151 @@
     }
 
 
-    // Управление видимостью слоёв (независимая активация с изменением прозрачности и цвета)
-    function toggleAccessibility(layer) {
-        const otherLayer = layer === 'new-zones-layer' ? 'new-zones-1500-layer' : 'new-zones-layer';
+    // Управление видимостью слоёв
+    function toggleLayerVisibility(layer) {
+        const visibility = map.getLayoutProperty(layer, 'visibility');
+        const newVisibility = visibility === 'none' ? 'visible' : 'none';
 
-        // Получаем текущее состояние видимости слоя
-        const currentVisibility = map.getLayoutProperty(layer, 'visibility');
+        // Изменяем видимость слоя
+        map.setLayoutProperty(layer, 'visibility', newVisibility);
 
-        if (currentVisibility === 'none') {
-            // Активируем слой
-            map.setLayoutProperty(layer, 'visibility', 'visible');
-            map.setPaintProperty(layer, 'fill-color', 'rgba(26, 112, 20, 0.9)');
-            map.setPaintProperty(otherLayer, 'fill-opacity', 0.6);
-        } else {
-            // Деактивируем слой
-            map.setLayoutProperty(layer, 'visibility', 'none');
-            map.setPaintProperty(otherLayer, 'fill-opacity', 0.3);
-        }
+        // Логируем изменения (для отладки)
+        console.log(`${layer} visibility: ${newVisibility}`);
     }
 
-    // Связываем кнопки с независимыми слоями
-    document.getElementById('apply-800').addEventListener('click', () => toggleAccessibility('new-zones-layer'));
-    document.getElementById('apply-1500').addEventListener('click', () => toggleAccessibility('new-zones-1500-layer'));
+    // Управление кнопками для независимых слоёв
+    document.getElementById('apply-800').addEventListener('click', () => toggleLayerVisibility('new-zones-layer'));
+    document.getElementById('apply-1500').addEventListener('click', () => toggleLayerVisibility('new-zones-1500-layer'));
 
+    // Управление боковой панелью
     document.getElementById('toggleSidebar').addEventListener('click', function () {
         const sidebar = document.getElementById('sidebar');
-        const toggleButton = document.getElementById('toggleSidebar');
+        const toggleButton = this;
+        const infographic = document.querySelector('.infographic-chart-container');
 
-        // Переключаем класс `collapsed`
+        // Переключаем класс "collapsed" у боковой панели
         sidebar.classList.toggle('collapsed');
         toggleButton.classList.toggle('collapsed');
 
-        // Обновляем tooltip и направление стрелки
+        // Проверяем, свёрнута ли панель
         const isCollapsed = sidebar.classList.contains('collapsed');
         toggleButton.setAttribute('title', isCollapsed ? 'Развернуть панель' : 'Скрыть панель');
+
+        // Показываем или скрываем диаграмму
+        infographic.style.display = isCollapsed ? 'flex' : 'none';
+
+        // Логируем для отладки
+        console.log(`Sidebar ${isCollapsed ? 'collapsed' : 'expanded'}, infographic ${isCollapsed ? 'shown' : 'hidden'}`);
     });
 
 
+    // Обновление инфографики
+    function updateInfographic() {
+        try {
+            // Пример данных; замените на реальные вычисления
+            const accessibleCount = greenZonesData.features?.length || 500; // Считаем зоны
+            const inaccessibleCount = recommendationsData.features?.length || 1200; // Считаем рекомендации
+
+            // Обновляем текст
+            document.getElementById('accessible-count').innerText = accessibleCount;
+            document.getElementById('inaccessible-count').innerText = inaccessibleCount;
+
+            // Логируем обновления (для отладки)
+            console.log(`Infographic updated: ${accessibleCount} accessible, ${inaccessibleCount} inaccessible`);
+        } catch (error) {
+            console.error('Ошибка обновления инфографики:', error);
+        }
+    }
+
+    updateChart(500, 1200); // Тестовые данные
+
+    // Изменение прозрачности слоёв
+    document.getElementById('opacity-slider').addEventListener('input', (e) => {
+        const opacity = parseFloat(e.target.value);
+
+        // Устанавливаем прозрачность слоёв
+        map.setPaintProperty('new-zones-layer', 'fill-opacity', opacity);
+        map.setPaintProperty('new-zones-1500-layer', 'fill-opacity', opacity);
+
+        // Логируем изменения (для отладки)
+        console.log(`Opacity set to: ${opacity}`);
+    });
+
     // Сброс карты
     function resetMap() {
+        // Центруем карту и скрываем слои
         map.flyTo({ center: [76.945, 43.255], zoom: 11 });
         map.setLayoutProperty('new-zones-layer', 'visibility', 'none');
         map.setLayoutProperty('new-zones-1500-layer', 'visibility', 'none');
+
+        // Логируем сброс (для отладки)
+        console.log('Map reset');
     }
 
     // Полноэкранный режим
     function toggleFullScreen() {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen();
+            console.log('Entered fullscreen mode');
         } else {
-            if (document.exitFullscreen) document.exitFullscreen();
+            document.exitFullscreen();
+            console.log('Exited fullscreen mode');
         }
     }
 
     map.on('load', loadData);
 
+    function updateChart(accessible, inaccessible) {
+        const ctx = document.getElementById('infographic-chart').getContext('2d');
+        console.log('Initializing chart with data:', accessible, inaccessible);
+
+        const chartData = {
+            labels: ['В шаговой доступности', 'Вне доступности'],
+            datasets: [{
+                label: 'Доступность зон',
+                data: [accessible, inaccessible],
+                backgroundColor: ['rgba(13, 70, 13, 0.8)', 'rgba(200, 50, 50, 0.8)'],
+                hoverOffset: 4
+            }]
+        };
+
+        if (window.infographicChart) {
+            window.infographicChart.data = chartData;
+            window.infographicChart.update();
+        } else {
+            window.infographicChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#444',
+                                font: {
+                                    size: 14
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    const value = tooltipItem.raw;
+                                    const total = chartData.datasets[0].data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(2);
+                                    return `${tooltipItem.label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
 
     </script>
+
+
     </body>
     </html>

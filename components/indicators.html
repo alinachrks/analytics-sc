@@ -9,93 +9,73 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
+        /* Основной стиль */
         body {
             margin: 0;
             display: flex;
             height: 100vh;
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #f9f9f9, #e6e6e6);
+            font-family: 'Roboto', Arial, sans-serif;
+            background: linear-gradient(135deg, #f3f4f6, #e2e5ea);
         }
         #map {
             flex: 1;
         }
-
+    
         /* Сайдбар */
-        /* Стили боковой панели */
         .sidebar {
             width: 400px;
-            padding: 20px;
-            background: rgba(10, 25, 50, 0.9); /* Тёмно-синий цвет с прозрачностью */
-            color: #ffffff; /* Белый текст */
-            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3); /* Более выразительная тень */
-            border-right: 2px solid rgba(255, 255, 255, 0.2); /* Тонкая белая линия */
+            padding: 12px;
+            background: rgba(20, 30, 50, 0.95);
+            color: #ffffff;
+            box-shadow: 2px 0 12px rgba(0, 0, 0, 0.3);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
             overflow-y: auto;
-            font-family: Arial, sans-serif;
         }
-
-        /* Заголовок панели */
         .sidebar h3 {
-            font-size: 22px;
+            font-size: 24px;
             margin-bottom: 20px;
-            color: #4de1ff; /* Светлый голубой для акцента */
+            color: #a1cde1;
             font-weight: bold;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.3); /* Линия под заголовком */
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
             padding-bottom: 10px;
         }
-
-        /* Общий текст панели */
         .sidebar p {
-            font-size: 15px;
-            color: #c0d3ff; /* Светлый оттенок текста */
+            font-size: 16px;
+            color: #b3c7e6;
             line-height: 1.8;
         }
-
-        /* Секция с информацией */
+    
+        /* Информационный блок */
         .info {
-            font-size: 15px;
-            background: rgba(20, 40, 70, 0.8); /* Более светлый оттенок синего */
-            padding: 15px;
+            background: rgba(30, 50, 80, 0.9);
+            padding: 8px;
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Лёгкая тень */
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
-
-        /* Заголовки разделов (например, Демография, Экономика) */
         .info strong {
             display: block;
             margin-bottom: 8px;
-            font-size: 16px;
-            color: #ffcc00; /* Жёлтый акцент для заголовков */
+            font-size: 18px;
+            color: #fbc02d;
         }
-
-        /* Табличные данные */
         .info span {
-            display: inline-block;
+            display: block;
             font-size: 14px;
-            margin: 5px 0;
-            color: #e0eaff; /* Ещё светлее для выделения */
+            color: #e3f2fd;
+            margin-bottom: 5px;
         }
-
-        /* Списки */
         .info ul {
-            list-style-type: none;
+            list-style: none;
             padding: 0;
             margin: 10px 0;
         }
-
         .info ul li {
-            margin-bottom: 8px;
             font-size: 14px;
-            color: #cce7ff; /* Нежный светло-голубой текст */
+            color: #cfd8dc;
+            margin-bottom: 8px;
         }
-
-        /* Подсказки */
-        .info-tooltip {
-            font-size: 13px;
-            color: #a0c4ff;
-            margin-top: 10px;
-            line-height: 1.6;
-        }
-
+    
         /* Кнопка управления сайдбаром */
         .toggle-sidebar {
             position: absolute;
@@ -104,8 +84,8 @@
             z-index: 4;
             width: 40px;
             height: 40px;
-            background: linear-gradient(135deg, #4de1ff, #007ba7);
-            color: #fff;
+            background: linear-gradient(135deg, #6d8692, #2e5d76);
+            color: #ffffff;
             border: none;
             border-radius: 50%;
             display: flex;
@@ -113,45 +93,44 @@
             align-items: center;
             cursor: pointer;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
+            transition: transform 0.3s, background 0.3s;
         }
-
         .toggle-sidebar:hover {
-            background: linear-gradient(135deg, #2bb7d1, #005f80);
+            background: linear-gradient(135deg, #7c939e, #2a5975);
+            transform: scale(1.1);
         }
-
+    
         /* График */
         .chart-container {
             position: fixed;
-            bottom: 15px;
-            right: 15px;
-            width: 300px;
-            height: 200px;
-            background: #fff;
+            bottom: 20px;
+            right: 20px;
+            width: 320px;
+            height: 220px;
+            background: #ffffff;
             border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
             padding: 15px;
             z-index: 5;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
-            transition: width 0.3s, height 0.3s, transform 0.3s;
+            transition: transform 0.3s, width 0.3s, height 0.3s;
         }
 
         .chart-container.expanded {
             width: 600px;
             height: 400px;
-            transform: translateY(-50px);
+            transform: translateY(-30px);
         }
 
         .expand-chart {
             position: absolute;
             top: 10px;
             right: 10px;
-            background: linear-gradient(135deg, #4de1ff, #007ba7);
-            color: #fff;
+            background: linear-gradient(135deg, #7c8f98, #296585);
+            color: #ffffff;
             border: none;
             border-radius: 50%;
             width: 30px;
@@ -160,42 +139,93 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
+            transition: transform 0.3s, background 0.3s;
         }
 
         .expand-chart:hover {
-            background: linear-gradient(135deg, #2bb7d1, #005f80);
+            background: linear-gradient(135deg, #98a5ab, #356580);
+            transform: scale(1.1);
         }
 
+    
         /* Слайдер прозрачности */
         .transparency-control {
             position: fixed;
             bottom: 20px;
-            right: 20px;
+            left: 20px;
             background: #ffffff;
             padding: 10px 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            font-family: Arial, sans-serif;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             font-size: 14px;
+            color: #455a64;
         }
+        .transparency-control input[type="range"] {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .legend {
+            margin-top: 20px;
+            background: rgba(30, 50, 80, 0.9);
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .legend h4 {
+            font-size: 18px;
+            color: #4fc3f7;
+            margin-bottom: 10px;
+        }
+        .legend ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .legend li {
+            font-size: 14px;
+            color: #e3f2fd;
+            margin-bottom: 5px;
+        }
+        .map-container {
+            flex: 1; /* Карта занимает всё доступное пространство */
+            position: relative;
+            border-left: 2px solid rgba(255, 255, 255, 0.2); /* Визуальное разделение карты и сайдбара */
+        }
+
     </style>
+    
 </head>
+
 <body>
+    <!-- Сайдбар -->
     <div class="sidebar" id="sidebar">
         <button class="toggle-sidebar" id="toggleSidebar" title="Скрыть панель">
             <i class="fas fa-chevron-left"></i>
         </button>
         <h3>Индекс качества жизни</h3>
-        <p>Нажмите на район, чтобы увидеть данные и график динамики.</p>
+        <p>Выберите район на карте, чтобы увидеть детальную информацию и графики.</p>
+        
         <div class="info">
-            <strong>Данные района:</strong>
-            <p id="district-info">Нет данных</p>
+            <strong>Информация по району:</strong>
+            <div id="district-info">
+                <p>Нет данных. Выберите район для отображения информации.</p>
+            </div>
+        </div>
+        
+        <div class="legend">
+            <h4>Легенда:</h4>
+            <ul>
+                <li><span style="color: #1a9641;">●</span> Высокий индекс Q (0.75 - 1.00)</li>
+                <li><span style="color: #fdae61;">●</span> Средний индекс Q (0.50 - 0.74)</li>
+                <li><span style="color: #d7191c;">●</span> Низкий индекс Q (0.25 - 0.49)</li>
+                <li><span style="color: #6c757d;">●</span> Очень низкий индекс Q (0.00 - 0.24)</li>
+            </ul>
         </div>
     </div>
 
-    <div id="map"></div>
+    <!-- Карта -->
+    <div id="map" class="map-container"></div>
 
     <!-- График -->
     <div class="chart-container" id="chartContainer">
@@ -211,172 +241,149 @@
     </div>
 
     <script>
+        // Устанавливаем токен Mapbox
         mapboxgl.accessToken = 'pk.eyJ1IjoiYWxpbmFjaCIsImEiOiJjbGlpcnZpaTgwMTZ4M2twaGo1NjRsNHhhIn0.9jw_R_D1i1nqOtaolld-dQ';
-    
+        
+        // Создаем объект карты
         const map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/streets-v11',
-            center: [76.945, 43.255],
+            center: [76.945, 43.255], // Координаты центра
             zoom: 10
         });
-    
-        const geojsonUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/refs/heads/main/quality_of_life_by_districts.geojson';
-        let chartInstance, popup = null;
-    
-        // Загрузка данных и создание слоя
+
+        // URL для данных GeoJSON
+        const geojsonUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/quality_of_life_by_districts.geojson';
+
+        let fullDataset = []; // Хранилище всех данных
+        let popup; // Переменная для всплывающей подсказки
+        let chartInstance; // Переменная для графика
+
+        // Загружаем данные GeoJSON при загрузке карты
         map.on('load', async () => {
-            const response = await fetch(geojsonUrl);
-            const data = await response.json();
-    
-            map.addSource('districts', {
-                type: 'geojson',
-                data: data
-            });
-    
-            map.addLayer({
-                id: 'districts-layer',
-                type: 'fill',
-                source: 'districts',
-                paint: {
-                    'fill-color': ['interpolate', ['linear'], ['get', 'Q'], 0, '#f8d5cc', 1, '#1a9641'],
-                    'fill-opacity': 0.7
-                }
-            });
-    
-            map.addLayer({
-                id: 'districts-highlight',
-                type: 'fill',
-                source: 'districts',
-                paint: {
-                    'fill-color': '#FFCC00',
-                    'fill-opacity': 0.9
-                },
-                filter: ['==', 'district_name', '']
-            });
-    
-            // Наведение на район
-            map.on('mouseenter', 'districts-layer', (e) => handleHover(e));
-            map.on('mouseleave', 'districts-layer', () => clearHover());
-    
-            // Клик по району
-            map.on('click', 'districts-layer', (e) => handleClick(e));
+            try {
+                const response = await fetch(geojsonUrl);
+                const geojsonData = await response.json();
+                fullDataset = geojsonData.features.map(f => f.properties); // Сохраняем данные
+
+                // Добавляем источник данных
+                map.addSource('districts', {
+                    type: 'geojson',
+                    data: geojsonData
+                });
+
+                // Добавляем слой заливки районов
+                map.addLayer({
+                    id: 'districts-layer',
+                    type: 'fill',
+                    source: 'districts',
+                    paint: {
+                        'fill-color': [
+                            'interpolate',
+                            ['linear'],
+                            ['get', 'Q'],
+                            0, '#d7191c',     // Низкий индекс
+                            0.25, '#fdae61',  // Средний индекс
+                            0.75, '#1a9641'   // Высокий индекс
+                        ],
+                        'fill-opacity': 0.5
+                    }
+                });
+
+                // Добавляем слой контуров районов
+                map.addLayer({
+                    id: 'districts-line',
+                    type: 'line',
+                    source: 'districts',
+                    paint: {
+                        'line-color': '#ffffff',
+                        'line-width': 1
+                    }
+                });
+
+                // Добавляем слой подсветки
+                map.addLayer({
+                    id: 'districts-highlight',
+                    type: 'fill',
+                    source: 'districts',
+                    paint: {
+                        'fill-color': '#7698b0',
+                        'fill-opacity': 0.6
+                    },
+                    filter: ['==', 'district_name', '']
+                });
+
+                // Обрабатываем события карты
+                map.on('mousemove', 'districts-layer', handleHover);
+                map.on('mouseleave', 'districts-layer', clearHover);
+                map.on('click', 'districts-layer', (e) => {
+                    const districtName = e.features[0].properties.district_name;
+                    const districtData = fullDataset.filter(d => d.district_name === districtName);
+                    updateSidebar(districtData);
+                    updateChart(districtData);
+                });
+            } catch (error) {
+                console.error('Ошибка загрузки GeoJSON:', error);
+                alert('Ошибка загрузки данных.');
+            }
         });
-    
-        // Управление прозрачностью
-        document.getElementById('opacity-slider').addEventListener('input', (e) => {
-            const opacity = parseFloat(e.target.value);
-            map.setPaintProperty('districts-layer', 'fill-opacity', opacity);
-        });
-    
-        // Сворачивание сайдбара
-        document.getElementById('toggleSidebar').addEventListener('click', () => {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('collapsed');
-        });
-    
-        // Увеличение графика
-        document.getElementById('expandChart').addEventListener('click', () => {
-            const chartContainer = document.getElementById('chartContainer');
-            chartContainer.classList.toggle('expanded');
-        });
-    
-        // Обработка наведения
+
+        // Подсветка района при наведении
         function handleHover(e) {
-            map.getCanvas().style.cursor = 'pointer';
             const properties = e.features[0].properties;
-            const districtName = properties.district_name || "Неизвестный район";
+            const districtName = properties.district_name || 'Неизвестный район';
             const currentQ = properties.Q || 0;
-            const previousQ = properties.previous_Q || 0;
-            const change = ((currentQ - previousQ) * 100).toFixed(2);
-    
+
             map.setFilter('districts-highlight', ['==', 'district_name', districtName]);
-    
-            const coordinates = e.lngLat;
-            const html = `
-                <strong>${districtName}</strong><br>
-                Изменение Q: ${change > 0 ? '+' : ''}${change}%<br>
-                Текущий Q: ${currentQ.toFixed(2)}
-            `;
-    
+
+            map.setPaintProperty('districts-layer', 'fill-opacity', [
+                'case',
+                ['==', ['get', 'district_name'], districtName], 0.8,
+                0.3
+            ]);
+
             if (popup) popup.remove();
             popup = new mapboxgl.Popup({ closeButton: false })
-                .setLngLat(coordinates)
-                .setHTML(html)
+                .setLngLat(e.lngLat)
+                .setHTML(`
+                    <strong>${districtName}</strong><br>
+                    Текущий индекс Q: ${currentQ.toFixed(2)}
+                `)
                 .addTo(map);
-        }
-    
-        // Очистка подсветки и всплывающей подсказки
-        function clearHover() {
-            map.getCanvas().style.cursor = '';
-            map.setFilter('districts-highlight', ['==', 'district_name', '']);
-            if (popup) popup.remove();
-        }
-    
-        // Обработка клика по району
-        function handleClick(e) {
-            const properties = e.features[0].properties;
-            updateSidebar(properties);
-            updateChart(e.features.map(f => f.properties));
-        }
-    
-        // Обновление боковой панели
-        function updateSidebar(data) {
-            const infoHtml = `
-                <h3>${data.district_name || "Нет данных"}</h3>
-                <p><strong>Дата:</strong> ${data.indicator_date || "Нет данных"}</p>
-                <p><strong>Индекс Q:</strong> ${data.Q !== undefined ? data.Q.toFixed(2) : "Нет данных"}</p>
-                
-                <h4>Демография (D)</h4>
-                <p><strong>Численность населения:</strong> ${data["Численность населения"] || "Нет данных"} чел.</p>
-                <p><strong>Численность родившихся:</strong> ${data["Численность родившихся"] || "Нет данных"} чел.</p>
-                <p><strong>Численность умерших:</strong> ${data["Численность умерших"] || "Нет данных"} чел.</p>
-                <p><strong>Естественный прирост:</strong> ${data["Естественный прирост"] || "Нет данных"} чел.</p>
-                <p><strong>Миграция (прибыло/выбыло/сальдо):</strong> 
-                    ${data["Миграция населения - прибыло"] || "Нет данных"} / 
-                    ${data["Миграция населения - выбыло"] || "Нет данных"} / 
-                    ${data["Миграция населения - сальдо"] || "Нет данных"} чел.</p>
-                
-                <h4>Экономика (E)</h4>
-                <p><strong>Среднемесячная зарплата:</strong> ${data["Среднемесячная зарплата по организационно-правовым формам"] || "Нет данных"} тг.</p>
-                <p><strong>Объём промышленной продукции:</strong> ${data["Объём промышленной продукции по всей промышленности"] || "Нет данных"} млн тг.</p>
-                <p><strong>Количество действующих предприятий:</strong> ${data["Количество действующих субъектов всего по району"] || "Нет данных"}.</p>
-                <p><strong>Количество зарегистрированных субъектов малого бизнеса:</strong> ${data["Всего зарегистрированных субъектов малого предпринимательства (юрид. и физ. лица)"] || "Нет данных"}.</p>
-                <p><strong>Индекс физического объёма (промышленность):</strong> ${data["Индекс физического объёма, по всей промышленности"] || "Нет данных"}.</p>
-                
-                <h4>Жилищные условия (H)</h4>
-                <p><strong>Ввод жилья:</strong> ${data["Ввод жилья"] || "Нет данных"} тыс. кв.м.</p>
-                <p><strong>Многоквартирные жилые дома:</strong> ${data["Многоквартирные жилые дома"] || "Нет данных"}.</p>
-                <p><strong>Количество квартир (многоквартирные дома):</strong> ${data["Количество квартир - многоквартирные дома"] || "Нет данных"}.</p>
-                <p><strong>Индивидуальные жилые дома:</strong> ${data["Индивидуальные жилые дома"] || "Нет данных"}.</p>
-                
-                <h4>Безопасность (S)</h4>
-                <p><strong>Умершие от несчастных случаев:</strong> ${data["Умершие  от несчастных случаев, отравлений и травм"] || "Нет данных"}.</p>
-                <p><strong>Умершие от заболеваний системы кровообращения:</strong> ${data["Умершие от болезней системы кровообращения"] || "Нет данных"}.</p>
-                <p><strong>Умершие от ДТП:</strong> ${data["Умершие от дорожно-транспортных происшествий"] || "Нет данных"}.</p>
-                <p><strong>Умершие от инфекционных и паразитарных болезней:</strong> ${data["Умершие от инфекционных и паразитарных болезней"] || "Нет данных"}.</p>
-                <p><strong>Умершие от самоубийств:</strong> ${data["Умершие  от самоубийств"] || "Нет данных"}.</p>
-                
-                <h4>Социальная стабильность (SS)</h4>
-                <p><strong>Количество вузов:</strong> ${data["ВУЗы"] || "Нет данных"}.</p>
-                <p><strong>Число браков:</strong> ${data["Число браков"] || "Нет данных"}.</p>
-                <p><strong>Число разводов:</strong> ${data["Число разводов"] || "Нет данных"}.</p>
-                <p><strong>Коэффициент брачности (на 1000 человек):</strong> ${data["Коэффицент брачности на 1000 человек"] || "Нет данных"}.</p>
-                <p><strong>Коэффициент разводимости (на 1000 человек):</strong> ${data["Коэффицент разводимости на 1000 человек"] || "Нет данных"}.</p>
-            `;
-            document.getElementById('district-info').innerHTML = infoHtml;
+            map.getCanvas().style.cursor = 'pointer';
         }
 
-    
+        // Сброс подсветки
+        function clearHover() {
+            map.setFilter('districts-highlight', ['==', 'district_name', '']);
+            map.setPaintProperty('districts-layer', 'fill-opacity', 0.5);
+            if (popup) popup.remove();
+            map.getCanvas().style.cursor = '';
+        }
+
+        // Обновление боковой панели
+        function updateSidebar(districtData) {
+            const latestQuarter = districtData.reduce((latest, current) => {
+                const latestDate = new Date(latest.indicator_date || '1900-01-01');
+                const currentDate = new Date(current.indicator_date || '1900-01-01');
+                return currentDate > latestDate ? current : latest;
+            }, {});
+
+            document.getElementById('district-info').innerHTML = `
+                <h3>${latestQuarter.district_name || 'Нет данных'}</h3>
+                <p>Индекс Q: ${latestQuarter.Q !== undefined ? latestQuarter.Q.toFixed(2) : 'Нет данных'}</p>
+            `;
+        }
+
         // Обновление графика
-        function updateChart(data) {
-            const chartData = data
+        function updateChart(districtData) {
+            const chartData = districtData
                 .filter(d => d.quarter_year && d.Q !== undefined)
-                .sort((a, b) => a.quarter_year.localeCompare(b.quarter_year))
-                .map(d => ({ date: d.quarter_year, value: d.Q }));
-    
-            const labels = chartData.map(item => item.date);
-            const values = chartData.map(item => item.value);
-    
+                .sort((a, b) => new Date(a.quarter_year) - new Date(b.quarter_year));
+
+            const labels = chartData.map(d => d.quarter_year);
+            const values = chartData.map(d => d.Q);
+
             const ctx = document.getElementById('qChart').getContext('2d');
             if (chartInstance) {
                 chartInstance.data.labels = labels;
@@ -391,13 +398,12 @@
                             label: 'Динамика индекса Q',
                             data: values,
                             borderColor: '#1a9641',
-                            backgroundColor: 'rgba(26, 150, 65, 0.1)',
+                            backgroundColor: 'rgba(26, 150, 65, 0.2)',
                             tension: 0.3
                         }]
                     },
                     options: {
                         responsive: true,
-                        plugins: { legend: { display: true } },
                         scales: {
                             x: { title: { display: true, text: 'Квартал' } },
                             y: { title: { display: true, text: 'Индекс Q' } }
@@ -406,7 +412,22 @@
                 });
             }
         }
+
+        // Прозрачность слоя
+        document.getElementById('opacity-slider').addEventListener('input', (e) => {
+            map.setPaintProperty('districts-layer', 'fill-opacity', parseFloat(e.target.value));
+        });
+
+        // Сворачивание боковой панели
+        document.getElementById('toggleSidebar').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+
+        // Расширение графика
+        document.getElementById('expandChart').addEventListener('click', () => {
+            document.getElementById('chartContainer').classList.toggle('expanded');
+        });
     </script>
-    
 </body>
+
 </html>

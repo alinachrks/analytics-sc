@@ -7,6 +7,7 @@
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 
     <style>
         /* Основной стиль */
@@ -17,10 +18,14 @@
             font-family: 'Roboto', Arial, sans-serif;
             background: linear-gradient(135deg, #f3f4f6, #e2e5ea);
         }
+
+        /* Карта */
         #map {
             flex: 1;
+            width: 100%; /* Убедиться в заполнении ширины */
+            height: 100%; /* Убедиться в заполнении высоты */
         }
-    
+
         /* Сайдбар */
         .sidebar {
             width: 400px;
@@ -31,20 +36,22 @@
             border-right: 1px solid rgba(255, 255, 255, 0.1);
             overflow-y: auto;
         }
+
         .sidebar h3 {
-            font-size: 24px;
-            margin-bottom: 20px;
+            font-size: 18px;
+            margin-bottom: 12px;
             color: #a1cde1;
             font-weight: bold;
             border-bottom: 2px solid rgba(255, 255, 255, 0.2);
             padding-bottom: 10px;
         }
+
         .sidebar p {
             font-size: 16px;
             color: #b3c7e6;
             line-height: 1.8;
         }
-    
+
         /* Информационный блок */
         .info {
             background: rgba(30, 50, 80, 0.9);
@@ -53,29 +60,101 @@
             margin-bottom: 20px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
+
         .info strong {
             display: block;
             margin-bottom: 8px;
-            font-size: 18px;
+            font-size: 16px;
             color: #fbc02d;
         }
+
         .info span {
             display: block;
             font-size: 14px;
             color: #e3f2fd;
             margin-bottom: 5px;
         }
-        .info ul {
-            list-style: none;
+
+         /* Скрытая боковая панель */
+         .sidebar.collapsed {
+            width: 0; /* Устанавливаем ширину в 0 */
+            padding: 0; /* Убираем внутренние отступы */
+            overflow: hidden; /* Скрываем содержимое */
+            transition: width 0.3s ease, padding 0.3s ease; /* Плавная анимация */
+        }
+
+        .toggle-sidebar.collapsed {
+            left: 0; /* Кнопка должна оставаться у края окна */
+        }
+
+
+        /* Кнопка управления боковой панелью */
+        .toggle-sidebar {
+            position: fixed;
+            top: 20px;
+            left: 400px; /* Расположение кнопки у края панели */
+            z-index: 4;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(145deg, #7b9cc0, #2e4359); /* Градиент */
+            color: white;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+            transition: left 0.3s ease, background 0.2s ease;
+        }
+
+        .toggle-sidebar:hover {
+            background: linear-gradient(145deg, #5f7691, #253d54); /* Градиент при наведении */
+        }
+
+        .toggle-sidebar.collapsed {
+            left: 0; /* Сдвигаем кнопку, когда панель скрыта */
+        }
+
+        .toggle-sidebar i {
+            font-size: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-sidebar.collapsed i {
+            transform: rotate(180deg); /* Поворачиваем стрелку */
+        }
+
+
+        /* Легенда */
+        .legend {
+            margin-top: 20px;
+            background: rgba(30, 50, 80, 0.9);
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .legend h4 {
+            font-size: 18px;
+            color: #4fc3f7;
+            margin-bottom: 10px;
+        }
+
+        .legend ul {
+            list-style-type: none;
             padding: 0;
-            margin: 10px 0;
+            margin: 0;
+            font-size: 16px
         }
-        .info ul li {
+
+
+        .legend li {
             font-size: 14px;
-            color: #cfd8dc;
-            margin-bottom: 8px;
+            color: #e3f2fd;
+            margin-bottom: 5px;
         }
-    
+
         /* Кнопка управления сайдбаром */
         .toggle-sidebar {
             position: absolute;
@@ -95,18 +174,59 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             transition: transform 0.3s, background 0.3s;
         }
+
         .toggle-sidebar:hover {
             background: linear-gradient(135deg, #7c939e, #2a5975);
             transform: scale(1.1);
         }
-    
+
+        /* Таблицы */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #e3f2fd;
+            background: rgba(20, 30, 50, 0.95);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        th {
+            background: rgba(40, 60, 90, 0.9);
+            font-weight: bold;
+            color: #fbc02d;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            background: rgba(30, 50, 80, 0.8);
+            color: #b3c7e6;
+        }
+
+        tr:nth-child(even) td {
+            background: rgba(30, 50, 80, 0.7);
+        }
+
+        tr:hover td {
+            background: rgba(50, 70, 100, 0.9);
+            color: #ffffff;
+            transition: background 0.3s ease-in-out, color 0.3s ease-in-out;
+        }
+
         /* График */
         .chart-container {
             position: fixed;
-            bottom: 20px;
+            top: 20px;
             right: 20px;
-            width: 320px;
-            height: 220px;
+            width: 380px;
+            height: 280px;
             background: #ffffff;
             border-radius: 12px;
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
@@ -116,13 +236,13 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            transition: transform 0.3s, width 0.3s, height 0.3s;
+            transition: all 0.3s ease-in-out;
+            transform-origin: top right;
         }
 
         .chart-container.expanded {
             width: 600px;
             height: 400px;
-            transform: translateY(-30px);
         }
 
         .expand-chart {
@@ -147,50 +267,127 @@
             transform: scale(1.1);
         }
 
-    
-        /* Слайдер прозрачности */
-        .transparency-control {
+        /* Общие стили кнопок */
+        .button-container {
             position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background: #ffffff;
-            padding: 10px 15px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            font-size: 14px;
-            color: #455a64;
-        }
-        .transparency-control input[type="range"] {
-            width: 100%;
-            margin-top: 10px;
+            bottom: 60px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 10;
         }
 
-        .legend {
-            margin-top: 20px;
-            background: rgba(30, 50, 80, 0.9);
-            padding: 10px 15px;
-            border-radius: 8px;
+        .action-button {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #6d8692, #2e5d76);
+            color: #ffffff;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s, background 0.3s;
         }
-        .legend h4 {
-            font-size: 18px;
-            color: #4fc3f7;
-            margin-bottom: 10px;
+
+        .action-button:hover {
+            background: linear-gradient(135deg, #7c939e, #2a5975);
+            transform: scale(1.1);
         }
-        .legend ul {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
+
+        .action-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
-        .legend li {
-            font-size: 14px;
-            color: #e3f2fd;
-            margin-bottom: 5px;
+
+        .action-button i {
+            pointer-events: none;
         }
-        .map-container {
-            flex: 1; /* Карта занимает всё доступное пространство */
-            position: relative;
-            border-left: 2px solid rgba(255, 255, 255, 0.2); /* Визуальное разделение карты и сайдбара */
+
+        /* Настройка подсказок */
+        .action-button[title]:hover::after {
+            content: attr(title);
+            position: absolute;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #ffffff;
+            font-size: 12px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            white-space: nowrap;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        .action-button[title]:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px;
+            border-style: solid;
+            border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
+            z-index: 20;
+        }
+
+        .transparency-control {
+            position: fixed;
+            bottom: 40px; /* Над кнопками */
+            right: 80px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Промежуток между иконкой и слайдером */
+        }
+
+        .transparency-control input[type="range"] {
+            width: 150px; /* Установить ширину слайдера */
+        }
+
+
+        /* Кнопка "Во весь экран" */
+        #fullscreen-toggle {
+            position: fixed; /* Устанавливаем фиксированное позиционирование */
+            bottom: 10px; /* Расположение кнопки снизу */
+            right: 20px; /* Расположение кнопки справа */
+            width: 50px; /* Размер кнопки */
+            height: 50px;
+            background: linear-gradient(135deg, #6d8692, #2e5d76); /* Градиент фона */
+            color: #ffffff; /* Белый цвет иконки */
+            border: none; /* Убираем границы */
+            border-radius: 50%; /* Круглая кнопка */
+            display: flex; /* Центровка содержимого */
+            align-items: center;
+            justify-content: center;
+            cursor: pointer; /* Указатель при наведении */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Тень для глубины */
+            transition: transform 0.3s, background 0.3s; /* Анимация нажатия и наведения */
+        }
+
+        /* Эффект при наведении */
+        #fullscreen-toggle:hover {
+            background: linear-gradient(135deg, #7c939e, #2a5975); /* Изменение цвета при наведении */
+            transform: scale(1.1); /* Увеличение кнопки */
+        }
+
+        /* Эффект при нажатии */
+        #fullscreen-toggle:active {
+            transform: scale(0.95); /* Уменьшение при клике */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Ослабление тени */
+        }
+
+        /* Иконка внутри кнопки */
+        #fullscreen-toggle i {
+            font-size: 20px; /* Размер иконки */
+            pointer-events: none; /* Отключение событий мыши для иконки */
         }
 
     </style>
@@ -198,48 +395,73 @@
 </head>
 
 <body>
-    <!-- Сайдбар -->
-    <div class="sidebar" id="sidebar">
-        <button class="toggle-sidebar" id="toggleSidebar" title="Скрыть панель">
-            <i class="fas fa-chevron-left"></i>
-        </button>
-        <h3>Индекс качества жизни</h3>
-        <p>Выберите район на карте, чтобы увидеть детальную информацию и графики.</p>
-        
-        <div class="info">
-            <strong>Информация по району:</strong>
-            <div id="district-info">
-                <p>Нет данных. Выберите район для отображения информации.</p>
+    <body>
+        <!-- Сайдбар -->
+        <div class="sidebar" id="sidebar">
+            <button class="toggle-sidebar" id="toggleSidebar" title="Скрыть панель">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <h3>Информация по району</h3>
+            <p>Выберите район на карте, чтобы увидеть детальную информацию и графики.</p>
+    
+            <div class="info">
+                <strong> </strong>
+                <div id="district-info">
+                    <p>Нет данных. Выберите район для отображения информации.</p>
+                </div>
+            </div>
+    
+            <div class="legend">
+                <h4>Легенда:</h4>
+                <ul>
+                    <li><span style="color: #1a9641;">●</span> Высокий индекс Q (0.75 - 1.00)</li>
+                    <li><span style="color: #fdae61;">●</span> Средний индекс Q (0.50 - 0.74)</li>
+                    <li><span style="color: #d7191c;">●</span> Низкий индекс Q (0.25 - 0.49)</li>
+                    <li><span style="color: #6c757d;">●</span> Очень низкий индекс Q (0.00 - 0.24)</li>
+                </ul>
             </div>
         </div>
-        
-        <div class="legend">
-            <h4>Легенда:</h4>
-            <ul>
-                <li><span style="color: #1a9641;">●</span> Высокий индекс Q (0.75 - 1.00)</li>
-                <li><span style="color: #fdae61;">●</span> Средний индекс Q (0.50 - 0.74)</li>
-                <li><span style="color: #d7191c;">●</span> Низкий индекс Q (0.25 - 0.49)</li>
-                <li><span style="color: #6c757d;">●</span> Очень низкий индекс Q (0.00 - 0.24)</li>
-            </ul>
+    
+        <!-- Карта -->
+        <div id="map" class="map-container"></div>
+    
+        <!-- График -->
+        <div class="chart-container" id="chartContainer">
+            <canvas id="qChart"></canvas>
+            <button class="expand-chart" id="expandChart" title="Увеличить график">
+                <i class="fas fa-expand"></i>
+            </button>
         </div>
-    </div>
+    
+        <div class="controls">
+            <div class="left-controls">
+                <div class="transparency-control" title="Настроить прозрачность">
+                    <label for="opacity-slider">
+                        <i class="fas fa-adjust"></i>
+                    </label>
+                    <input id="opacity-slider" type="range" min="0" max="1" step="0.1" value="0.7">
+                </div>
+            </div>
+            <div class="right-controls">
+                <button id="fullscreen-toggle" class="action-button" title="Во весь экран">
+                    <i class="fas fa-expand"></i>
+                </button>
+            </div>
+        </div>
+    
+        <div class="button-container">
+            <button id="showAll" class="action-button" title="Динамика всех районов">
+                <i class="fas fa-chart-bar"></i>
+            </button>
+            <button id="showCurrentQ" class="action-button" title="Показать Q">
+                <i class="fas fa-chart-line"></i>
+            </button>
+            <button id="showPreviousQ" class="action-button" title="Показать previous_Q">
+                <i class="fas fa-history"></i>
+            </button>
+        </div>
 
-    <!-- Карта -->
-    <div id="map" class="map-container"></div>
-
-    <!-- График -->
-    <div class="chart-container" id="chartContainer">
-        <canvas id="qChart"></canvas>
-        <button class="expand-chart" id="expandChart" title="Увеличить график">
-            <i class="fas fa-expand"></i>
-        </button>
-    </div>
-
-    <div class="transparency-control">
-        <label for="opacity-slider">Прозрачность:</label>
-        <input id="opacity-slider" type="range" min="0" max="1" step="0.1" value="0.7">
-    </div>
-
+    
     <script>
         // Устанавливаем токен Mapbox
         mapboxgl.accessToken = 'pk.eyJ1IjoiYWxpbmFjaCIsImEiOiJjbGlpcnZpaTgwMTZ4M2twaGo1NjRsNHhhIn0.9jw_R_D1i1nqOtaolld-dQ';
@@ -258,136 +480,408 @@
         let fullDataset = []; // Хранилище всех данных
         let popup; // Переменная для всплывающей подсказки
         let chartInstance; // Переменная для графика
+        let showCurrent = true; // По умолчанию отображаем Q
+
 
         // Загружаем данные GeoJSON при загрузке карты
         map.on('load', async () => {
             try {
+                // Запрашиваем данные GeoJSON
                 const response = await fetch(geojsonUrl);
                 const geojsonData = await response.json();
-                fullDataset = geojsonData.features.map(f => f.properties); // Сохраняем данные
 
-                // Добавляем источник данных
-                map.addSource('districts', {
-                    type: 'geojson',
-                    data: geojsonData
+                // Обогащаем данные, добавляя поле previous_Q
+                const enrichedProperties = calculatePreviousQ(geojsonData.features.map(f => f.properties));
+                fullDataset = enrichedProperties;
+
+                // Обновляем свойства объектов в GeoJSON
+                geojsonData.features.forEach((feature, index) => {
+                    feature.properties = enrichedProperties[index];
                 });
 
-                // Добавляем слой заливки районов
-                map.addLayer({
-                    id: 'districts-layer',
-                    type: 'fill',
-                    source: 'districts',
-                    paint: {
-                        'fill-color': [
-                            'interpolate',
-                            ['linear'],
-                            ['get', 'Q'],
-                            0, '#d7191c',     // Низкий индекс
-                            0.25, '#fdae61',  // Средний индекс
-                            0.75, '#1a9641'   // Высокий индекс
-                        ],
-                        'fill-opacity': 0.5
-                    }
-                });
+                // Добавляем источник данных на карту
+                addGeoJsonSource('districts', geojsonData);
 
-                // Добавляем слой контуров районов
-                map.addLayer({
-                    id: 'districts-line',
-                    type: 'line',
-                    source: 'districts',
-                    paint: {
-                        'line-color': '#ffffff',
-                        'line-width': 1
-                    }
-                });
+                // Добавляем слои для отображения районов
+                addDistrictLayers();
 
-                // Добавляем слой подсветки
-                map.addLayer({
-                    id: 'districts-highlight',
-                    type: 'fill',
-                    source: 'districts',
-                    paint: {
-                        'fill-color': '#7698b0',
-                        'fill-opacity': 0.6
-                    },
-                    filter: ['==', 'district_name', '']
-                });
+                // Устанавливаем события карты
+                setupMapInteractions();
 
-                // Обрабатываем события карты
-                map.on('mousemove', 'districts-layer', handleHover);
-                map.on('mouseleave', 'districts-layer', clearHover);
-                map.on('click', 'districts-layer', (e) => {
-                    const districtName = e.features[0].properties.district_name;
-                    const districtData = fullDataset.filter(d => d.district_name === districtName);
-                    updateSidebar(districtData);
-                    updateChart(districtData);
-                });
+                // Устанавливаем события для переключения параметров Q и previous_Q
+                setupParameterSwitching();
+
+                console.log('Данные успешно обработаны и добавлены на карту:', geojsonData);
             } catch (error) {
                 console.error('Ошибка загрузки GeoJSON:', error);
-                alert('Ошибка загрузки данных.');
             }
         });
 
-        // Подсветка района при наведении
+        // Функция для добавления источника GeoJSON
+        function addGeoJsonSource(sourceId, geojsonData) {
+            map.addSource(sourceId, {
+                type: 'geojson',
+                data: geojsonData,
+            });
+        }
+
+        // Функция для добавления слоев на карту
+        function addDistrictLayers() {
+            // Добавляем слой заливки районов
+            map.addLayer({
+                id: 'districts-layer',
+                type: 'fill',
+                source: 'districts',
+                paint: {
+                    'fill-color': [
+                        'step',
+                        ['get', 'Q'],
+                        '#6c757d', // Цвет для отсутствия данных
+                        0.25, '#d7191c', // Низкий индекс Q
+                        0.50, '#fdae61', // Средний индекс Q
+                        0.75, '#1a9641', // Высокий индекс Q
+                    ],
+                    'fill-opacity': 0.5,
+                },
+            });
+
+            // Добавляем слой контуров районов
+            map.addLayer({
+                id: 'districts-line',
+                type: 'line',
+                source: 'districts',
+                paint: {
+                    'line-color': '#ffffff',
+                    'line-width': 1,
+                },
+            });
+
+            // Добавляем слой для подсветки районов при наведении
+            map.addLayer({
+                id: 'districts-highlight',
+                type: 'fill',
+                source: 'districts',
+                paint: {
+                    'fill-color': '#ffff00',
+                    'fill-opacity': 0.8,
+                },
+                filter: ['==', 'district_name', ''],
+            });
+        }
+
+        // Функция для обработки взаимодействий на карте
+        function setupMapInteractions() {
+            map.on('mousemove', 'districts-layer', handleHover);
+            map.on('mouseleave', 'districts-layer', clearHover);
+            map.on('click', 'districts-layer', handleClick);
+        }
+
+        // Функция для обработки наведения мыши
         function handleHover(e) {
             const properties = e.features[0].properties;
             const districtName = properties.district_name || 'Неизвестный район';
-            const currentQ = properties.Q || 0;
+            const currentValue = properties[showCurrent ? 'Q' : 'previous_Q'];
+            const valueLabel = showCurrent ? 'Индекс Q' : 'previous_Q';
+            const change = properties.previous_Q && properties.Q
+                ? ((properties.Q - properties.previous_Q) / properties.previous_Q * 100).toFixed(2)
+                : 'Нет данных';
 
+            // Обновляем фильтр подсветки
             map.setFilter('districts-highlight', ['==', 'district_name', districtName]);
 
-            map.setPaintProperty('districts-layer', 'fill-opacity', [
-                'case',
-                ['==', ['get', 'district_name'], districtName], 0.8,
-                0.3
-            ]);
-
+            // Удаляем предыдущий popup, если есть
             if (popup) popup.remove();
+
+            // Добавляем новый popup
             popup = new mapboxgl.Popup({ closeButton: false })
                 .setLngLat(e.lngLat)
                 .setHTML(`
                     <strong>${districtName}</strong><br>
-                    Текущий индекс Q: ${currentQ.toFixed(2)}
+                    <strong>${valueLabel}:</strong> ${currentValue !== undefined ? currentValue.toFixed(2) : 'Нет данных'}<br>
+                    ${showCurrent ? `<strong>Изменение Q:</strong> ${change}%` : ''}
                 `)
                 .addTo(map);
+
             map.getCanvas().style.cursor = 'pointer';
         }
 
-        // Сброс подсветки
+        // Функция для обработки кликов на районы
+        function handleClick(e) {
+            const districtName = e.features[0].properties.district_name.trim().toLowerCase();
+            const districtData = fullDataset.filter(d => d.district_name.trim().toLowerCase() === districtName);
+
+            console.log('Выбранный район:', districtName);
+            console.log('Найденные данные:', districtData);
+
+            updateSidebar(districtData);
+            updateChart(districtData);
+        }
+
+        // Функция для сброса подсветки
         function clearHover() {
             map.setFilter('districts-highlight', ['==', 'district_name', '']);
-            map.setPaintProperty('districts-layer', 'fill-opacity', 0.5);
             if (popup) popup.remove();
             map.getCanvas().style.cursor = '';
         }
 
+        // Функция для переключения между Q и previous_Q
+        function setupParameterSwitching() {
+            document.getElementById('showCurrentQ').addEventListener('click', () => {
+                showCurrent = true;
+                updateLayer();
+            });
+
+            document.getElementById('showPreviousQ').addEventListener('click', () => {
+                showCurrent = false;
+                updateLayer();
+            });
+        }
+
+        // Функция для обновления слоя заливки
+        function updateLayer() {
+            map.setPaintProperty('districts-layer', 'fill-color', [
+                'step',
+                ['get', showCurrent ? 'Q' : 'previous_Q'],
+                '#6c757d',
+                0.25, '#d7191c',
+                0.50, '#fdae61',
+                0.75, '#1a9641',
+            ]);
+        }
+
+        function calculatePreviousQ(dataset) {
+            // Создаем словарь для хранения предыдущих значений
+            const previousQByDistrict = {};
+
+            // Сортируем данные по району и времени
+            const sortedData = dataset.sort((a, b) => {
+                if (a.district_name === b.district_name) {
+                    return new Date(a.indicator_date) - new Date(b.indicator_date);
+                }
+                return a.district_name.localeCompare(b.district_name);
+            });
+
+            // Вычисляем previous_Q
+            sortedData.forEach(data => {
+                const district = data.district_name;
+
+                if (previousQByDistrict[district] !== undefined) {
+                    // Если есть предыдущее значение, добавляем его в свойства
+                    data.previous_Q = previousQByDistrict[district];
+                } else {
+                    // Если нет, устанавливаем как null
+                    data.previous_Q = null;
+                }
+
+                // Обновляем текущее значение для следующей итерации
+                previousQByDistrict[district] = data.Q;
+            });
+
+            return sortedData;
+        }
+
+        // Полноэкранный режим
+        function toggleFullScreen() {
+            const fullscreenButton = document.querySelector('#fullscreen-toggle i'); // Иконка кнопки
+            const fullscreenButtonContainer = document.querySelector('#fullscreen-toggle'); // Контейнер кнопки
+
+            if (!document.fullscreenElement) {
+                // Входим в полноэкранный режим
+                document.documentElement.requestFullscreen()
+                    .then(() => {
+                        fullscreenButton.classList.remove('fa-expand');
+                        fullscreenButton.classList.add('fa-compress');
+                        fullscreenButtonContainer.setAttribute('title', 'Свернуть экран');
+                        console.log('Вошли в полноэкранный режим');
+                    })
+                    .catch((err) => {
+                        console.error(`Ошибка при входе в полноэкранный режим: ${err.message}`);
+                    });
+            } else {
+                // Выходим из полноэкранного режима
+                document.exitFullscreen()
+                    .then(() => {
+                        fullscreenButton.classList.remove('fa-compress');
+                        fullscreenButton.classList.add('fa-expand');
+                        fullscreenButtonContainer.setAttribute('title', 'Во весь экран');
+                        console.log('Вышли из полноэкранного режима');
+                    })
+                    .catch((err) => {
+                        console.error(`Ошибка при выходе из полноэкранного режима: ${err.message}`);
+                    });
+            }
+        }
+
+
+
+
         // Обновление боковой панели
         function updateSidebar(districtData) {
+            // Проверяем, есть ли данные для выбранного района
+            if (!districtData.length) {
+                console.error('Данные для выбранного района отсутствуют.');
+                document.getElementById('district-info').innerHTML = `<p>Нет данных для выбранного района.</p>`;
+                return;
+            }
+
+            // Ищем последнюю запись для района
             const latestQuarter = districtData.reduce((latest, current) => {
                 const latestDate = new Date(latest.indicator_date || '1900-01-01');
                 const currentDate = new Date(current.indicator_date || '1900-01-01');
                 return currentDate > latestDate ? current : latest;
-            }, {});
+            });
+
+            // Извлекаем данные
+            const currentQ = latestQuarter.Q || 0;
+            const previousQ = latestQuarter.previous_Q || 0;
+            const change = previousQ !== 0 
+                ? ((currentQ - previousQ) / previousQ * 100).toFixed(2) 
+                : 'Нет данных'; // Изменение в %
 
             document.getElementById('district-info').innerHTML = `
                 <h3>${latestQuarter.district_name || 'Нет данных'}</h3>
-                <p>Индекс Q: ${latestQuarter.Q !== undefined ? latestQuarter.Q.toFixed(2) : 'Нет данных'}</p>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                    <tr>
+                        <th style="text-align: left; border-bottom: 1px solid #ddd; padding: 8px;">Параметр</th>
+                        <th style="text-align: left; border-bottom: 1px solid #ddd; padding: 8px;">Значение</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Дата</td>
+                        <td style="padding: 8px;">${latestQuarter.indicator_date || 'Нет данных'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Индекс Q</td>
+                        <td style="padding: 8px;">${latestQuarter.Q !== undefined ? latestQuarter.Q.toFixed(2) : 'Нет данных'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Численность населения</td>
+                        <td style="padding: 8px;">${latestQuarter["Численность населения"] || 'Нет данных'} чел.</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Численность родившихся</td>
+                        <td style="padding: 8px;">${latestQuarter["Численность родившихся"] || 'Нет данных'} чел.</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Численность умерших</td>
+                        <td style="padding: 8px;">${latestQuarter["Численность умерших"] || 'Нет данных'} чел.</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Естественный прирост</td>
+                        <td style="padding: 8px;">${latestQuarter["Естественный прирост"] || 'Нет данных'} чел.</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Миграция (прибыло/выбыло/сальдо)</td>
+                        <td style="padding: 8px;">
+                            ${latestQuarter["Миграция населения - прибыло"] || 'Нет данных'} / 
+                            ${latestQuarter["Миграция населения - выбыло"] || 'Нет данных'} / 
+                            ${latestQuarter["Миграция населения - сальдо"] || 'Нет данных'} чел.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Среднемесячная зарплата</td>
+                        <td style="padding: 8px;">${latestQuarter["Среднемесячная зарплата по организационно-правовым формам"] || 'Нет данных'} тг.</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Объём промышленной продукции</td>
+                        <td style="padding: 8px;">${latestQuarter["Объём промышленной продукции по всей промышленности"] || 'Нет данных'} млн тг.</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Количество действующих предприятий</td>
+                        <td style="padding: 8px;">${latestQuarter["Количество действующих субъектов всего по району"] || 'Нет данных'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Количество зарегистрированных субъектов малого бизнеса</td>
+                        <td style="padding: 8px;">${latestQuarter["Всего зарегистрированных субъектов малого предпринимательства (юрид. и физ. лица)"] || 'Нет данных'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Индекс физического объёма (промышленность)</td>
+                        <td style="padding: 8px;">${latestQuarter["Индекс физического объёма, по всей промышленности"] || 'Нет данных'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Ввод жилья</td>
+                        <td style="padding: 8px;">${latestQuarter["Ввод жилья"] || 'Нет данных'} тыс. кв.м.</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Многоквартирные жилые дома</td>
+                        <td style="padding: 8px;">${latestQuarter["Многоквартирные жилые дома"] || 'Нет данных'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Количество квартир (многоквартирные дома)</td>
+                        <td style="padding: 8px;">${latestQuarter["Количество квартир - многоквартирные дома"] || 'Нет данных'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Индивидуальные жилые дома</td>
+                        <td style="padding: 8px;">${latestQuarter["Индивидуальные жилые дома"] || 'Нет данных'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Умершие от несчастных случаев</td>
+                        <td style="padding: 8px;">${latestQuarter["Умершие  от несчастных случаев, отравлений и травм"] || 'Нет данных'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Умершие от заболеваний системы кровообращения</td>
+                        <td style="padding: 8px;">${latestQuarter["Умершие от болезней системы кровообращения"] || 'Нет данных'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Умершие от ДТП</td>
+                        <td style="padding: 8px;">${latestQuarter["Умершие от дорожно-транспортных происшествий"] || 'Нет данных'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Умершие от инфекционных и паразитарных болезней</td>
+                        <td style="padding: 8px;">${latestQuarter["Умершие от инфекционных и паразитарных болезней"] || 'Нет данных'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Умершие от самоубийств</td>
+                        <td style="padding: 8px;">${latestQuarter["Умершие  от самоубийств"] || 'Нет данных'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Количество вузов</td>
+                        <td style="padding: 8px;">${latestQuarter["ВУЗы"] || 'Нет данных'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Число браков</td>
+                        <td style="padding: 8px;">${latestQuarter["Число браков"] || 'Нет данных'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Число разводов</td>
+                        <td style="padding: 8px;">${latestQuarter["Число разводов"] || 'Нет данных'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Коэффициент брачности (на 1000 человек)</td>
+                        <td style="padding: 8px;">${latestQuarter["Коэффицент брачности на 1000 человек"] || 'Нет данных'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">Коэффициент разводимости (на 1000 человек)</td>
+                        <td style="padding: 8px;">${latestQuarter["Коэффицент разводимости на 1000 человек"] || 'Нет данных'}</td>
+                    </tr>
+                </table>
             `;
         }
 
+
+
         // Обновление графика
-        function updateChart(districtData) {
+        function updateChart(districtData = fullDataset) {
             const chartData = districtData
                 .filter(d => d.quarter_year && d.Q !== undefined)
                 .sort((a, b) => new Date(a.quarter_year) - new Date(b.quarter_year));
 
-            const labels = chartData.map(d => d.quarter_year);
+            const labels = chartData.map(d => `${d.quarter_year} (${d.district_name})`);
             const values = chartData.map(d => d.Q);
+
+            // Настройка цветов точек и линий в зависимости от значения Q
+            const pointColors = values.map(value => {
+                if (value < 0.15) return '#d7191c'; // Низкий индекс
+                if (value < 0.4) return '#fdae61'; // Средний индекс
+                if (value < 0.5) return '#a6d96a'; // Выше среднего
+                return '#1a9641'; // Высокий индекс
+            });
 
             const ctx = document.getElementById('qChart').getContext('2d');
             if (chartInstance) {
                 chartInstance.data.labels = labels;
                 chartInstance.data.datasets[0].data = values;
+                chartInstance.data.datasets[0].pointBackgroundColor = pointColors;
+                chartInstance.data.datasets[0].borderColor = pointColors;
                 chartInstance.update();
             } else {
                 chartInstance = new Chart(ctx, {
@@ -397,21 +891,39 @@
                         datasets: [{
                             label: 'Динамика индекса Q',
                             data: values,
-                            borderColor: '#1a9641',
-                            backgroundColor: 'rgba(26, 150, 65, 0.2)',
+                            borderColor: pointColors, // Цвет линии фиксирован
+                            backgroundColor: 'rgba(26, 150, 65, 0.1)', // Полупрозрачный фон для линии
+                            pointBackgroundColor: pointColors, // Цвет точек
+                            pointRadius: 4, // Размер точек
                             tension: 0.3
                         }]
                     },
                     options: {
                         responsive: true,
                         scales: {
-                            x: { title: { display: true, text: 'Квартал' } },
-                            y: { title: { display: true, text: 'Индекс Q' } }
+                            x: {
+                                title: { display: true, text: 'Квартал (Район)' },
+                                ticks: { autoSkip: true, maxTicksLimit: 10 } // Уменьшаем количество подписей на оси
+                            },
+                            y: { 
+                                title: { display: true, text: 'Индекс Q' },
+                                beginAtZero: true
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        return `Q: ${context.raw.toFixed(2)}`;
+                                    }
+                                }
+                            }
                         }
                     }
                 });
             }
         }
+
 
         // Прозрачность слоя
         document.getElementById('opacity-slider').addEventListener('input', (e) => {
@@ -425,8 +937,117 @@
 
         // Расширение графика
         document.getElementById('expandChart').addEventListener('click', () => {
-            document.getElementById('chartContainer').classList.toggle('expanded');
+            const chartContainer = document.getElementById('chartContainer');
+            const canvas = document.getElementById('qChart');
+            
+            // Переключаем класс "expanded"
+            chartContainer.classList.toggle('expanded');
+
+            // Обновляем размеры канваса
+            if (chartContainer.classList.contains('expanded')) {
+                canvas.style.width = "100%";
+                canvas.style.height = "100%";
+            } else {
+                canvas.style.width = "380px";
+                canvas.style.height = "280px";
+            }
+
+            // Перерисовываем график
+            if (chartInstance) {
+                chartInstance.resize();
+            }
         });
+
+
+        document.getElementById('showAll').addEventListener('click', () => {
+            updateChart();
+        });
+
+
+
+        // Привязываем обработчик к кнопке
+        document.addEventListener("DOMContentLoaded", () => {
+            const fullscreenToggle = document.getElementById("fullscreen-toggle");
+            const showCurrentQ = document.getElementById("showCurrentQ");
+            const showPreviousQ = document.getElementById("showPreviousQ");
+            const opacitySlider = document.getElementById("opacity-slider");
+
+            let isFullscreen = false;
+            let showQMode = 'current'; // Default mode
+
+            fullscreenToggle.addEventListener("click", () => {
+                const mapContainer = document.getElementById("map");
+
+                if (!isFullscreen) {
+                    mapContainer.requestFullscreen();
+                    fullscreenToggle.innerHTML = `<i class="fas fa-compress"></i>`;
+                    fullscreenToggle.title = "Свернуть";
+                } else {
+                    document.exitFullscreen();
+                    fullscreenToggle.innerHTML = `<i class="fas fa-expand"></i>`;
+                    fullscreenToggle.title = "Во весь экран";
+                }
+
+                isFullscreen = !isFullscreen;
+            });
+
+            showCurrentQ.addEventListener("click", () => {
+                showQMode = 'current';
+                map.setPaintProperty('districts-layer', 'fill-color', [
+                    'step',
+                    ['get', 'Q'],
+                    '#6c757d',
+                    0.20, '#d7191c',
+                    0.40, '#fdae61',
+                    0.50, '#1a9641'
+                ]);
+            });
+
+            showPreviousQ.addEventListener("click", () => {
+                showQMode = 'previous';
+                map.setPaintProperty('districts-layer', 'fill-color', [
+                    'step',
+                    ['get', 'previous_Q'],
+                    '#6c757d',
+                    0.2, '#d7191c',
+                    0.4, '#fdae61',
+                    0.5, '#1a9641'
+                ]);
+            });
+
+            opacitySlider.addEventListener("input", (e) => {
+                const opacity = e.target.value;
+                map.setPaintProperty('districts-layer', 'fill-opacity', parseFloat(opacity));
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.getElementById('sidebar');
+            const toggleSidebarButton = document.getElementById('toggleSidebar');
+
+            // Обработка нажатия на кнопку
+            toggleSidebarButton.addEventListener('click', () => {
+                const isCollapsed = sidebar.classList.contains('collapsed');
+
+                // Переключение классов для боковой панели
+                sidebar.classList.toggle('collapsed');
+                toggleSidebarButton.classList.toggle('collapsed');
+
+                // Изменение положения кнопки
+                if (isCollapsed) {
+                    toggleSidebarButton.style.left = '400px'; // Обычная ширина панели
+                } else {
+                    toggleSidebarButton.style.left = '0'; // Скрытая панель
+                }
+
+                // Поворот иконки
+                const icon = toggleSidebarButton.querySelector('i');
+                icon.classList.toggle('fa-chevron-left', isCollapsed);
+                icon.classList.toggle('fa-chevron-right', !isCollapsed);
+            });
+        });
+
+
     </script>
 </body>
 

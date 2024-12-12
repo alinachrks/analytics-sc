@@ -489,14 +489,8 @@
                 const response = await fetch(geojsonUrl);
                 const geojsonData = await response.json();
 
-                // Обогащаем данные, добавляя поле previous_Q
-                const enrichedProperties = calculatePreviousQ(geojsonData.features.map(f => f.properties));
-                fullDataset = enrichedProperties;
-
-                // Обновляем свойства объектов в GeoJSON
-                geojsonData.features.forEach((feature, index) => {
-                    feature.properties = enrichedProperties[index];
-                });
+                // Обновляем данные и сохраняем их для использования
+                fullDataset = geojsonData.features.map(feature => feature.properties);
 
                 // Добавляем источник данных на карту
                 addGeoJsonSource('districts', geojsonData);
@@ -506,9 +500,6 @@
 
                 // Устанавливаем события карты
                 setupMapInteractions();
-
-                // Устанавливаем события для переключения параметров Q и previous_Q
-                setupParameterSwitching();
 
                 console.log('Данные успешно обработаны и добавлены на карту:', geojsonData);
             } catch (error) {
@@ -536,9 +527,9 @@
                         'step',
                         ['get', 'Q'],
                         '#6c757d', // Цвет для отсутствия данных
-                        0.25, '#d7191c', // Низкий индекс Q
-                        0.50, '#fdae61', // Средний индекс Q
-                        0.75, '#1a9641', // Высокий индекс Q
+                        0.2, '#d7191c', // Низкий индекс Q
+                        0.40, '#fdae61', // Средний индекс Q
+                        0.5, '#1a9641', // Высокий индекс Q
                     ],
                     'fill-opacity': 0.5,
                 },
@@ -579,11 +570,20 @@
         function handleHover(e) {
             const properties = e.features[0].properties;
             const districtName = properties.district_name || 'Неизвестный район';
-            const currentValue = properties[showCurrent ? 'Q' : 'previous_Q'];
-            const valueLabel = showCurrent ? 'Индекс Q' : 'previous_Q';
-            const change = properties.previous_Q && properties.Q
-                ? ((properties.Q - properties.previous_Q) / properties.previous_Q * 100).toFixed(2)
-                : 'Нет данных';
+            const currentValue = properties.Q;
+            const change = properties.delta_Q !== null ? properties.delta_Q.toFixed(2) : 'Нет данных';
+            const mainContributor = properties.main_contributors || 'Нет данных';
+
+            // Определяем цвет и иконку изменения Q
+            let changeColor = '#6c757d'; // Серый для 0
+            let changeIcon = '';
+            if (properties.delta_Q > 0) {
+                changeColor = '#1a9641'; // Зеленый для положительного изменения
+                changeIcon = '↑';
+            } else if (properties.delta_Q < 0) {
+                changeColor = '#d7191c'; // Красный для отрицательного изменения
+                changeIcon = '↓';
+            }
 
             // Обновляем фильтр подсветки
             map.setFilter('districts-highlight', ['==', 'district_name', districtName]);
@@ -596,53 +596,68 @@
                 .setLngLat(e.lngLat)
                 .setHTML(`
                     <strong>${districtName}</strong><br>
-                    <strong>${valueLabel}:</strong> ${currentValue !== undefined ? currentValue.toFixed(2) : 'Нет данных'}<br>
-                    ${showCurrent ? `<strong>Изменение Q:</strong> ${change}%` : ''}
+                    <strong>Индекс качества жизни (Q):</strong> ${currentValue !== undefined ? currentValue.toFixed(2) : 'Нет данных'}<br>
+                    <strong style="color: ${changeColor};">
+                        Изменение Q: ${change !== 'Нет данных' ? `${changeIcon} ${change}%` : 'Нет данных'}
+                    </strong><br>
+                    <strong>Основная причина:</strong> ${mainContributor}<br>
+                    <em>Для получения подробной информации нажмите на район</em>
                 `)
                 .addTo(map);
 
             map.getCanvas().style.cursor = 'pointer';
         }
 
-        // Функция для обработки кликов на районы
-        // Раскрытие графика при клике на район
-        function handleClick(e) {
-            const properties = e.features[0].properties;
-            const districtName = properties.district_name || 'Неизвестный район';
 
-            const currentQ = properties.Q !== undefined ? properties.Q.toFixed(2) : 'Нет данных';
-            const previousQ = properties.previous_Q !== undefined ? properties.previous_Q.toFixed(2) : 'Нет данных';
-            const deltaD = properties.delta_D !== undefined ? properties.delta_D.toFixed(2) : 'Нет данных';
-            const deltaE = properties.delta_E !== undefined ? properties.delta_E.toFixed(2) : 'Нет данных';
-            const deltaH = properties.delta_H !== undefined ? properties.delta_H.toFixed(2) : 'Нет данных';
-            const deltaS = properties.delta_S !== undefined ? properties.delta_S.toFixed(2) : 'Нет данных';
-            const deltaSS = properties.delta_SS !== undefined ? properties.delta_SS.toFixed(2) : 'Нет данных';
-            const mainContributors = properties.main_contributors || 'Нет данных';
-
-            // Обновляем боковую панель
-            document.getElementById('district-info').innerHTML = `
-                <h3>${districtName}</h3>
-                <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-                    <tr><th>Параметр</th><th>Значение</th></tr>
-                    <tr><td>Текущий Q</td><td>${currentQ}</td></tr>
-                    <tr><td>Предыдущий Q</td><td>${previousQ}</td></tr>
-                    <tr><td>Изменение (демография)</td><td>${deltaD}</td></tr>
-                    <tr><td>Изменение (экономика)</td><td>${deltaE}</td></tr>
-                    <tr><td>Изменение (жилищные условия)</td><td>${deltaH}</td></tr>
-                    <tr><td>Изменение (безопасность)</td><td>${deltaS}</td></tr>
-                    <tr><td>Изменение (социальная стабильность)</td><td>${deltaSS}</td></tr>
-                    <tr><td>Ключевые категории</td><td>${mainContributors}</td></tr>
-                </table>
-            `;
-
-            // Обновляем график
-            updateChart([properties]);
-
-            // Раскрытие графика
-            const chartContainer = document.getElementById('chartContainer');
-            chartContainer.classList.remove('minimized');
-            chartContainer.classList.add('expanded');
+        // Функция для сброса подсветки
+        function clearHover() {
+            map.setFilter('districts-highlight', ['==', 'district_name', '']);
+            if (popup) popup.remove();
+            map.getCanvas().style.cursor = '';
         }
+
+      // Функция для обработки кликов на районы
+      function handleClick(e) {
+        const properties = e.features[0].properties;
+        const districtName = properties.district_name || 'Неизвестный район';
+
+        const currentQ = properties.Q !== undefined ? properties.Q.toFixed(2) : 'Нет данных';
+        const previousQ = properties.previous_Q !== undefined ? properties.previous_Q.toFixed(2) : 'Нет данных';
+        const deltaD = properties.delta_D !== undefined ? properties.delta_D.toFixed(2) : 'Нет данных';
+        const deltaE = properties.delta_E !== undefined ? properties.delta_E.toFixed(2) : 'Нет данных';
+        const deltaH = properties.delta_H !== undefined ? properties.delta_H.toFixed(2) : 'Нет данных';
+        const deltaS = properties.delta_S !== undefined ? properties.delta_S.toFixed(2) : 'Нет данных';
+        const deltaSS = properties.delta_SS !== undefined ? properties.delta_SS.toFixed(2) : 'Нет данных';
+        const mainContributors = properties.main_contributors || 'Нет данных';
+
+        // Обновляем боковую панель
+        document.getElementById('district-info').innerHTML = `
+            <h3>${districtName}</h3>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                <tr><th>Параметр</th><th>Значение</th></tr>
+                <tr><td>Текущий Q</td><td>${currentQ}</td></tr>
+                <tr><td>Предыдущий Q</td><td>${previousQ}</td></tr>
+                <tr><td>Изменение (демография)</td><td>${deltaD}</td></tr>
+                <tr><td>Изменение (экономика)</td><td>${deltaE}</td></tr>
+                <tr><td>Изменение (жилищные условия)</td><td>${deltaH}</td></tr>
+                <tr><td>Изменение (безопасность)</td><td>${deltaS}</td></tr>
+                <tr><td>Изменение (социальная стабильность)</td><td>${deltaSS}</td></tr>
+                <tr><td>Ключевые категории</td><td>${mainContributors}</td></tr>
+            </table>
+        `;
+
+        // Фильтруем данные для графика по выбранному району
+        const districtData = fullDataset.filter(item => item.district_name === districtName);
+
+        // Обновляем график с данными для выбранного района
+        updateChart(districtData);
+
+        // Раскрытие графика
+        const chartContainer = document.getElementById('chartContainer');
+        chartContainer.classList.remove('minimized');
+        chartContainer.classList.add('expanded');
+    }
+
 
         // Сжатие графика
         document.getElementById('chartContainer').addEventListener('click', () => {
@@ -653,13 +668,6 @@
             }
         });
 
-
-        // Функция для сброса подсветки
-        function clearHover() {
-            map.setFilter('districts-highlight', ['==', 'district_name', '']);
-            if (popup) popup.remove();
-            map.getCanvas().style.cursor = '';
-        }
 
         // Функция для переключения между Q и previous_Q
         function setupParameterSwitching() {
@@ -897,20 +905,28 @@
 
 
         // Обновление графика
-        function updateChart(districtData = fullDataset) {
-            const chartData = districtData
-                .filter(d => d.quarter_year && d.Q !== undefined)
-                .sort((a, b) => new Date(a.quarter_year) - new Date(b.quarter_year));
+        function updateChart(data) {
+            // Проверяем, есть ли данные
+            if (!data || data.length === 0) {
+                console.warn('Нет данных для отображения на графике.');
+                return;
+            }
 
-            const labels = chartData.map(d => d.quarter_year); // Только квартал в оси X
-            const values = chartData.map(d => d.Q);
-            const deltaD = chartData.map(d => d.delta_D || 0);
-            const deltaE = chartData.map(d => d.delta_E || 0);
-            const deltaH = chartData.map(d => d.delta_H || 0);
-            const deltaS = chartData.map(d => d.delta_S || 0);
-            const deltaSS = chartData.map(d => d.delta_SS || 0);
+            // Подготовка данных для графика
+            const chartData = data
+                .filter(d => d.quarter_year && d.Q !== undefined) // Фильтруем только записи с данными
+                .sort((a, b) => new Date(a.quarter_year) - new Date(b.quarter_year)) // Сортируем по дате
+                .map(d => ({
+                    date: d.quarter_year,
+                    value: d.Q,
+                    delta: d.delta_Q || 0 // Добавляем изменения Q, если есть
+                }));
 
-            // Настройка цветов точек и линий в зависимости от значения Q
+            const labels = chartData.map(item => item.date); // Метки на оси X (даты)
+            const values = chartData.map(item => item.value); // Значения индекса Q
+            const deltas = chartData.map(item => item.delta); // Изменения индекса Q
+
+            // Настройка цветов точек в зависимости от значения индекса Q
             const pointColors = values.map(value => {
                 if (value < 0.15) return '#d7191c'; // Низкий индекс
                 if (value < 0.4) return '#fdae61'; // Средний индекс
@@ -919,21 +935,16 @@
             });
 
             const ctx = document.getElementById('qChart').getContext('2d');
-            const districtName = districtData[0]?.district_name || 'Неизвестный район'; // Название района для заголовка графика
 
+            // Если график уже создан, обновляем его
             if (chartInstance) {
                 chartInstance.data.labels = labels;
                 chartInstance.data.datasets[0].data = values;
-                chartInstance.data.datasets[1].data = deltaD;
-                chartInstance.data.datasets[2].data = deltaE;
-                chartInstance.data.datasets[3].data = deltaH;
-                chartInstance.data.datasets[4].data = deltaS;
-                chartInstance.data.datasets[5].data = deltaSS;
-                chartInstance.data.datasets[0].pointBackgroundColor = pointColors;
-                chartInstance.data.datasets[0].borderColor = pointColors;
-                chartInstance.options.plugins.title.text = `Динамика показателей для района: ${districtName}`;
+                chartInstance.data.datasets[0].pointBackgroundColor = pointColors; // Обновляем цвета точек
+                chartInstance.data.datasets[1].data = deltas; // Обновляем изменения Q
                 chartInstance.update();
             } else {
+                // Создаем новый график, если он еще не создан
                 chartInstance = new Chart(ctx, {
                     type: 'line',
                     data: {
@@ -942,83 +953,60 @@
                             {
                                 label: 'Индекс Q',
                                 data: values,
-                                borderColor: pointColors,
+                                borderColor: '#1a9641',
                                 backgroundColor: 'rgba(26, 150, 65, 0.1)',
-                                pointBackgroundColor: pointColors,
+                                pointBackgroundColor: pointColors, // Цвет точек
+                                pointRadius: 5,
+                                tension: 0.3 // Плавность линии
+                            },
+                            {
+                                label: 'Изменение Q',
+                                data: deltas,
+                                borderColor: '#ff7f0e',
+                                backgroundColor: 'rgba(255, 127, 14, 0.1)',
                                 pointRadius: 4,
-                                tension: 0.3
-                            },
-                            {
-                                label: 'Демография',
-                                data: deltaD,
-                                borderColor: '#d7191c',
-                                backgroundColor: 'rgba(215, 25, 28, 0.1)',
-                                pointRadius: 3,
-                                tension: 0.3
-                            },
-                            {
-                                label: 'Экономика',
-                                data: deltaE,
-                                borderColor: '#fdae61',
-                                backgroundColor: 'rgba(253, 174, 97, 0.1)',
-                                pointRadius: 3,
-                                tension: 0.3
-                            },
-                            {
-                                label: 'Жилищные условия',
-                                data: deltaH,
-                                borderColor: '#fee08b',
-                                backgroundColor: 'rgba(254, 224, 139, 0.1)',
-                                pointRadius: 3,
-                                tension: 0.3
-                            },
-                            {
-                                label: 'Безопасность',
-                                data: deltaS,
-                                borderColor: '#4575b4',
-                                backgroundColor: 'rgba(69, 117, 180, 0.1)',
-                                pointRadius: 3,
-                                tension: 0.3
-                            },
-                            {
-                                label: 'Социальная стабильность',
-                                data: deltaSS,
-                                borderColor: '#91bfdb',
-                                backgroundColor: 'rgba(145, 191, 219, 0.1)',
-                                pointRadius: 3,
+                                borderDash: [5, 5], // Пунктирная линия
                                 tension: 0.3
                             }
                         ]
                     },
                     options: {
                         responsive: true,
-                        scales: {
-                            x: {
-                                title: { display: true, text: 'Квартал' },
-                                ticks: { autoSkip: true, maxTicksLimit: 10 }
-                            },
-                            y: {
-                                title: { display: true, text: 'Изменения' },
-                                beginAtZero: true
-                            }
-                        },
                         plugins: {
+                            legend: { display: true }, // Показываем легенду
                             tooltip: {
                                 callbacks: {
+                                    // Кастомные подсказки
                                     label: function (context) {
-                                        return `${context.dataset.label}: ${context.raw.toFixed(2)}`;
+                                        const value = context.raw.toFixed(2);
+                                        if (context.dataset.label === 'Индекс Q') {
+                                            return `Индекс Q: ${value}`;
+                                        } else {
+                                            return `Изменение Q: ${value}%`;
+                                        }
                                     }
                                 }
                             },
                             title: {
                                 display: true,
-                                text: `Динамика показателей для района: ${districtName}`
+                                text: 'Динамика индекса качества жизни' // Заголовок графика
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: { display: true, text: 'Квартал' }, // Подпись оси X
+                                ticks: { autoSkip: false, maxRotation: 45 } // Настройка меток
+                            },
+                            y: {
+                                title: { display: true, text: 'Индекс Q' }, // Подпись оси Y
+                                beginAtZero: true // Начало шкалы с нуля
                             }
                         }
                     }
                 });
             }
         }
+
 
         document.addEventListener("DOMContentLoaded", () => {
             // Элементы управления

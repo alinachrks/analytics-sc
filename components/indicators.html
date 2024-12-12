@@ -29,62 +29,26 @@
         /* Сайдбар */
         .sidebar {
             width: 400px;
+            max-width: 80%; /* Для мобильных устройств */
             padding: 12px;
             background: rgba(20, 30, 50, 0.95);
             color: #ffffff;
             box-shadow: 2px 0 12px rgba(0, 0, 0, 0.3);
             border-right: 1px solid rgba(255, 255, 255, 0.1);
             overflow-y: auto;
+            height: 100%; /* Полная высота */
+            position: fixed; /* Фиксация на экране */
+            left: 0;
+            top: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease; /* Плавные переходы */
+            transform: translateX(0); /* По умолчанию видима */
+            z-index: 100; /* Над картой */
         }
 
-        .sidebar h3 {
-            font-size: 18px;
-            margin-bottom: 12px;
-            color: #a1cde1;
-            font-weight: bold;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-            padding-bottom: 10px;
-        }
-
-        .sidebar p {
-            font-size: 16px;
-            color: #b3c7e6;
-            line-height: 1.8;
-        }
-
-        /* Информационный блок */
-        .info {
-            background: rgba(30, 50, 80, 0.9);
-            padding: 8px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .info strong {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 16px;
-            color: #fbc02d;
-        }
-
-        .info span {
-            display: block;
-            font-size: 14px;
-            color: #e3f2fd;
-            margin-bottom: 5px;
-        }
-
-         /* Скрытая боковая панель */
-         .sidebar.collapsed {
-            width: 0; /* Устанавливаем ширину в 0 */
-            padding: 0; /* Убираем внутренние отступы */
-            overflow: hidden; /* Скрываем содержимое */
-            transition: width 0.3s ease, padding 0.3s ease; /* Плавная анимация */
-        }
-
-        .toggle-sidebar.collapsed {
-            left: 0; /* Кнопка должна оставаться у края окна */
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+            opacity: 0; /* Для плавного исчезновения */
+            transition: transform 0.3s ease, opacity 0.3s ease; /* Анимация */
         }
 
 
@@ -92,8 +56,8 @@
         .toggle-sidebar {
             position: fixed;
             top: 20px;
-            left: 400px; /* Расположение кнопки у края панели */
-            z-index: 4;
+            left: 410px; /* Примерное размещение */
+            z-index: 110; /* Над панелью */
             width: 40px;
             height: 40px;
             background: linear-gradient(145deg, #7b9cc0, #2e4359); /* Градиент */
@@ -108,12 +72,8 @@
             transition: left 0.3s ease, background 0.2s ease;
         }
 
-        .toggle-sidebar:hover {
-            background: linear-gradient(145deg, #5f7691, #253d54); /* Градиент при наведении */
-        }
-
         .toggle-sidebar.collapsed {
-            left: 0; /* Сдвигаем кнопку, когда панель скрыта */
+            left: 20px; /* Расположение кнопки у края экрана */
         }
 
         .toggle-sidebar i {
@@ -122,7 +82,25 @@
         }
 
         .toggle-sidebar.collapsed i {
-            transform: rotate(180deg); /* Поворачиваем стрелку */
+            transform: rotate(180deg); /* Поворот стрелки */
+        }
+
+        .toggle-sidebar.collapsed {
+            left: 0; /* Кнопка должна оставаться у края окна */
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 300px; /* Уменьшаем ширину */
+            }
+
+            .toggle-sidebar {
+                left: 310px; /* Соответствующее положение кнопки */
+            }
+
+            .toggle-sidebar.collapsed {
+                left: 20px;
+            }
         }
 
 
@@ -157,23 +135,24 @@
 
         /* Кнопка управления сайдбаром */
         .toggle-sidebar {
-            position: absolute;
+            position: fixed;
             top: 20px;
-            right: -15px;
-            z-index: 4;
+            left: 400px; /* Или другое значение, зависящее от состояния боковой панели */
+            z-index: 1000; /* Убедитесь, что значение выше остальных элементов */
             width: 40px;
             height: 40px;
-            background: linear-gradient(135deg, #6d8692, #2e5d76);
-            color: #ffffff;
+            background: linear-gradient(145deg, #7b9cc0, #2e4359);
+            color: white;
             border: none;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transition: transform 0.3s, background 0.3s;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+            transition: left 0.3s ease, background 0.2s ease;
         }
+
 
         .toggle-sidebar:hover {
             background: linear-gradient(135deg, #7c939e, #2a5975);
@@ -266,6 +245,25 @@
             background: linear-gradient(135deg, #98a5ab, #356580);
             transform: scale(1.1);
         }
+
+        .chart-container.minimized {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #7c8f98, #296585);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .chart-container.minimized canvas,
+        .chart-container.minimized button {
+            display: none; /* Прячем содержимое */
+        }
+
 
         /* Общие стили кнопок */
         .button-container {
@@ -395,73 +393,74 @@
 </head>
 
 <body>
-    <body>
-        <!-- Сайдбар -->
-        <div class="sidebar" id="sidebar">
-            <button class="toggle-sidebar" id="toggleSidebar" title="Скрыть панель">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-            <h3>Информация по району</h3>
-            <p>Выберите район на карте, чтобы увидеть детальную информацию и графики.</p>
-    
-            <div class="info">
-                <strong> </strong>
-                <div id="district-info">
-                    <p>Нет данных. Выберите район для отображения информации.</p>
-                </div>
-            </div>
-    
-            <div class="legend">
-                <h4>Легенда:</h4>
-                <ul>
-                    <li><span style="color: #1a9641;">●</span> Высокий индекс Q (0.75 - 1.00)</li>
-                    <li><span style="color: #fdae61;">●</span> Средний индекс Q (0.50 - 0.74)</li>
-                    <li><span style="color: #d7191c;">●</span> Низкий индекс Q (0.25 - 0.49)</li>
-                    <li><span style="color: #6c757d;">●</span> Очень низкий индекс Q (0.00 - 0.24)</li>
-                </ul>
+    <!-- Сайдбар -->
+    <div class="sidebar" id="sidebar">
+        <!-- Содержимое боковой панели -->
+        <h3>Информация по району</h3>
+        <p>Выберите район на карте, чтобы увидеть детальную информацию и графики.</p>
+        <div class="info">
+            <strong> </strong>
+            <div id="district-info">
+                <p>Нет данных. Выберите район для отображения информации.</p>
             </div>
         </div>
+        <div class="legend">
+            <h4>Легенда:</h4>
+            <ul>
+                <li><span style="color: #1a9641;">●</span> Высокий индекс Q (0.75 - 1.00)</li>
+                <li><span style="color: #fdae61;">●</span> Средний индекс Q (0.50 - 0.74)</li>
+                <li><span style="color: #d7191c;">●</span> Низкий индекс Q (0.25 - 0.49)</li>
+                <li><span style="color: #6c757d;">●</span> Очень низкий индекс Q (0.00 - 0.24)</li>
+            </ul>
+        </div>
+    </div>
     
-        <!-- Карта -->
-        <div id="map" class="map-container"></div>
+    <!-- Кнопка управления -->
+    <button class="toggle-sidebar" id="toggleSidebar" title="Скрыть панель">
+        <i class="fas fa-chevron-left"></i>
+    </button>
     
-        <!-- График -->
-        <div class="chart-container" id="chartContainer">
-            <canvas id="qChart"></canvas>
-            <button class="expand-chart" id="expandChart" title="Увеличить график">
+
+    <!-- Карта -->
+    <div id="map" class="map-container"></div>
+
+    <!-- График -->
+    <div class="chart-container minimized" id="chartContainer">
+        <i class="fas fa-chart-line"></i>
+        <canvas id="qChart"></canvas>
+        <button class="expand-chart" id="expandChart" title="Свернуть график">
+            <i class="fas fa-compress"></i>
+        </button>
+    </div>
+
+    <div class="controls">
+        <div class="left-controls">
+            <div class="transparency-control" title="Настроить прозрачность">
+                <label for="opacity-slider">
+                    <i class="fas fa-adjust"></i>
+                </label>
+                <input id="opacity-slider" type="range" min="0" max="1" step="0.1" value="0.7">
+            </div>
+        </div>
+        <div class="right-controls">
+            <button id="fullscreen-toggle" class="action-button" title="Во весь экран">
                 <i class="fas fa-expand"></i>
             </button>
         </div>
-    
-        <div class="controls">
-            <div class="left-controls">
-                <div class="transparency-control" title="Настроить прозрачность">
-                    <label for="opacity-slider">
-                        <i class="fas fa-adjust"></i>
-                    </label>
-                    <input id="opacity-slider" type="range" min="0" max="1" step="0.1" value="0.7">
-                </div>
-            </div>
-            <div class="right-controls">
-                <button id="fullscreen-toggle" class="action-button" title="Во весь экран">
-                    <i class="fas fa-expand"></i>
-                </button>
-            </div>
-        </div>
-    
-        <div class="button-container">
-            <button id="showAll" class="action-button" title="Динамика всех районов">
-                <i class="fas fa-chart-bar"></i>
-            </button>
-            <button id="showCurrentQ" class="action-button" title="Показать Q">
-                <i class="fas fa-chart-line"></i>
-            </button>
-            <button id="showPreviousQ" class="action-button" title="Показать previous_Q">
-                <i class="fas fa-history"></i>
-            </button>
-        </div>
+    </div>
 
-    
+    <div class="button-container">
+        <button id="showAll" class="action-button" title="Динамика всех районов">
+            <i class="fas fa-chart-bar"></i>
+        </button>
+        <button id="showCurrentQ" class="action-button" title="Показать Q">
+            <i class="fas fa-chart-line"></i>
+        </button>
+        <button id="showPreviousQ" class="action-button" title="Показать previous_Q">
+            <i class="fas fa-history"></i>
+        </button>
+    </div>
+
     <script>
         // Устанавливаем токен Mapbox
         mapboxgl.accessToken = 'pk.eyJ1IjoiYWxpbmFjaCIsImEiOiJjbGlpcnZpaTgwMTZ4M2twaGo1NjRsNHhhIn0.9jw_R_D1i1nqOtaolld-dQ';
@@ -475,7 +474,7 @@
         });
 
         // URL для данных GeoJSON
-        const geojsonUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/quality_of_life_by_districts.geojson';
+        const geojsonUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/quality_of_life_by_districts_.geojson';
 
         let fullDataset = []; // Хранилище всех данных
         let popup; // Переменная для всплывающей подсказки
@@ -606,16 +605,54 @@
         }
 
         // Функция для обработки кликов на районы
+        // Раскрытие графика при клике на район
         function handleClick(e) {
-            const districtName = e.features[0].properties.district_name.trim().toLowerCase();
-            const districtData = fullDataset.filter(d => d.district_name.trim().toLowerCase() === districtName);
+            const properties = e.features[0].properties;
+            const districtName = properties.district_name || 'Неизвестный район';
 
-            console.log('Выбранный район:', districtName);
-            console.log('Найденные данные:', districtData);
+            const currentQ = properties.Q !== undefined ? properties.Q.toFixed(2) : 'Нет данных';
+            const previousQ = properties.previous_Q !== undefined ? properties.previous_Q.toFixed(2) : 'Нет данных';
+            const deltaD = properties.delta_D !== undefined ? properties.delta_D.toFixed(2) : 'Нет данных';
+            const deltaE = properties.delta_E !== undefined ? properties.delta_E.toFixed(2) : 'Нет данных';
+            const deltaH = properties.delta_H !== undefined ? properties.delta_H.toFixed(2) : 'Нет данных';
+            const deltaS = properties.delta_S !== undefined ? properties.delta_S.toFixed(2) : 'Нет данных';
+            const deltaSS = properties.delta_SS !== undefined ? properties.delta_SS.toFixed(2) : 'Нет данных';
+            const mainContributors = properties.main_contributors || 'Нет данных';
 
-            updateSidebar(districtData);
-            updateChart(districtData);
+            // Обновляем боковую панель
+            document.getElementById('district-info').innerHTML = `
+                <h3>${districtName}</h3>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                    <tr><th>Параметр</th><th>Значение</th></tr>
+                    <tr><td>Текущий Q</td><td>${currentQ}</td></tr>
+                    <tr><td>Предыдущий Q</td><td>${previousQ}</td></tr>
+                    <tr><td>Изменение (демография)</td><td>${deltaD}</td></tr>
+                    <tr><td>Изменение (экономика)</td><td>${deltaE}</td></tr>
+                    <tr><td>Изменение (жилищные условия)</td><td>${deltaH}</td></tr>
+                    <tr><td>Изменение (безопасность)</td><td>${deltaS}</td></tr>
+                    <tr><td>Изменение (социальная стабильность)</td><td>${deltaSS}</td></tr>
+                    <tr><td>Ключевые категории</td><td>${mainContributors}</td></tr>
+                </table>
+            `;
+
+            // Обновляем график
+            updateChart([properties]);
+
+            // Раскрытие графика
+            const chartContainer = document.getElementById('chartContainer');
+            chartContainer.classList.remove('minimized');
+            chartContainer.classList.add('expanded');
         }
+
+        // Сжатие графика
+        document.getElementById('chartContainer').addEventListener('click', () => {
+            const chartContainer = document.getElementById('chartContainer');
+            if (!chartContainer.classList.contains('minimized')) {
+                chartContainer.classList.add('minimized');
+                chartContainer.classList.remove('expanded');
+            }
+        });
+
 
         // Функция для сброса подсветки
         function clearHover() {
@@ -865,8 +902,13 @@
                 .filter(d => d.quarter_year && d.Q !== undefined)
                 .sort((a, b) => new Date(a.quarter_year) - new Date(b.quarter_year));
 
-            const labels = chartData.map(d => `${d.quarter_year} (${d.district_name})`);
+            const labels = chartData.map(d => d.quarter_year); // Только квартал в оси X
             const values = chartData.map(d => d.Q);
+            const deltaD = chartData.map(d => d.delta_D || 0);
+            const deltaE = chartData.map(d => d.delta_E || 0);
+            const deltaH = chartData.map(d => d.delta_H || 0);
+            const deltaS = chartData.map(d => d.delta_S || 0);
+            const deltaSS = chartData.map(d => d.delta_SS || 0);
 
             // Настройка цветов точек и линий в зависимости от значения Q
             const pointColors = values.map(value => {
@@ -877,36 +919,86 @@
             });
 
             const ctx = document.getElementById('qChart').getContext('2d');
+            const districtName = districtData[0]?.district_name || 'Неизвестный район'; // Название района для заголовка графика
+
             if (chartInstance) {
                 chartInstance.data.labels = labels;
                 chartInstance.data.datasets[0].data = values;
+                chartInstance.data.datasets[1].data = deltaD;
+                chartInstance.data.datasets[2].data = deltaE;
+                chartInstance.data.datasets[3].data = deltaH;
+                chartInstance.data.datasets[4].data = deltaS;
+                chartInstance.data.datasets[5].data = deltaSS;
                 chartInstance.data.datasets[0].pointBackgroundColor = pointColors;
                 chartInstance.data.datasets[0].borderColor = pointColors;
+                chartInstance.options.plugins.title.text = `Динамика показателей для района: ${districtName}`;
                 chartInstance.update();
             } else {
                 chartInstance = new Chart(ctx, {
                     type: 'line',
                     data: {
                         labels: labels,
-                        datasets: [{
-                            label: 'Динамика индекса Q',
-                            data: values,
-                            borderColor: pointColors, // Цвет линии фиксирован
-                            backgroundColor: 'rgba(26, 150, 65, 0.1)', // Полупрозрачный фон для линии
-                            pointBackgroundColor: pointColors, // Цвет точек
-                            pointRadius: 4, // Размер точек
-                            tension: 0.3
-                        }]
+                        datasets: [
+                            {
+                                label: 'Индекс Q',
+                                data: values,
+                                borderColor: pointColors,
+                                backgroundColor: 'rgba(26, 150, 65, 0.1)',
+                                pointBackgroundColor: pointColors,
+                                pointRadius: 4,
+                                tension: 0.3
+                            },
+                            {
+                                label: 'Демография',
+                                data: deltaD,
+                                borderColor: '#d7191c',
+                                backgroundColor: 'rgba(215, 25, 28, 0.1)',
+                                pointRadius: 3,
+                                tension: 0.3
+                            },
+                            {
+                                label: 'Экономика',
+                                data: deltaE,
+                                borderColor: '#fdae61',
+                                backgroundColor: 'rgba(253, 174, 97, 0.1)',
+                                pointRadius: 3,
+                                tension: 0.3
+                            },
+                            {
+                                label: 'Жилищные условия',
+                                data: deltaH,
+                                borderColor: '#fee08b',
+                                backgroundColor: 'rgba(254, 224, 139, 0.1)',
+                                pointRadius: 3,
+                                tension: 0.3
+                            },
+                            {
+                                label: 'Безопасность',
+                                data: deltaS,
+                                borderColor: '#4575b4',
+                                backgroundColor: 'rgba(69, 117, 180, 0.1)',
+                                pointRadius: 3,
+                                tension: 0.3
+                            },
+                            {
+                                label: 'Социальная стабильность',
+                                data: deltaSS,
+                                borderColor: '#91bfdb',
+                                backgroundColor: 'rgba(145, 191, 219, 0.1)',
+                                pointRadius: 3,
+                                tension: 0.3
+                            }
+                        ]
                     },
                     options: {
                         responsive: true,
                         scales: {
                             x: {
-                                title: { display: true, text: 'Квартал (Район)' },
-                                ticks: { autoSkip: true, maxTicksLimit: 10 } // Уменьшаем количество подписей на оси
+                                title: { display: true, text: 'Квартал' },
+                                ticks: { autoSkip: true, maxTicksLimit: 10 }
                             },
-                            y: { 
-                                title: { display: true, text: 'Индекс Q' },
+                            y: {
+                                title: { display: true, text: 'Изменения' },
                                 beginAtZero: true
                             }
                         },
@@ -914,9 +1006,13 @@
                             tooltip: {
                                 callbacks: {
                                     label: function (context) {
-                                        return `Q: ${context.raw.toFixed(2)}`;
+                                        return `${context.dataset.label}: ${context.raw.toFixed(2)}`;
                                     }
                                 }
+                            },
+                            title: {
+                                display: true,
+                                text: `Динамика показателей для района: ${districtName}`
                             }
                         }
                     }
@@ -924,129 +1020,113 @@
             }
         }
 
-
-        // Прозрачность слоя
-        document.getElementById('opacity-slider').addEventListener('input', (e) => {
-            map.setPaintProperty('districts-layer', 'fill-opacity', parseFloat(e.target.value));
-        });
-
-        // Сворачивание боковой панели
-        document.getElementById('toggleSidebar').addEventListener('click', () => {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-        });
-
-        // Расширение графика
-        document.getElementById('expandChart').addEventListener('click', () => {
-            const chartContainer = document.getElementById('chartContainer');
-            const canvas = document.getElementById('qChart');
-            
-            // Переключаем класс "expanded"
-            chartContainer.classList.toggle('expanded');
-
-            // Обновляем размеры канваса
-            if (chartContainer.classList.contains('expanded')) {
-                canvas.style.width = "100%";
-                canvas.style.height = "100%";
-            } else {
-                canvas.style.width = "380px";
-                canvas.style.height = "280px";
-            }
-
-            // Перерисовываем график
-            if (chartInstance) {
-                chartInstance.resize();
-            }
-        });
-
-
-        document.getElementById('showAll').addEventListener('click', () => {
-            updateChart();
-        });
-
-
-
-        // Привязываем обработчик к кнопке
         document.addEventListener("DOMContentLoaded", () => {
+            // Элементы управления
             const fullscreenToggle = document.getElementById("fullscreen-toggle");
             const showCurrentQ = document.getElementById("showCurrentQ");
             const showPreviousQ = document.getElementById("showPreviousQ");
             const opacitySlider = document.getElementById("opacity-slider");
+            const sidebar = document.getElementById("sidebar");
+            const toggleSidebarButton = document.getElementById("toggleSidebar");
+            const chartContainer = document.getElementById("chartContainer");
 
+            // Состояния
             let isFullscreen = false;
-            let showQMode = 'current'; // Default mode
+            let showQMode = "current"; // Режим отображения (current/previous)
 
+            // Полноэкранный режим
             fullscreenToggle.addEventListener("click", () => {
                 const mapContainer = document.getElementById("map");
-
                 if (!isFullscreen) {
-                    mapContainer.requestFullscreen();
-                    fullscreenToggle.innerHTML = `<i class="fas fa-compress"></i>`;
-                    fullscreenToggle.title = "Свернуть";
+                    mapContainer.requestFullscreen()
+                        .then(() => {
+                            fullscreenToggle.innerHTML = `<i class="fas fa-compress"></i>`;
+                            fullscreenToggle.title = "Свернуть";
+                        })
+                        .catch(err => console.error(`Ошибка при входе в полноэкранный режим: ${err.message}`));
                 } else {
-                    document.exitFullscreen();
-                    fullscreenToggle.innerHTML = `<i class="fas fa-expand"></i>`;
-                    fullscreenToggle.title = "Во весь экран";
+                    document.exitFullscreen()
+                        .then(() => {
+                            fullscreenToggle.innerHTML = `<i class="fas fa-expand"></i>`;
+                            fullscreenToggle.title = "Во весь экран";
+                        })
+                        .catch(err => console.error(`Ошибка при выходе из полноэкранного режима: ${err.message}`));
                 }
-
                 isFullscreen = !isFullscreen;
             });
 
-            showCurrentQ.addEventListener("click", () => {
-                showQMode = 'current';
-                map.setPaintProperty('districts-layer', 'fill-color', [
-                    'step',
-                    ['get', 'Q'],
-                    '#6c757d',
-                    0.20, '#d7191c',
-                    0.40, '#fdae61',
-                    0.50, '#1a9641'
+            // Переключение режима отображения Q
+            const updateLayerColor = () => {
+                const property = showQMode === "current" ? "Q" : "previous_Q";
+                map.setPaintProperty("districts-layer", "fill-color", [
+                    "step",
+                    ["get", property],
+                    "#6c757d",
+                    0.20, "#d7191c",
+                    0.40, "#fdae61",
+                    0.50, "#1a9641"
                 ]);
-            });
+            };
 
-            showPreviousQ.addEventListener("click", () => {
-                showQMode = 'previous';
-                map.setPaintProperty('districts-layer', 'fill-color', [
-                    'step',
-                    ['get', 'previous_Q'],
-                    '#6c757d',
-                    0.2, '#d7191c',
-                    0.4, '#fdae61',
-                    0.5, '#1a9641'
-                ]);
-            });
+            const toggleShowQMode = (mode) => {
+                showQMode = mode;
+                updateLayerColor();
+            };
 
+            showCurrentQ.addEventListener("click", () => toggleShowQMode("current"));
+            showPreviousQ.addEventListener("click", () => toggleShowQMode("previous"));
+
+            // Изменение прозрачности слоя
             opacitySlider.addEventListener("input", (e) => {
-                const opacity = e.target.value;
-                map.setPaintProperty('districts-layer', 'fill-opacity', parseFloat(opacity));
+                const opacity = parseFloat(e.target.value);
+                map.setPaintProperty("districts-layer", "fill-opacity", opacity);
             });
-        });
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const sidebar = document.getElementById('sidebar');
-            const toggleSidebarButton = document.getElementById('toggleSidebar');
+            // Функция для обработки кнопки боковой панели
+            const handleSidebarToggle = () => {
+                const isCollapsed = sidebar.classList.contains("collapsed");
 
-            // Обработка нажатия на кнопку
-            toggleSidebarButton.addEventListener('click', () => {
-                const isCollapsed = sidebar.classList.contains('collapsed');
+                sidebar.classList.toggle("collapsed", !isCollapsed);
+                toggleSidebarButton.classList.toggle("collapsed", !isCollapsed);
+                toggleSidebarButton.style.left = isCollapsed ? "400px" : "20px";
 
-                // Переключение классов для боковой панели
-                sidebar.classList.toggle('collapsed');
-                toggleSidebarButton.classList.toggle('collapsed');
+                const icon = toggleSidebarButton.querySelector("i");
+                icon.classList.toggle("fa-chevron-left", isCollapsed);
+                icon.classList.toggle("fa-chevron-right", !isCollapsed);
+            };
 
-                // Изменение положения кнопки
-                if (isCollapsed) {
-                    toggleSidebarButton.style.left = '400px'; // Обычная ширина панели
+            // Логика для боковой панели
+            toggleSidebarButton.addEventListener("click", handleSidebarToggle);
+
+            // Логика для графика
+            const toggleChartState = () => {
+                const isMinimized = chartContainer.classList.contains("minimized");
+                chartContainer.classList.toggle("minimized", !isMinimized);
+                chartContainer.classList.toggle("expanded", isMinimized);
+
+                // Обновляем размеры графика
+                const canvas = document.getElementById("qChart");
+                if (chartContainer.classList.contains("expanded")) {
+                    canvas.style.width = "100%";
+                    canvas.style.height = "100%";
                 } else {
-                    toggleSidebarButton.style.left = '0'; // Скрытая панель
+                    canvas.style.width = "380px";
+                    canvas.style.height = "280px";
                 }
 
-                // Поворот иконки
-                const icon = toggleSidebarButton.querySelector('i');
-                icon.classList.toggle('fa-chevron-left', isCollapsed);
-                icon.classList.toggle('fa-chevron-right', !isCollapsed);
+                // Перерисовываем график, если он существует
+                if (typeof chartInstance !== "undefined" && chartInstance) {
+                    chartInstance.resize();
+                }
+            };
+
+            chartContainer.addEventListener("click", toggleChartState);
+
+            // Обновление графика для всех данных
+            document.getElementById("showAll").addEventListener("click", () => {
+                updateChart();
             });
         });
-
 
     </script>
 </body>

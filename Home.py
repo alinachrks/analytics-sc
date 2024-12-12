@@ -64,6 +64,27 @@ def app():
     # Styling of the page
     page_element = """
     <style>
+        html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
+        margin: 0;
+        padding: 0;
+        height: 100vh; /* Полная высота экрана */
+        width: 100vw; /* Полная ширина экрана */
+        display: flex; /* Используем Flexbox для центровки */
+        align-items: center; /* Центровка по вертикали */
+        justify-content: center; /* Центровка по горизонтали */
+        overflow: hidden; /* Убираем прокрутку */
+    }
+
+    iframe {
+        height: 700px; /* Высота карты — 100% */
+        width: 100%; /* Ширина карты — 100% */
+        border: none; /* Убираем рамку */
+    }
+
+    [data-testid="stHeader"], [data-testid="stSidebar"], [data-testid="stToolbar"] {
+        display: none; /* Скрытие ненужных элементов */
+    }
+
     [data-testid="stAppViewContainer"]{
         background-size: cover;
         padding-top: 0;
@@ -115,7 +136,7 @@ def app():
     st.markdown(page_element, unsafe_allow_html=True)
 
     # Page header
-    st.markdown('<div class="st-title-container"><h1>Социально-экономический портрет города</h1></div>', unsafe_allow_html=True)
+    #st.markdown('<div class="st-title-container"><h1>Социально-экономический портрет города</h1></div>', unsafe_allow_html=True)
 
     # Tabs for maps
     tabs = st.tabs([

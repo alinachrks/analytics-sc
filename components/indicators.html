@@ -474,7 +474,7 @@
         });
 
         // URL для данных GeoJSON
-        const geojsonUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/quality_of_life_by_districts_.geojson';
+        const geojsonUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/ind_data_with_changes.geojson';
 
         let fullDataset = []; // Хранилище всех данных
         let popup; // Переменная для всплывающей подсказки
@@ -571,16 +571,16 @@
             const properties = e.features[0].properties;
             const districtName = properties.district_name || 'Неизвестный район';
             const currentValue = properties.Q;
-            const change = properties.delta_Q !== null ? properties.delta_Q.toFixed(2) : 'Нет данных';
+            const change = properties.previous_Q !== null ? properties.previous_Q.toFixed(2) : 'Нет данных';
             const mainContributor = properties.main_contributors || 'Нет данных';
 
             // Определяем цвет и иконку изменения Q
             let changeColor = '#6c757d'; // Серый для 0
             let changeIcon = '';
-            if (properties.delta_Q > 0) {
+            if (properties.previous_Q > 0) {
                 changeColor = '#1a9641'; // Зеленый для положительного изменения
                 changeIcon = '↑';
-            } else if (properties.delta_Q < 0) {
+            } else if (properties.previous_Q < 0) {
                 changeColor = '#d7191c'; // Красный для отрицательного изменения
                 changeIcon = '↓';
             }
@@ -616,35 +616,73 @@
             map.getCanvas().style.cursor = '';
         }
 
-      // Функция для обработки кликов на районы
-      function handleClick(e) {
-        const properties = e.features[0].properties;
-        const districtName = properties.district_name || 'Неизвестный район';
+        // Функция для обработки кликов на районы
+        function handleClick(e) {
+            const properties = e.features[0].properties;
+            const districtName = properties.district_name || 'Неизвестный район';
 
-        const currentQ = properties.Q !== undefined ? properties.Q.toFixed(2) : 'Нет данных';
-        const previousQ = properties.previous_Q !== undefined ? properties.previous_Q.toFixed(2) : 'Нет данных';
-        const deltaD = properties.delta_D !== undefined ? properties.delta_D.toFixed(2) : 'Нет данных';
-        const deltaE = properties.delta_E !== undefined ? properties.delta_E.toFixed(2) : 'Нет данных';
-        const deltaH = properties.delta_H !== undefined ? properties.delta_H.toFixed(2) : 'Нет данных';
-        const deltaS = properties.delta_S !== undefined ? properties.delta_S.toFixed(2) : 'Нет данных';
-        const deltaSS = properties.delta_SS !== undefined ? properties.delta_SS.toFixed(2) : 'Нет данных';
-        const mainContributors = properties.main_contributors || 'Нет данных';
+            const currentQ = properties.Q !== undefined ? properties.Q.toFixed(2) : 'Нет данных';
+            const previousQ = properties.previous_Q !== undefined ? properties.previous_Q.toFixed(2) : 'Нет данных';
 
-        // Обновляем боковую панель
-        document.getElementById('district-info').innerHTML = `
-            <h3>${districtName}</h3>
-            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-                <tr><th>Параметр</th><th>Значение</th></tr>
-                <tr><td>Текущий Q</td><td>${currentQ}</td></tr>
-                <tr><td>Предыдущий Q</td><td>${previousQ}</td></tr>
-                <tr><td>Изменение (демография)</td><td>${deltaD}</td></tr>
-                <tr><td>Изменение (экономика)</td><td>${deltaE}</td></tr>
-                <tr><td>Изменение (жилищные условия)</td><td>${deltaH}</td></tr>
-                <tr><td>Изменение (безопасность)</td><td>${deltaS}</td></tr>
-                <tr><td>Изменение (социальная стабильность)</td><td>${deltaSS}</td></tr>
-                <tr><td>Ключевые категории</td><td>${mainContributors}</td></tr>
-            </table>
-        `;
+            // Обновляем боковую панель
+            document.getElementById('district-info').innerHTML = `
+                <h3>${districtName}</h3>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                    <tr><th>Параметр</th><th>Значение</th></tr>
+                    <tr><td>Ввод жилья</td><td>${properties["Ввод жилья"] || 'Нет данных'}</td></tr>
+                    <tr><td>Всего действующих крупных и средних промышленных предприятий</td><td>${properties["Всего действующих крупных и средних промышленных предприятий"] || 'Нет данных'}</td></tr>
+                    <tr><td>Всего зарегистрированных субъектов малого предпринимательства (юрид. и физ. лица)</td><td>${properties["Всего зарегистрированных субъектов малого предпринимательства (юрид. и физ. лица)"] || 'Нет данных'}</td></tr>
+                    <tr><td>Действующие зарегистрированные субъекты малого предпринимательства</td><td>${properties["Действующие зарегистрированные субъекты малого предпринимательства"] || 'Нет данных'}</td></tr>
+                    <tr><td>Естественный прирост</td><td>${properties["Естественный прирост"] || 'Нет данных'}</td></tr>
+                    <tr><td>Индекс физического объёма, по всей промышленности</td><td>${properties["Индекс физического объёма, по всей промышленности"] || 'Нет данных'}</td></tr>
+                    <tr><td>Индивидуальные жилые дома</td><td>${properties["Индивидуальные жилые дома"] || 'Нет данных'}</td></tr>
+                    <tr><td>Количество действующих государственных предприятий по организационно-правовым формам</td><td>${properties["Количество действующих государственных предприятий по организационно-правовым формам"] || 'Нет данных'}</td></tr>
+                    <tr><td>Количество действующих иностранных предприятий по организационно-правовым формам</td><td>${properties["Количество действующих иностранных предприятий по организационно-правовым формам"] || 'Нет данных'}</td></tr>
+                    <tr><td>Количество действующих субъектов всего по району</td><td>${properties["Количество действующих субъектов всего по району"] || 'Нет данных'}</td></tr>
+                    <tr><td>Количество действующих частных предприятий по организационно-правовым формам</td><td>${properties["Количество действующих частных предприятий по организационно-правовым формам"] || 'Нет данных'}</td></tr>
+                    <tr><td>Количество зарегистрированных крупных предприятий</td><td>${properties["Количество зарегистрированных крупных предприятий"] || 'Нет данных'}</td></tr>
+                    <tr><td>Количество зарегистрированных малых предприятий</td><td>${properties["Количество зарегистрированных малых предприятий"] || 'Нет данных'}</td></tr>
+                    <tr><td>Количество зарегистрированных средних предприятий</td><td>${properties["Количество зарегистрированных средних предприятий"] || 'Нет данных'}</td></tr>
+                    <tr><td>Количество зарегистрированных субъектов всего по району</td><td>${properties["Количество зарегистрированных субъектов всего по району"] || 'Нет данных'}</td></tr>
+                    <tr><td>Количество квартир - многоквартирные дома</td><td>${properties["Количество квартир - многоквартирные дома"] || 'Нет данных'}</td></tr>
+                    <tr><td>Количество трудоустроенных</td><td>${properties["Количество трудоустроенных"] || 'Нет данных'}</td></tr>
+                    <tr><td>Коэффицент брачности на 1000 человек</td><td>${properties["Коэффицент брачности на 1000 человек"] || 'Нет данных'}</td></tr>
+                    <tr><td>Коэффицент естественного прироста на 1000 человек</td><td>${properties["Коэффицент естественного прироста на 1000 человек"] || 'Нет данных'}</td></tr>
+                    <tr><td>Коэффицент младенческой смертности на 1000 человек</td><td>${properties["Коэффицент младенческой смертности на 1000 человек"] || 'Нет данных'}</td></tr>
+                    <tr><td>Коэффицент разводимости на 1000 человек</td><td>${properties["Коэффицент разводимости на 1000 человек"] || 'Нет данных'}</td></tr>
+                    <tr><td>Коэффицент рождаемости на 1000 человек</td><td>${properties["Коэффицент рождаемости на 1000 человек"] || 'Нет данных'}</td></tr>
+                    <tr><td>Коэффицент смертности на 1000 человек</td><td>${properties["Коэффицент смертности на 1000 человек"] || 'Нет данных'}</td></tr>
+                    <tr><td>Миграция населения - выбыло</td><td>${properties["Миграция населения - выбыло"] || 'Нет данных'}</td></tr>
+                    <tr><td>Миграция населения - прибыло</td><td>${properties["Миграция населения - прибыло"] || 'Нет данных'}</td></tr>
+                    <tr><td>Миграция населения - сальдо</td><td>${properties["Миграция населения - сальдо"] || 'Нет данных'}</td></tr>
+                    <tr><td>Многоквартирные жилые дома</td><td>${properties["Многоквартирные жилые дома"] || 'Нет данных'}</td></tr>
+                    <tr><td>Объём промышленной продукции по всей промышленности</td><td>${properties["Объём промышленной продукции по всей промышленности"] || 'Нет данных'}</td></tr>
+                    <tr><td>Среднемесячная зарплата по организационно-правовым формам</td><td>${properties["Среднемесячная зарплата по организационно-правовым формам"] || 'Нет данных'}</td></tr>
+                    <tr><td>Умершие от несчастных случаев, отравлений и травм</td><td>${properties["Умершие от несчастных случаев, отравлений и травм"] || 'Нет данных'}</td></tr>
+                    <tr><td>Умершие от самоубийств</td><td>${properties["Умершие от самоубийств"] || 'Нет данных'}</td></tr>
+                    <tr><td>Умершие от болезней органов дыхания</td><td>${properties["Умершие от болезней органов дыхания"] || 'Нет данных'}</td></tr>
+                    <tr><td>Умершие от болезней органов пищеварения</td><td>${properties["Умершие от болезней органов пищеварения"] || 'Нет данных'}</td></tr>
+                    <tr><td>Умершие от болезней системы кровообращения</td><td>${properties["Умершие от болезней системы кровообращения"] || 'Нет данных'}</td></tr>
+                    <tr><td>Умершие от гипертонической болезни</td><td>${properties["Умершие от гипертонической болезни"] || 'Нет данных'}</td></tr>
+                    <tr><td>Умершие от гриппа, ОРЗ и пневмонии</td><td>${properties["Умершие от гриппа, ОРЗ и пневмонии"] || 'Нет данных'}</td></tr>
+                    <tr><td>Умершие от дорожно-транспортных происшествий</td><td>${properties["Умершие от дорожно-транспортных происшествий"] || 'Нет данных'}</td></tr>
+                    <tr><td>Умершие от злокачественных новообразований</td><td>${properties["Умершие от злокачественных новообразований"] || 'Нет данных'}</td></tr>
+                    <tr><td>Умершие от инфекционных и паразитарных болезней</td><td>${properties["Умершие от инфекционных и паразитарных болезней"] || 'Нет данных'}</td></tr>
+                    <tr><td>Умершие от ишемической болезни сердца</td><td>${properties["Умершие от ишемической болезни сердца"] || 'Нет данных'}</td></tr>
+                    <tr><td>Умершие от новообразований</td><td>${properties["Умершие от новообразований"] || 'Нет данных'}</td></tr>
+                    <tr><td>Умершие от острого инфаркта миокарда</td><td>${properties["Умершие от острого инфаркта миокарда"] || 'Нет данных'}</td></tr>
+                    <tr><td>Умершие от стенокардии</td><td>${properties["Умершие от стенокардии"] || 'Нет данных'}</td></tr>
+                    <tr><td>Умершие от судистого поражения мозга</td><td>${properties["Умершие от судистого поражения мозга"] || 'Нет данных'}</td></tr>
+                    <tr><td>Умершие от убийств</td><td>${properties["Умершие от убийств"] || 'Нет данных'}</td></tr>
+                    <tr><td>Численность населения</td><td>${properties["Численность населения"] || 'Нет данных'}</td></tr>
+                    <tr><td>Численность родившихся</td><td>${properties["Численность родившихся"] || 'Нет данных'}</td></tr>
+                    <tr><td>Численность умерших</td><td>${properties["Численность умерших"] || 'Нет данных'}</td></tr>
+                    <tr><td>Число браков</td><td>${properties["Число браков"] || 'Нет данных'}</td></tr>
+                    <tr><td>Число разводов</td><td>${properties["Число разводов"] || 'Нет данных'}</td></tr>
+                </table>
+            `;
+
+
 
         // Фильтруем данные для графика по выбранному району
         const districtData = fullDataset.filter(item => item.district_name === districtName);
@@ -919,7 +957,7 @@
                 .map(d => ({
                     date: d.quarter_year,
                     value: d.Q,
-                    delta: d.delta_Q || 0 // Добавляем изменения Q, если есть
+                    delta: d.previous_Q || 0 // Добавляем изменения Q, если есть
                 }));
 
             const labels = chartData.map(item => item.date); // Метки на оси X (даты)
@@ -927,12 +965,14 @@
             const deltas = chartData.map(item => item.delta); // Изменения индекса Q
 
             // Настройка цветов точек в зависимости от значения индекса Q
-            const pointColors = values.map(value => {
-                if (value < 0.15) return '#d7191c'; // Низкий индекс
+            const pointColorsQ = values.map(value => {
+                if (value < 0.2) return '#d7191c'; // Низкий индекс
                 if (value < 0.4) return '#fdae61'; // Средний индекс
                 if (value < 0.5) return '#a6d96a'; // Выше среднего
                 return '#1a9641'; // Высокий индекс
             });
+
+            const pointColorsDelta = deltas.map(delta => (delta >= 0 ? '#1a9641' : '#d7191c')); // Зелёный для положительного, красный для отрицательного изменения
 
             const ctx = document.getElementById('qChart').getContext('2d');
 
@@ -940,8 +980,9 @@
             if (chartInstance) {
                 chartInstance.data.labels = labels;
                 chartInstance.data.datasets[0].data = values;
-                chartInstance.data.datasets[0].pointBackgroundColor = pointColors; // Обновляем цвета точек
-                chartInstance.data.datasets[1].data = deltas; // Обновляем изменения Q
+                chartInstance.data.datasets[0].pointBackgroundColor = pointColorsQ; // Обновляем цвета точек для Q
+                chartInstance.data.datasets[1].data = deltas;
+                chartInstance.data.datasets[1].pointBackgroundColor = pointColorsDelta; // Обновляем цвета точек для изменения Q
                 chartInstance.update();
             } else {
                 // Создаем новый график, если он еще не создан
@@ -955,7 +996,7 @@
                                 data: values,
                                 borderColor: '#1a9641',
                                 backgroundColor: 'rgba(26, 150, 65, 0.1)',
-                                pointBackgroundColor: pointColors, // Цвет точек
+                                pointBackgroundColor: pointColorsQ, // Цвет точек для Q
                                 pointRadius: 5,
                                 tension: 0.3 // Плавность линии
                             },
@@ -964,9 +1005,11 @@
                                 data: deltas,
                                 borderColor: '#ff7f0e',
                                 backgroundColor: 'rgba(255, 127, 14, 0.1)',
+                                pointBackgroundColor: pointColorsDelta, // Цвет точек для изменения Q
                                 pointRadius: 4,
                                 borderDash: [5, 5], // Пунктирная линия
-                                tension: 0.3
+                                tension: 0.3,
+                                yAxisID: 'y2' // Связываем с осью y2
                             }
                         ]
                     },
@@ -999,7 +1042,16 @@
                             },
                             y: {
                                 title: { display: true, text: 'Индекс Q' }, // Подпись оси Y
-                                beginAtZero: true // Начало шкалы с нуля
+                                beginAtZero: true, // Начало шкалы с нуля
+                                position: 'left'
+                            },
+                            y2: {
+                                title: { display: true, text: 'Изменение Q' }, // Подпись второй оси Y
+                                beginAtZero: true, // Начало шкалы с нуля
+                                position: 'right',
+                                grid: {
+                                    drawOnChartArea: false // Убираем сетку для второй оси
+                                }
                             }
                         }
                     }
@@ -1050,9 +1102,9 @@
                     "step",
                     ["get", property],
                     "#6c757d",
-                    0.20, "#d7191c",
-                    0.40, "#fdae61",
-                    0.50, "#1a9641"
+                    0.10, "#d7191c",
+                    0.30, "#fdae61",
+                    0.45, "#1a9641"
                 ]);
             };
 

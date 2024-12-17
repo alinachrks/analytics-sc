@@ -4,18 +4,10 @@
     <meta charset="utf-8">
     <title>Индекс качества жизни</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
-    
-    <!-- Подключение стилей и скриптов -->
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- MathJax для LaTeX -->
-    <script type="text/javascript" id="MathJax-script" async
-        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
-    </script>
-
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 
     <style>
         /* Основной стиль */
@@ -396,93 +388,6 @@
             pointer-events: none; /* Отключение событий мыши для иконки */
         }
 
-        /* Модальное окно */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.6); /* Затемнённый фон */
-            backdrop-filter: blur(5px); /* Эффект размытия */
-        }
-
-        .modal-content {
-            background: linear-gradient(135deg, #f9fafb, #ffffff);
-            color: #333;
-            margin: 8% auto;
-            padding: 30px;
-            border-radius: 12px;
-            width: 50%;
-            max-height: 80%;
-            overflow-y: auto;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-            animation: fadeIn 0.5s ease-in-out;
-        }
-
-        /* Заголовок и текст */
-        .modal-content h3 {
-            font-size: 1.8rem;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #1a76d2;
-            text-align: center;
-        }
-
-        .modal-content h4 {
-            font-size: 1.2rem;
-            margin-top: 20px;
-            margin-bottom: 10px;
-            color: #555;
-            border-bottom: 2px solid #e0e0e0;
-            display: inline-block;
-        }
-
-        .modal-content p, .modal-content ul {
-            font-size: 1rem;
-            line-height: 1.6;
-            color: #555;
-        }
-
-        .modal-content ul {
-            padding-left: 20px;
-        }
-
-        .modal-content ul li {
-            margin: 10px 0;
-            font-weight: 500;
-        }
-
-        .close-modal {
-            color: #555;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: color 0.3s ease-in-out;
-        }
-
-        .close-modal:hover {
-            color: #d32f2f;
-        }
-
-        /* Анимация появления */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-
-
-
     </style>
     
 </head>
@@ -502,12 +407,11 @@
         <div class="legend">
             <h4>Легенда:</h4>
             <ul>
-                <li><span style="color: #1a9641;">●</span> Высокий индекс QoL (0.5 - 1.00)</li>
-                <li><span style="color: #a6d96a;">●</span> Выше среднего индекс QoL (0.3 - 0.49)</li>
-                <li><span style="color: #fdae61;">●</span> Средний индекс QoL (0.2 - 0.29)</li>
-                <li><span style="color: #d7191c;">●</span> Очень низкий индекс QoL (0.1 - 0.19)</li>
-                <li><span style="color: #6c757d;">●</span> Нет данных или нулевой индекс</li>
-            </ul>            
+                <li><span style="color: #1a9641;">●</span> Высокий индекс QoL (0.75 - 1.00)</li>
+                <li><span style="color: #fdae61;">●</span> Средний индекс QoL (0.50 - 0.74)</li>
+                <li><span style="color: #d7191c;">●</span> Низкий индекс QoL (0.25 - 0.49)</li>
+                <li><span style="color: #6c757d;">●</span> Очень низкий индекс QoL (0.00 - 0.24)</li>
+            </ul>
         </div>
     </div>
     
@@ -556,52 +460,6 @@
             <i class="fas fa-history"></i>
         </button>
     </div>
-
-
-    <!-- Кнопка "Методика" -->
-    <button id="showMethodology" class="action-button" title="Методика расчета QoL">
-        <i class="fas fa-info-circle"></i>
-    </button>
-
-    <!-- Модальное окно для методики -->
-    <div id="modal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <h3>Методика расчёта индекса качества жизни (QoL)</h3>
-            
-            <p>
-                Индекс качества жизни (QoL) агрегирует несколько показателей в ключевые категории:
-            </p>
-            <ul>
-                <li><strong>Демография:</strong> рождаемость, смертность, миграция.</li>
-                <li><strong>Экономика:</strong> уровень зарплат, количество предприятий.</li>
-                <li><strong>Жилищные условия:</strong> ввод жилья, количество квартир.</li>
-                <li><strong>Безопасность:</strong> показатели смертности от различных причин.</li>
-            </ul>
-    
-            <h4>Формула расчёта:</h4>
-            <p style="text-align: center;">
-                \( Q = w_D \cdot D + w_E \cdot E + w_H \cdot H + w_S \cdot S + w_{SS} \cdot SS \)
-            </p>
-            <p>
-                где:
-                <ul>
-                    <li>\( Q \) — итоговый индекс качества жизни.</li>
-                    <li>\( D, E, H, S, SS \) — категории показателей.</li>
-                    <li>\( w \) — веса категорий (например, \( w_D = 0.25 \)).</li>
-                </ul>
-            </p>
-    
-            <h4>Нормализация данных:</h4>
-            <p style="text-align: center;">
-                \( x_{\text{norm}} = \frac{x - x_{\text{min}}}{x_{\text{max}} - x_{\text{min}}} \)
-            </p>
-            <p>
-                где \( x \) — значение показателя, \( x_{\text{min}}, x_{\text{max}} \) — минимальное и максимальное значения.
-            </p>
-        </div>
-    </div>
-    
 
     <script>
         // Устанавливаем токен Mapbox
@@ -669,10 +527,10 @@
                         'step',
                         ['get', 'QoL'], 
                         '#6c757d', // Цвет для отсутствия данных
-                        0.1, '#d7191c', // Очень низкий индекс
-                        0.2, '#fdae61', // Средний индекс
-                        0.3, '#a6d96a', // Выше среднего
-                        0.5, '#1a9641'  // Высокий индекс
+                        0.2, '#d7191c', // Очень низкий индекс
+                        0.4, '#fdae61', // Средний индекс
+                        0.6, '#a6d96a', // Выше среднего
+                        0.8, '#1a9641'  // Высокий индекс
                     ],
                     'fill-opacity': 0.7, // Прозрачность по умолчанию
                 },
@@ -834,10 +692,10 @@
                 'step',
                 ['get', property],
                 '#6c757d', // Цвет для отсутствия данных
-                0.1, '#d7191c',
-                0.2, '#fdae61',
-                0.3, '#a6d96a',
-                0.5, '#1a9641'
+                0.2, '#d7191c',
+                0.4, '#fdae61',
+                0.6, '#a6d96a',
+                0.8, '#1a9641'
             ]);
         }
 
@@ -893,188 +751,163 @@
         }
 
 
-        // Обновляем боковой панели
-        function updateSidebar(districtData) {
-            const sidebarContent = document.getElementById('district-info');
 
-            // Проверка на наличие данных
-            if (!districtData || districtData.length === 0) {
-                console.warn('Нет данных для выбранного района.');
-                sidebarContent.innerHTML = `<p>Нет данных для выбранного района.</p>`;
+        function updateSidebar(districtData) {
+            // Проверяем, есть ли данные для выбранного района
+            if (!districtData.length) {
+                console.error('Данные для выбранного района отсутствуют.');
+                document.getElementById('district-info').innerHTML = `<p>Нет данных для выбранного района.</p>`;
                 return;
             }
 
-            // Получаем данные за последний период
+            // Ищем последнюю запись для района
             const latestQuarter = districtData.reduce((latest, current) => {
                 const latestDate = new Date(latest.orig_indicator_date || '1900-01-01');
                 const currentDate = new Date(current.orig_indicator_date || '1900-01-01');
                 return currentDate > latestDate ? current : latest;
             });
 
-            console.log("Данные latestQuarter:", latestQuarter);
-            console.log("Доступные ключи:", Object.keys(latestQuarter)); // Проверяем доступные ключи
-
-            // Параметры для отображения
-            const parameters = [
-                { label: 'ВУЗы', key: 'orig_ВУЗы' },
-                { label: 'Ввод жилья', key: 'orig_Ввод жилья' },
-                { label: 'Численность населения', key: 'orig_Численность населения' },
-                { label: 'Численность родившихся', key: 'orig_Численность родившихся' },
-                { label: 'Численность умерших', key: 'orig_Численность умерших' },
-                { label: 'Естественный прирост', key: 'orig_Естественный прирост' },
-                { label: 'Количество трудоустроенных', key: 'orig_Количество трудоустроенных' },
-                { label: 'Индекс физического объёма', key: 'orig_Индекс физического объёма, по всей промышленности' },
-                { label: 'Коэффициент брачности на 1000 человек', key: 'orig_Коэффицент брачности на 1000 человек' }
-            ];
-
-            // Генерация HTML для таблицы
-            const tableRows = parameters.map(param => {
-                // Извлечение значения с учётом проверки ключей
-                const value = latestQuarter.hasOwnProperty(param.key) ? latestQuarter[param.key] : '-';
-
-                const displayValue = (value !== undefined && value !== null && value !== "")
-                    ? value.toLocaleString() 
-                    : '-';
-
-                return `
-                    <tr>
-                        <td style="padding: 8px;">${param.label}</td>
-                        <td style="padding: 8px;">${displayValue}</td>
-                    </tr>
-                `;
-            }).join('');
-
-            // Обновляем HTML боковой панели
-            sidebarContent.innerHTML = `
-                <h3>${latestQuarter.orig_district_name || 'Неизвестный район'}</h3>
+            // Обновляем панель с данными
+            document.getElementById('district-info').innerHTML = `
+                <h3>${latestQuarter.orig_district_name || 'Нет данных'}</h3>
                 <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                     <tr>
                         <th style="text-align: left; border-bottom: 1px solid #ddd; padding: 8px;">Параметр</th>
                         <th style="text-align: left; border-bottom: 1px solid #ddd; padding: 8px;">Значение</th>
                     </tr>
-                    ${tableRows}
+                    <tr><td style="padding: 8px;">Дата</td><td style="padding: 8px;">${latestQuarter.orig_indicator_date || 'Нет данных'}</td></tr>
+                    <tr><td style="padding: 8px;">Индекс Q</td><td style="padding: 8px;">${latestQuarter.QoL !== undefined ? latestQuarter.QoL.toFixed(2) : 'Нет данных'}</td></tr>
+                    <tr><td style="padding: 8px;">Изменение Q (%)</td><td style="padding: 8px;">${latestQuarter.QoL_change !== undefined ? latestQuarter.QoL_change.toFixed(2) + '%' : 'Нет данных'}</td></tr>
+                    <tr><td style="padding: 8px;">Численность населения</td><td style="padding: 8px;">${latestQuarter["orig_Численность населения"] || 'Нет данных'} чел.</td></tr>
+                    <tr><td style="padding: 8px;">Численность родившихся</td><td style="padding: 8px;">${latestQuarter["orig_Численность родившихся"] || 'Нет данных'} чел.</td></tr>
+                    <tr><td style="padding: 8px;">Численность умерших</td><td style="padding: 8px;">${latestQuarter["orig_Численность умерших"] || 'Нет данных'} чел.</td></tr>
+                    <tr><td style="padding: 8px;">Естественный прирост</td><td style="padding: 8px;">${latestQuarter["orig_Естественный прирост"] || 'Нет данных'} чел.</td></tr>
+                    <tr><td style="padding: 8px;">Среднемесячная зарплата</td><td style="padding: 8px;">${latestQuarter["orig_Среднемесячная зарплата по организационно-правовым формам"] || 'Нет данных'} тг.</td></tr>
+                    <tr><td style="padding: 8px;">Объём промышленной продукции</td><td style="padding: 8px;">${latestQuarter["orig_Объём промышленной продукции по всей промышленности"] || 'Нет данных'} млн тг.</td></tr>
+                    <tr><td style="padding: 8px;">Ввод жилья</td><td style="padding: 8px;">${latestQuarter["orig_Ввод жилья"] || 'Нет данных'} тыс. кв.м.</td></tr>
                 </table>
             `;
         }
 
 
-
         // Обновление графика
-        function updateChart(districtData) {
-            const ctx = document.getElementById('qChart').getContext('2d');
-
-            // Проверка данных
-            if (!districtData || districtData.length === 0) {
-                console.warn('Нет данных для построения графика.');
+        function updateChart(data) {
+            // Проверяем наличие данных
+            if (!data || data.length === 0) {
+                console.warn('Нет данных для отображения на графике.');
                 return;
             }
 
-            // Сортировка данных по дате
-            const chartData = districtData
-                .filter(d => d.orig_indicator_date && d.QoL !== undefined)
-                .sort((a, b) => new Date(a.orig_indicator_date) - new Date(b.orig_indicator_date))
+            // Подготовка данных для графика
+            const chartData = data
+                .filter(d => d.indicator_date && d.QoL !== undefined) // Фильтрация по QoL
+                .sort((a, b) => new Date(a.indicator_date) - new Date(b.indicator_date))
                 .map(d => ({
-                    date: d.orig_indicator_date,
-                    value: d.QoL,
-                    delta: d.QoL_change || 0
+                    date: d.indicator_date, // Дата
+                    value: d.QoL,           // Индекс качества жизни
+                    delta: d.QoL_change || 0 // Изменение индекса
                 }));
 
-            const labels = chartData.map(item => item.date);
-            const values = chartData.map(item => item.value);
-            const changes = chartData.map(item => item.delta);
+            const labels = chartData.map(item => item.date);    // Метки на оси X
+            const values = chartData.map(item => item.value);   // Значения QoL
+            const deltas = chartData.map(item => item.delta);   // Изменение QoL
 
-            // Цвета точек для QoL
+            // Цвета для точек графика QoL
             const pointColorsQoL = values.map(value => {
-                if (value < 0.1) return '#d7191c'; // Очень низкий
-                if (value < 0.3) return '#fdae61'; // Средний
-                if (value < 0.5) return '#a6d96a'; // Выше среднего
-                return '#1a9641';                // Высокий
+                if (value < 0.2) return '#d7191c'; // Низкий индекс
+                if (value < 0.4) return '#fdae61'; // Средний индекс
+                if (value < 0.6) return '#a6d96a'; // Выше среднего
+                return '#1a9641';                 // Высокий индекс
             });
 
-            // Цвета точек для изменения QoL
-            const pointColorsChange = changes.map(change => {
-                if (change > 0) return '#1a9641'; // Положительная динамика
-                if (change < 0) return '#d7191c'; // Отрицательная динамика
-                return '#6c757d';                // Без изменений
-            });
+            // Цвета для изменения QoL
+            const pointColorsDelta = deltas.map(delta => (delta >= 0 ? '#1a9641' : '#d7191c'));
 
-            // Удаляем предыдущий график, если он существует
+            const ctx = document.getElementById('qChart').getContext('2d');
+
+            // Если график уже создан, обновляем его
             if (chartInstance) {
-                chartInstance.destroy();
-            }
-
-            // Создание нового графика
-            chartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels,
-                    datasets: [
-                        {
-                            label: 'Индекс QoL',
-                            data: values,
-                            borderColor: '#1a9641', // Зелёный для линии QoL
-                            backgroundColor: 'rgba(26, 150, 65, 0.1)',
-                            pointBackgroundColor: pointColorsQoL,
-                            pointRadius: 5,
-                            tension: 0.3
-                        },
-                        {
-                            label: 'Изменение QoL (%)',
-                            data: changes,
-                            borderColor: '#6c757d', // Серый цвет для линии
-                            backgroundColor: 'rgba(108, 117, 125, 0.1)',
-                            pointBackgroundColor: pointColorsChange,
-                            pointRadius: 4,
-                            borderDash: [5, 5],
-                            tension: 0.3,
-                            yAxisID: 'y1'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { display: true },
-                        title: {
-                            display: true,
-                            text: 'Динамика индекса качества жизни'
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function (context) {
-                                    const value = context.raw.toFixed(2);
-                                    return context.dataset.label.includes('QoL')
-                                        ? `${context.dataset.label}: ${value}`
-                                        : `${context.dataset.label}: ${value}%`;
+                chartInstance.data.labels = labels;
+                chartInstance.data.datasets[0].data = values;
+                chartInstance.data.datasets[0].pointBackgroundColor = pointColorsQoL;
+                chartInstance.data.datasets[1].data = deltas;
+                chartInstance.data.datasets[1].pointBackgroundColor = pointColorsDelta;
+                chartInstance.update();
+            } else {
+                // Создаем новый график, если его ещё нет
+                chartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Индекс Q',
+                                data: values,
+                                borderColor: '#1a9641',
+                                backgroundColor: 'rgba(26, 150, 65, 0.1)',
+                                pointBackgroundColor: pointColorsQoL,
+                                pointRadius: 5,
+                                tension: 0.3
+                            },
+                            {
+                                label: 'Изменение Q',
+                                data: deltas,
+                                borderColor: '#ff7f0e',
+                                backgroundColor: 'rgba(255, 127, 14, 0.1)',
+                                pointBackgroundColor: pointColorsDelta,
+                                pointRadius: 4,
+                                borderDash: [5, 5],
+                                tension: 0.3,
+                                yAxisID: 'y2'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: true },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        const value = context.raw.toFixed(2);
+                                        return context.dataset.label === 'Индекс Q' 
+                                            ? `Индекс Q: ${value}` 
+                                            : `Изменение Q: ${value}%`;
+                                    }
                                 }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Динамика индекса качества жизни'
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: { display: true, text: 'Квартал' },
+                                ticks: { autoSkip: true, maxRotation: 45 }
+                            },
+                            y: {
+                                title: { display: true, text: 'Индекс Q' },
+                                beginAtZero: true
+                            },
+                            y2: {
+                                title: { display: true, text: 'Изменение Q (%)' },
+                                beginAtZero: true,
+                                position: 'right',
+                                grid: { drawOnChartArea: false }
                             }
                         }
-                    },
-                    scales: {
-                        x: {
-                            title: { display: true, text: 'Дата' }
-                        },
-                        y: {
-                            title: { display: true, text: 'Индекс QoL' },
-                            beginAtZero: true
-                        },
-                        y1: {
-                            position: 'right',
-                            title: { display: true, text: 'Изменение QoL (%)' },
-                            grid: { drawOnChartArea: false }
-                        }
                     }
-                }
-            });
+                });
+            }
         }
-
 
 
         document.addEventListener("DOMContentLoaded", () => {
             // Элементы управления
             const fullscreenToggle = document.getElementById("fullscreen-toggle");
-            const showCurrentQ = document.getElementById("showCurrentQ");
-            const showPreviousQ = document.getElementById("showPreviousQ");
+            const showCurrentQoL = document.getElementById("showCurrentQ");
+            const showPreviousQoL = document.getElementById("showPreviousQ");
             const opacitySlider = document.getElementById("opacity-slider");
             const sidebar = document.getElementById("sidebar");
             const toggleSidebarButton = document.getElementById("toggleSidebar");
@@ -1082,167 +915,99 @@
 
             // Состояния
             let isFullscreen = false;
-            let showQMode = "current"; // Режим отображения: текущий QoL или изменение QoL
+            let showQMode = "current"; // Режим отображения (current/previous)
 
-            // Полноэкранный режим с кросс-браузерной поддержкой
+            // Полноэкранный режим
             fullscreenToggle.addEventListener("click", () => {
-                const element = document.documentElement;
-
+                const mapContainer = document.getElementById("map");
                 if (!isFullscreen) {
-                    if (element.requestFullscreen) element.requestFullscreen();
-                    else if (element.webkitRequestFullscreen) element.webkitRequestFullscreen();
-                    else if (element.msRequestFullscreen) element.msRequestFullscreen();
-
-                    fullscreenToggle.innerHTML = `<i class="fas fa-compress"></i>`;
-                    fullscreenToggle.title = "Свернуть";
+                    mapContainer.requestFullscreen()
+                        .then(() => {
+                            fullscreenToggle.innerHTML = `<i class="fas fa-compress"></i>`;
+                            fullscreenToggle.title = "Свернуть";
+                        })
+                        .catch(err => console.error(`Ошибка при входе в полноэкранный режим: ${err.message}`));
                 } else {
-                    if (document.exitFullscreen) document.exitFullscreen();
-                    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-                    else if (document.msExitFullscreen) document.msExitFullscreen();
-
-                    fullscreenToggle.innerHTML = `<i class="fas fa-expand"></i>`;
-                    fullscreenToggle.title = "Во весь экран";
+                    document.exitFullscreen()
+                        .then(() => {
+                            fullscreenToggle.innerHTML = `<i class="fas fa-expand"></i>`;
+                            fullscreenToggle.title = "Во весь экран";
+                        })
+                        .catch(err => console.error(`Ошибка при выходе из полноэкранного режима: ${err.message}`));
                 }
                 isFullscreen = !isFullscreen;
             });
 
-            // Обновление цветов слоёв на основе текущего режима
+            // Переключение режима отображения Q
             const updateLayerColor = () => {
-                if (!map.isStyleLoaded()) {
-                    console.warn("Карта ещё не загружена. Попробуйте позже.");
-                    return;
-                }
-
-                if (showQMode === "current") {
-                    // Логика цветов для "QoL"
-                    map.setPaintProperty("districts-layer", "fill-color", [
-                        "step",
-                        ["get", "QoL"],
-                        "#6c757d", // Нет данных
-                        0.1, "#d7191c", // Очень низкий QoL
-                        0.3, "#fdae61", // Средний QoL
-                        0.5, "#a6d96a", // Выше среднего QoL
-                        0.7, "#1a9641" // Высокий QoL
-                    ]);
-                } else if (showQMode === "previous") {
-                    // Логика цветов для "QoL_change"
-                    map.setPaintProperty("districts-layer", "fill-color", [
-                        "interpolate",
-                        ["linear"],
-                        ["get", "QoL_change"],
-                        -80, "#67001f", // Очень сильное негативное изменение
-                        -20, "#d73027", // Значительное негативное изменение
-                        -5, "#f46d43",  // Умеренное негативное изменение
-                        0, "#fdae61",   // Нейтральное изменение (0)
-                        5, "#a6d96a",   // Умеренное позитивное изменение
-                        20, "#1a9641",  // Значительное позитивное изменение
-                        100, "#00441b"  // Очень сильное позитивное изменение
-                    ]);
-
-                }
+                const property = showQMode === "current" ? "Q" : "QoL_change";
+                map.setPaintProperty("districts-layer", "fill-color", [
+                    "step",
+                    ["get", property],
+                    "#6c757d",
+                    0.3, "#d7191c",
+                    0.40, "#fdae61",
+                    0.5, "#1a9641"
+                ]);
             };
 
-            // Переключение между текущим QoL и изменением QoL
             const toggleShowQMode = (mode) => {
                 showQMode = mode;
                 updateLayerColor();
             };
 
-            showCurrentQ.addEventListener("click", () => {
-                toggleShowQMode("current");
-                console.log("Отображается текущий индекс QoL");
-            });
+            showCurrentQ.addEventListener("click", () => toggleShowQMode("current"));
+            showPreviousQ.addEventListener("click", () => toggleShowQMode("previous"));
 
-            showPreviousQ.addEventListener("click", () => {
-                toggleShowQMode("previous");
-                console.log("Отображается изменение QoL");
-            });
-
-            // Изменение прозрачности слоя карты
+            // Изменение прозрачности слоя
             opacitySlider.addEventListener("input", (e) => {
                 const opacity = parseFloat(e.target.value);
-                if (map.isStyleLoaded()) {
-                    map.setPaintProperty("districts-layer", "fill-opacity", opacity);
-                } else {
-                    console.warn("Карта ещё не загружена. Попробуйте позже.");
-                }
+                map.setPaintProperty("districts-layer", "fill-opacity", opacity);
             });
 
-            // Обработка кнопки скрытия/отображения боковой панели
-            toggleSidebarButton.addEventListener("click", () => {
-                sidebar.classList.toggle("collapsed");
-                toggleSidebarButton.classList.toggle("collapsed");
-
+            // Функция для обработки кнопки боковой панели
+            const handleSidebarToggle = () => {
                 const isCollapsed = sidebar.classList.contains("collapsed");
-                toggleSidebarButton.style.left = isCollapsed ? "20px" : "410px";
+
+                sidebar.classList.toggle("collapsed", !isCollapsed);
+                toggleSidebarButton.classList.toggle("collapsed", !isCollapsed);
+                toggleSidebarButton.style.left = isCollapsed ? "400px" : "20px";
 
                 const icon = toggleSidebarButton.querySelector("i");
-                icon.classList.toggle("fa-chevron-left", !isCollapsed);
-                icon.classList.toggle("fa-chevron-right", isCollapsed);
-            });
+                icon.classList.toggle("fa-chevron-left", isCollapsed);
+                icon.classList.toggle("fa-chevron-right", !isCollapsed);
+            };
 
-            // Обработка минимизации и раскрытия графика
-            chartContainer.addEventListener("click", () => {
-                chartContainer.classList.toggle("minimized");
-                chartContainer.classList.toggle("expanded");
+            // Логика для боковой панели
+            toggleSidebarButton.addEventListener("click", handleSidebarToggle);
 
+            // Логика для графика
+            const toggleChartState = () => {
+                const isMinimized = chartContainer.classList.contains("minimized");
+                chartContainer.classList.toggle("minimized", !isMinimized);
+                chartContainer.classList.toggle("expanded", isMinimized);
+
+                // Обновляем размеры графика
                 const canvas = document.getElementById("qChart");
-                const isExpanded = chartContainer.classList.contains("expanded");
+                if (chartContainer.classList.contains("expanded")) {
+                    canvas.style.width = "100%";
+                    canvas.style.height = "100%";
+                } else {
+                    canvas.style.width = "380px";
+                    canvas.style.height = "280px";
+                }
 
-                canvas.style.width = isExpanded ? "100%" : "380px";
-                canvas.style.height = isExpanded ? "100%" : "280px";
-
+                // Перерисовываем график, если он существует
                 if (typeof chartInstance !== "undefined" && chartInstance) {
                     chartInstance.resize();
                 }
-            });
-        });
+            };
 
+            chartContainer.addEventListener("click", toggleChartState);
 
-        document.addEventListener("DOMContentLoaded", () => {
-            const methodologyButton = document.getElementById("showMethodology");
-            const modal = document.getElementById("methodologyModal");
-            const closeModal = document.getElementById("closeModal");
-
-            // Показать модальное окно
-            methodologyButton.addEventListener("click", () => {
-                modal.style.display = "block";
-            });
-
-            // Закрыть модальное окно
-            closeModal.addEventListener("click", () => {
-                modal.style.display = "none";
-            });
-
-            // Закрыть модал при клике вне содержимого
-            window.addEventListener("click", (event) => {
-                if (event.target === modal) {
-                    modal.style.display = "none";
-                }
-            });
-        });
-
-        document.addEventListener("DOMContentLoaded", () => {
-            // Получаем элементы модального окна
-            const methodologyButton = document.getElementById("showMethodology");
-            const modal = document.getElementById("modal");
-            const closeModalButton = document.querySelector(".close-modal");
-
-            // Показать модальное окно при клике на кнопку "Методика"
-            methodologyButton.addEventListener("click", () => {
-                modal.style.display = "block";
-            });
-
-            // Закрыть модальное окно при клике на крестик
-            closeModalButton.addEventListener("click", () => {
-                modal.style.display = "none";
-            });
-
-            // Закрыть модальное окно при клике вне его содержимого
-            window.addEventListener("click", (event) => {
-                if (event.target === modal) {
-                    modal.style.display = "none";
-                }
+            // Обновление графика для всех данных
+            document.getElementById("showAll").addEventListener("click", () => {
+                updateChart();
             });
         });
 

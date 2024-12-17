@@ -274,30 +274,44 @@
 
 
         /* Общие стили кнопок */
+        /* Контейнер для кнопок */
         .button-container {
             position: fixed;
-            bottom: 60px;
-            right: 20px;
+            bottom: 20px; /* Прижимаем к низу */
+            right: 20px; /* Справа */
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            z-index: 10;
+            align-items: center;
+            gap: 8px; /* Отступ между кнопками */
+            z-index: 1000;
+            background: rgba(20, 30, 50, 0.85);
+            border-radius: 12px;
+            padding: 10px 5px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
+        /* Ряды кнопок */
+        .button-row {
+            display: flex;
+            justify-content: center;
+            gap: 6px; /* Отступ между кнопками в ряду */
+        }
+
+        /* Стили кнопок */
         .action-button {
-            width: 50px;
-            height: 50px;
+            width: 45px;
+            height: 45px;
             background: linear-gradient(135deg, #6d8692, #2e5d76);
             color: #ffffff;
             border: none;
             border-radius: 50%;
             display: flex;
-            align-items: center;
             justify-content: center;
-            font-size: 20px;
+            align-items: center;
+            font-size: 16px;
             cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transition: transform 0.3s, background 0.3s;
+            transition: background 0.2s ease, transform 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
         .action-button:hover {
@@ -307,120 +321,67 @@
 
         .action-button:active {
             transform: scale(0.95);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
-        .action-button i {
-            pointer-events: none;
+        /* Горизонтальный слайдер */
+        .transparency-slider-horizontal {
+            margin-top: 10px;
+            width: 80%; /* Растягиваем по ширине */
         }
 
-        /* Настройка подсказок */
-        .action-button[title]:hover::after {
-            content: attr(title);
-            position: absolute;
-            bottom: 70px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: #ffffff;
-            font-size: 12px;
-            padding: 5px 10px;
+        .transparency-slider-horizontal input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #d3d3d3;
             border-radius: 5px;
-            white-space: nowrap;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-            z-index: 20;
-            pointer-events: none;
+            outline: none;
+            cursor: pointer;
         }
 
-        .action-button[title]:hover::before {
-            content: '';
-            position: absolute;
-            bottom: 60px;
-            left: 50%;
-            transform: translateX(-50%);
-            border-width: 5px;
-            border-style: solid;
-            border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
-            z-index: 20;
+        .transparency-slider-horizontal input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            background: #2e5d76;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease;
         }
 
-        .transparency-control {
-            position: fixed;
-            bottom: 40px; /* Над кнопками */
-            right: 80px;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            gap: 10px; /* Промежуток между иконкой и слайдером */
-        }
-
-        .transparency-control input[type="range"] {
-            width: 150px; /* Установить ширину слайдера */
+        .transparency-slider-horizontal input[type="range"]:hover::-webkit-slider-thumb {
+            transform: scale(1.2);
         }
 
 
-        /* Кнопка "Во весь экран" */
-        #fullscreen-toggle {
-            position: fixed; /* Устанавливаем фиксированное позиционирование */
-            bottom: 10px; /* Расположение кнопки снизу */
-            right: 20px; /* Расположение кнопки справа */
-            width: 50px; /* Размер кнопки */
-            height: 50px;
-            background: linear-gradient(135deg, #6d8692, #2e5d76); /* Градиент фона */
-            color: #ffffff; /* Белый цвет иконки */
-            border: none; /* Убираем границы */
-            border-radius: 50%; /* Круглая кнопка */
-            display: flex; /* Центровка содержимого */
-            align-items: center;
-            justify-content: center;
-            cursor: pointer; /* Указатель при наведении */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Тень для глубины */
-            transition: transform 0.3s, background 0.3s; /* Анимация нажатия и наведения */
-        }
-
-        /* Эффект при наведении */
-        #fullscreen-toggle:hover {
-            background: linear-gradient(135deg, #7c939e, #2a5975); /* Изменение цвета при наведении */
-            transform: scale(1.1); /* Увеличение кнопки */
-        }
-
-        /* Эффект при нажатии */
-        #fullscreen-toggle:active {
-            transform: scale(0.95); /* Уменьшение при клике */
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Ослабление тени */
-        }
-
-        /* Иконка внутри кнопки */
-        #fullscreen-toggle i {
-            font-size: 20px; /* Размер иконки */
-            pointer-events: none; /* Отключение событий мыши для иконки */
-        }
 
         /* Модальное окно */
         .modal {
             display: none;
             position: fixed;
+            top: 20px; /* Отступ сверху */
+            right: 20px; /* Прижимаем к правому краю */
+            width: 350px; /* Фиксированная ширина */
+            height: auto; /* Высота зависит от контента */
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            border-radius: 8px;
             z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.6); /* Затемнённый фон */
-            backdrop-filter: blur(5px); /* Эффект размытия */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
         }
 
         .modal-content {
             background: linear-gradient(135deg, #f9fafb, #ffffff);
             color: #333;
-            margin: 8% auto;
-            padding: 30px;
-            border-radius: 12px;
-            width: 50%;
-            max-height: 80%;
-            overflow-y: auto;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-            animation: fadeIn 0.5s ease-in-out;
+            margin: 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: -4px -4px 10px rgba(0, 0, 0, 0.3);
+            max-height: 90vh; /* Ограничение высоты */
+            overflow-y: auto; /* Прокрутка при необходимости */
         }
+
 
         /* Заголовок и текст */
         .modal-content h3 {
@@ -529,39 +490,33 @@
         </button>
     </div>
 
-    <div class="controls">
-        <div class="left-controls">
-            <div class="transparency-control" title="Настроить прозрачность">
-                <label for="opacity-slider">
-                    <i class="fas fa-adjust"></i>
-                </label>
-                <input id="opacity-slider" type="range" min="0" max="1" step="0.1" value="0.7">
-            </div>
+
+
+    <div class="button-container">
+        <div class="button-row">
+            <button id="showCurrentQ" class="action-button" title="Показать текущий QoL">
+                <i class="fas fa-chart-line"></i>
+            </button>
+            <button id="showPreviousQ" class="action-button" title="Показать изменение QoL">
+                <i class="fas fa-history"></i>
+            </button>
         </div>
-        <div class="right-controls">
+        <div class="button-row">
+            <button id="showMethodology" class="action-button" title="Методика расчёта QoL">
+                <i class="fas fa-info-circle"></i>
+            </button>
             <button id="fullscreen-toggle" class="action-button" title="Во весь экран">
                 <i class="fas fa-expand"></i>
             </button>
         </div>
+        <!-- Вертикальный слайдер для прозрачности -->
+        <div class="transparency-slider-horizontal">
+            <input id="opacity-slider" type="range" min="0" max="1" step="0.1" value="0.7" title="Прозрачность">
+        </div>
     </div>
+    
+    
 
-    <div class="button-container">
-        <button id="showAll" class="action-button" title="Динамика всех районов">
-            <i class="fas fa-chart-bar"></i>
-        </button>
-        <button id="showCurrentQ" class="action-button" title="Показать Q">
-            <i class="fas fa-chart-line"></i>
-        </button>
-        <button id="showPreviousQ" class="action-button" title="Показать QoL_change">
-            <i class="fas fa-history"></i>
-        </button>
-    </div>
-
-
-    <!-- Кнопка "Методика" -->
-    <button id="showMethodology" class="action-button" title="Методика расчета QoL">
-        <i class="fas fa-info-circle"></i>
-    </button>
 
     <!-- Модальное окно для методики -->
     <div id="modal" class="modal">

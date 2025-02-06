@@ -7,6 +7,8 @@
 	<link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
 	<script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
 	<style>
 		body {
 			margin: 0;
@@ -58,7 +60,7 @@
 		
 		.legend h4 {
 			margin: 0 0 10px;
-			font-size: 16px;
+			font-size: 14px;
 		}
 		
 		.legend div {
@@ -84,34 +86,46 @@
 			color: white;
 			border: none;
 			cursor: pointer;
-			font-size: 16px;
+			font-size: 14px;
 		}
 
 		.chart-container {
 			position: absolute;
 			top: 20px;
 			right: 20px;
-			width: 400px;
-			height: 300px;
+			width: 450px;
+			height: 320px;
 			background: white;
 			border-radius: 8px;
 			padding: 10px;
 			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 			transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+			z-index: 10;
+		}
+
+		.chart-container.fullscreen {
+			width: 100vw;
+			height: 100vh;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			border-radius: 0;
+			padding: 20px;
+			z-index: 1000;
 		}
 
 		.chart-container.collapsed {
-			transform: translateX(420px);
+			transform: translateY(-150%);
 			opacity: 0;
 			pointer-events: none;
 		}
 
 		.chart-buttons {
-			position: absolute;
-			top: 5px;
-			right: 5px;
 			display: flex;
 			gap: 5px;
+			justify-content: flex-end;
+			margin-bottom: 5px;
 		}
 
 		.action-button {
@@ -131,6 +145,26 @@
 
 		.action-button i {
 			font-size: 16px;
+		}
+
+		.floating-button {
+			position: absolute;
+			top: 20px;
+			right: 20px;
+			background: #1081b8;
+			color: white;
+			border: none;
+			border-radius: 50%;
+			width: 50px;
+			height: 50px;
+			font-size: 20px;
+			cursor: pointer;
+			display: none;
+			z-index: 100;
+		}
+
+		.floating-button:hover {
+			background: #0a5c8c;
 		}
 
 
@@ -158,7 +192,7 @@
 			border-radius: 5px;
 			padding: 6px 10px;
 			cursor: pointer;
-			font-size: 14px;
+			font-size: 12px;
 			transition: background 0.3s ease-in-out;
 		}
 
@@ -167,17 +201,31 @@
 		}
 
 		.action-button i {
-			font-size: 16px;
+			font-size: 12px;
 		}
 
 		.filter-panel {
-			display: none;
-			flex-direction: column;
-			gap: 5px;
-			padding: 10px;
-			background: rgba(255, 255, 255, 0.9);
-			border-radius: 5px;
-			width: 180px;
+			display: none;  /* Панель скрыта по умолчанию */
+			position: absolute;
+			top: 80px;
+			left: 10px;
+			background: rgba(255, 255, 255, 0.95);
+			padding: 15px;
+			border-radius: 8px;
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+			width: 110px;
+			transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+		}
+
+		.filter-panel.active {
+			display: block;  /* Когда добавляется класс active, панель отображается */
+		}
+
+
+		.filter-panel h4 {
+			margin: 0 0 10px;
+			font-size: 12px;
+			color: #333;
 		}
 
 		.filter-panel input {
@@ -185,55 +233,289 @@
 			padding: 5px;
 			border: 1px solid #ccc;
 			border-radius: 5px;
+			margin-bottom: 10px;
+		}
+
+		.filter-buttons {
+			display: flex;
+			justify-content: space-between;
+			gap: 5px;
+			margin-top: 10px;
+		}
+
+		.filter-buttons .action-button {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 36px;
+			height: 36px;
+			border-radius: 50%;
+			font-size: 14px;
+			border: none;
+			cursor: pointer;
+			transition: transform 0.2s ease-in-out, background 0.3s ease-in-out;
+			position: relative;
+		}
+
+		.filter-buttons .action-button:hover {
+			transform: scale(1.1);
+		}
+
+		/* Стили для разных кнопок */
+		.apply-button {
+			background: #007bff;
+			color: white;
+		}
+
+		.apply-button:hover {
+			background: #0056b3;
+		}
+
+		.reset-button {
+			background: #6c757d;
+			color: white;
+		}
+
+		.reset-button:hover {
+			background: #5a6268;
+		}
+
+		.close-filter {
+			background: #dc3545;
+			color: white;
+		}
+
+		.close-filter:hover {
+			background: #c82333;
+		}
+
+		/* Всплывающие подсказки */
+		.action-button::after {
+			content: attr(data-tooltip);
+			position: absolute;
+			bottom: -30px;
+			left: 50%;
+			transform: translateX(-50%);
+			background: rgba(0, 0, 0, 0.8);
+			color: white;
+			font-size: 12px;
+			padding: 5px 8px;
+			border-radius: 4px;
+			white-space: nowrap;
+			opacity: 0;
+			visibility: hidden;
+			transition: opacity 0.2s ease-in-out;
+		}
+
+		.action-button:hover::after {
+			opacity: 1;
+			visibility: visible;
 		}
 
 
+		.modal {
+			display: none;
+			position: fixed;
+			z-index: 1000;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(0, 0, 0, 0.6);
+			justify-content: center;
+			align-items: center;
+		}
+
+		.modal-content {
+			background: white;
+			padding: 20px;
+			border-radius: 8px;
+			width: 60%;
+			max-height: 80%;
+			overflow-y: auto;
+			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+		}
+
+		.modal-content h2 {
+			text-align: center;
+		}
+
+		.modal-content ul {
+			padding-left: 20px;
+		}
+
+		.modal-content p, .modal-content ul {
+			font-size: 16px;
+			line-height: 1.5;
+		}
+
+		.close {
+			float: right;
+			font-size: 24px;
+			font-weight: bold;
+			cursor: pointer;
+		}
+
+		.close-report {
+			display: block;
+			margin: 20px auto 0;
+			padding: 10px 15px;
+			background: #1081b8;
+			color: white;
+			border: none;
+			border-radius: 5px;
+			cursor: pointer;
+			font-size: 16px;
+			text-align: center;
+		}
+
+		.close-report:hover {
+			background: #0a5c8c;
+		}
+
+		#mapWrapper {
+			width: 100%;
+			height: 100vh;
+			position: relative;
+		}
+
+		/* Убираем скрытие кнопок и графика в полноэкранном режиме */
+		#mapWrapper.fullscreen .chart-container,
+		#mapWrapper.fullscreen .button-container,
+		#mapWrapper.fullscreen .legend {
+			position: absolute;
+			z-index: 1001;
+		}
+
+		/* Убираем исчезновение контейнеров */
+		.chart-container, .button-container, .legend {
+			position: absolute;
+		}
 
 	</style>
 </head>
 <body>
-	<div id="map"></div>
-	<div class="legend" id="legend">
-		<button class="legend-toggle" onclick="toggleLegend()">✖</button>
-		<h4>Количество номеров</h4>
-		<div><span class="legend-circle" style="background-color:#25bbc8;"></span> Менее 50</div>
-		<div><span class="legend-circle" style="background-color:#239c07;"></span> 50 - 100</div>
-		<div><span class="legend-circle" style="background-color:#ecbe08;"></span> 100 - 200</div>
-		<div><span class="legend-circle" style="background-color:#e01612;"></span> 200+</div>
-	</div>
-	  
-
-	<div class="chart-container" id="chartContainer">
-		<div class="chart-buttons">
-			<button id="toggleChartBtn" class="action-button" title="Скрыть/показать график" onclick="toggleChart()">
-				<i class="fas fa-chart-bar"></i>
-			</button>
-			<button id="chartFullscreenBtn" class="action-button" title="Во весь экран" onclick="toggleChartFullscreen()">
-				<i class="fas fa-expand"></i>
-			</button>
+	<div id="mapWrapper">
+		<div id="map"></div>
+		<div class="legend" id="legend">
+			<button class="legend-toggle" onclick="toggleLegend()">✖</button>
+			<h4>Количество номеров</h4>
+			<div><span class="legend-circle" style="background-color:#25bbc8;"></span> Менее 50</div>
+			<div><span class="legend-circle" style="background-color:#239c07;"></span> 50 - 100</div>
+			<div><span class="legend-circle" style="background-color:#ecbe08;"></span> 100 - 200</div>
+			<div><span class="legend-circle" style="background-color:#e01612;"></span> 200+</div>
 		</div>
-		<canvas id="hotelChart"></canvas>
+		<div class="chart-container" id="chartContainer">
+			<div class="chart-buttons">
+				<button id="toggleChartBtn" class="action-button" title="Скрыть/показать график" onclick="toggleChart()">
+					<i class="fas fa-chart-bar"></i>
+				</button>
+				<button id="chartFullscreenBtn" class="action-button" title="Во весь экран" onclick="toggleChartFullscreen()">
+					<i class="fas fa-expand"></i>
+				</button>
+			</div>
+			<canvas id="hotelChart"></canvas>
+		</div>
 	</div>
 	
-
+	
+	<button id="showChartBtn" class="floating-button" onclick="toggleChart()">
+		<i class="fas fa-chart-bar"></i>
+	</button>
+		
 	<div class="button-container">
 		<div class="button-row">
 			<button id="mapFullscreenBtn" class="action-button" title="Во весь экран" onclick="toggleMapFullscreen()">
 				<i class="fas fa-expand"></i>
 			</button>
+			
 			<button id="toggleFiltersBtn" class="action-button" title="Фильтр точек" onclick="toggleFilters()">
 				<i class="fas fa-filter"></i>
 			</button>
-		</div>
-		<div class="filter-panel" id="filterPanel">
-			<label for="minRooms">Мин. номеров:</label>
-			<input type="number" id="minRooms" value="0" min="0" step="10">
-			<label for="maxRooms">Макс. номеров:</label>
-			<input type="number" id="maxRooms" value="300" min="0" step="10">
-			<button class="action-button" onclick="applyFilter()">Применить</button>
+			<button id="showReportBtn" class="action-button" title="Показать отчёт" onclick="toggleReport()">
+				<i class="fas fa-file-alt"></i>
+			</button>
 		</div>
 	</div>
 	
+	<div class="filter-panel" id="filterPanel">
+		<h4>Фильтр номеров</h4>
+		<label for="minRooms">Мин. номеров:</label>
+		<input type="number" id="minRooms" value="0" min="0" step="10">
+		
+		<label for="maxRooms">Макс. номеров:</label>
+		<input type="number" id="maxRooms" value="300" min="0" step="10">
+	
+		<div class="filter-buttons">
+			<button class="action-button apply-button" onclick="applyFilter()" data-tooltip="Применить">
+				<i class="fas fa-check"></i>
+			</button>
+			<button class="action-button reset-button" onclick="resetChart()" data-tooltip="Сбросить">
+				<i class="fas fa-undo"></i>
+			</button>
+			<button class="action-button close-filter" onclick="toggleFilters()" data-tooltip="Скрыть">
+				<i class="fas fa-times"></i>
+			</button>
+		</div>
+				
+	</div>
+	
+	<div id="reportModal" class="modal">
+		<div class="modal-content">
+			<span class="close" onclick="toggleReport()">&times;</span>
+			<h2>Аналитический отчет по номерному фонду в городе Алматы</h2>
+			
+			<p><strong>1. Введение</strong></p>
+			<p>Алматы располагает обширной сетью гостиниц и хостелов, обеспечивающих комфортное проживание для туристов и деловых путешественников...</p>
+	
+			<p><strong>2. Общая информация</strong></p>
+			<p>Согласно данным, в Алматы функционируют 347 гостиничных объектов, включающих:</p>
+			<ul>
+				<li>7 пятизвездочных гостиниц (2%)</li>
+				<li>17 четырехзвездочных гостиниц (4,8%)</li>
+				<li>5 трехзвездочных гостиниц (1,4%)</li>
+				<li>197 гостиниц без категории (56,7%)</li>
+				<li>121 объект других типов размещения (34,8%)</li>
+			</ul>
+	
+			<p><strong>3. Распределение номерного фонда по категориям гостиниц</strong></p>
+			<ul>
+				<li>Пятизвездочные гостиницы: 190 номеров</li>
+				<li>Четырехзвездочные гостиницы: 457 номеров</li>
+				<li>Трехзвездочные гостиницы: 133 номера</li>
+				<li>Гостиницы без категории: 5 392 номера</li>
+				<li>Хостелы и пансионаты: 3 315 номеров</li>
+			</ul>
+	
+			<p><strong>4. Среднее количество койко-мест на номер</strong></p>
+			<ul>
+				<li>Пятизвездочные гостиницы: 2 койко-места на номер</li>
+				<li>Четырехзвездочные гостиницы: 2 койко-места на номер</li>
+				<li>Трехзвездочные гостиницы: 2,5 койко-места на номер</li>
+				<li>Гостиницы без категории: 2,5 койко-места на номер</li>
+				<li>Хостелы и пансионаты: 6 койко-мест на номер</li>
+			</ul>
+	
+			<p><strong>Общее число койко-мест: 34 997</strong></p>
+	
+			<p><strong>5. Выводы</strong></p>
+			<ul>
+				<li>В Алматы 9 520 гостиничных номеров.</li>
+				<li>Среднее количество койко-мест на номер составляет 3,7.</li>
+				<li>Гостиничный фонд города представлен широким спектром категорий отелей.</li>
+				<li>В гостиницах стандартного формата на один номер приходится 2–2,5 койко-места.</li>
+				<li>В хостелах и пансионатах среднее количество койко-мест составляет 6.</li>
+			</ul>
+	
+			<p><strong>6. Заключение</strong></p>
+			<p>Анализ номерного фонда Алматы показывает, что город располагает разнообразными вариантами размещения, охватывающими широкий спектр гостиничных категорий – от пятизвездочных отелей до хостелов и пансионатов. Общее количество номеров составляет 9 520, а среднее число койко-мест на один номер – 3,68, что выше стандартного уровня для гостиничного сектора.</p>
+			<p>Высокий показатель среднего количества койко-мест обусловлен значительной долей объектов размещения, ориентированных на бюджетных путешественников и группы – таких как хостелы, пансионаты и лагеря. В стандартных гостиницах (трех-, четырех-, пятизвездочных, а также без категории) этот показатель соответствует традиционным нормам – 2–2,5 койко-места на номер.</p>
+			<p>Гостиничный рынок Алматы демонстрирует значительный потенциал для дальнейшего развития, включая модернизацию номерного фонда и повышение качества сервиса. Дальнейшее развитие инфраструктуры и расширение спектра услуг могут способствовать увеличению туристического потока, улучшению комфорта проживания и привлечению новых категорий гостей – как деловых, так и туристических.
+				</p>
+	
+			<button class="close-report" onclick="toggleReport()">Закрыть</button>
+		</div>
+	</div>
 	
 	
 	<script>
@@ -314,8 +596,6 @@
 
 			
 	
-	
-
 
 				// Добавляем обработчик кликов для отображения информации
 				map.on('click', 'hotels-layer', (e) => {
@@ -345,71 +625,85 @@
 
 
 
-		// Функция сворачивания/разворачивания графика
+		// Функция скрытия/показа графика
 		function toggleChart() {
 			const chartContainer = document.getElementById('chartContainer');
+			const showChartBtn = document.getElementById('showChartBtn');
+			
 			chartContainer.classList.toggle('collapsed');
+			
+			// Если график скрыт, показываем кнопку восстановления
+			if (chartContainer.classList.contains('collapsed')) {
+				showChartBtn.style.display = 'block';
+			} else {
+				showChartBtn.style.display = 'none';
+			}
 		}
 
-		// Функция переключения полноэкранного режима графика
+		// Полноэкранный режим графика
 		function toggleChartFullscreen() {
 			const chartContainer = document.getElementById('chartContainer');
 			const fullscreenBtn = document.getElementById('chartFullscreenBtn').querySelector('i');
 
 			if (!document.fullscreenElement) {
+				chartContainer.classList.add('fullscreen');
 				chartContainer.requestFullscreen()
 					.then(() => fullscreenBtn.classList.replace('fa-expand', 'fa-compress'))
 					.catch(err => console.error(`Ошибка при входе в полноэкранный режим: ${err.message}`));
 			} else {
 				document.exitFullscreen()
-					.then(() => fullscreenBtn.classList.replace('fa-compress', 'fa-expand'))
+					.then(() => {
+						chartContainer.classList.remove('fullscreen');
+						fullscreenBtn.classList.replace('fa-compress', 'fa-expand');
+					})
 					.catch(err => console.error(`Ошибка при выходе из полноэкранного режима: ${err.message}`));
 			}
 		}
 
-
-		// Улучшенный график
+		// Инициализация графика
 		function generateChart(data) {
 			const ctx = document.getElementById('hotelChart').getContext('2d');
-			new Chart(ctx, {
+
+			// Удаляем существующий график перед созданием нового
+			if (window.myChart) {
+				window.myChart.destroy();
+			}
+
+			window.myChart = new Chart(ctx, {
 				type: 'bar',
 				data: {
 					labels: data.features.map(f => f.properties['Наименование']),
 					datasets: [{
 						label: 'Количество номеров',
 						data: data.features.map(f => f.properties['Количество номеров']),
-						backgroundColor: data.features.map(f => {
-							const count = f.properties['Количество номеров'];
-							return count < 50 ? '#25bbc8' :
-								count < 100 ? '#239c07' :
-								count < 200 ? '#ecbe08' :
-												'#e01612';
-						}),
-						borderColor: '#ffffff',
-						borderWidth: 1
+						backgroundColor: '#1081b8'
 					}]
 				},
 				options: {
 					responsive: true,
 					maintainAspectRatio: false,
-					plugins: {
-						legend: {
-							display: false
-						},
-						tooltip: {
-							callbacks: {
-								label: (tooltipItem) => `Номеров: ${tooltipItem.raw}`
-							}
+					layout: {
+						padding: {
+							bottom: 24 // Добавляем отступ снизу, чтобы было больше места для подписей
 						}
 					},
 					scales: {
 						x: {
-							ticks: { color: '#333', font: { size: 12 } },
-							grid: { display: false }
+							ticks: {
+								font: {
+									size: 12
+								},
+								maxRotation: 45,
+								minRotation: 20,
+								padding: 6 // Увеличиваем расстояние от подписей до оси
+							}
 						},
 						y: {
-							ticks: { color: '#333', font: { size: 12 } },
-							grid: { color: '#ddd' }
+							ticks: {
+								font: {
+									size: 12
+								}
+							}
 						}
 					}
 				}
@@ -417,30 +711,63 @@
 		}
 
 
+
 		// Функция переключения полноэкранного режима карты
 		function toggleMapFullscreen() {
-			const mapContainer = document.getElementById('map');
+			const mapWrapper = document.getElementById('mapWrapper');
 			const fullscreenBtn = document.getElementById('mapFullscreenBtn').querySelector('i');
 
 			if (!document.fullscreenElement) {
-				mapContainer.requestFullscreen()
-					.then(() => fullscreenBtn.classList.replace('fa-expand', 'fa-compress'))
+				mapWrapper.requestFullscreen()
+					.then(() => {
+						fullscreenBtn.classList.replace('fa-expand', 'fa-compress');
+						mapWrapper.classList.add('fullscreen');
+					})
 					.catch(err => console.error(`Ошибка при входе в полноэкранный режим: ${err.message}`));
 			} else {
 				document.exitFullscreen()
-					.then(() => fullscreenBtn.classList.replace('fa-compress', 'fa-expand'))
+					.then(() => {
+						fullscreenBtn.classList.replace('fa-compress', 'fa-expand');
+						mapWrapper.classList.remove('fullscreen');
+					})
 					.catch(err => console.error(`Ошибка при выходе из полноэкранного режима: ${err.message}`));
 			}
 		}
 
-		// Функция переключения панели фильтров
-		function toggleFilters() {
-			const filterPanel = document.getElementById('filterPanel');
-			filterPanel.style.display = filterPanel.style.display === 'flex' ? 'none' : 'flex';
+		// Гарантированное отображение карты при загрузке
+		document.addEventListener("DOMContentLoaded", () => {
+			const mapElement = document.getElementById("map");
+			if (mapElement) {
+				mapElement.style.display = "block";
+			}
+		});
+
+		// Исправленное скрытие/показ графика
+		function toggleChart() {
+			const chartContainer = document.getElementById("chartContainer");
+			const showChartBtn = document.getElementById("showChartBtn");
+
+			if (chartContainer.classList.contains("collapsed")) {
+				chartContainer.classList.remove("collapsed");
+				chartContainer.style.display = "block"; // Показываем контейнер
+				showChartBtn.style.display = "none";
+			} else {
+				chartContainer.classList.add("collapsed");
+				chartContainer.style.display = "none"; // Прячем контейнер
+				showChartBtn.style.display = "block";
+			}
 		}
 
-		// Фильтр точек на карте
+
+		function toggleFilters() {
+			const filterPanel = document.getElementById('filterPanel');
+			filterPanel.classList.toggle('active');
+		}
+
+
 		function applyFilter() {
+			if (!originalData) return;
+
 			const minRooms = parseInt(document.getElementById('minRooms').value, 10);
 			const maxRooms = parseInt(document.getElementById('maxRooms').value, 10);
 
@@ -448,13 +775,48 @@
 				['>=', ['get', 'Количество номеров'], minRooms],
 				['<=', ['get', 'Количество номеров'], maxRooms]
 			]);
+
+			const filteredData = {
+				type: "FeatureCollection",
+				features: originalData.features.filter(f => {
+					const rooms = f.properties['Количество номеров'];
+					return rooms >= minRooms && rooms <= maxRooms;
+				})
+			};
+
+			generateChart(filteredData);
 		}
 
+		function resetChart() {
+			document.getElementById('minRooms').value = 0;
+			document.getElementById('maxRooms').value = 300;
+
+			map.setFilter('hotels-layer', null);
+			generateChart(originalData);
+		}
+
+		function toggleReport() {
+			const reportModal = document.getElementById('reportModal');
+			reportModal.style.display = reportModal.style.display === 'flex' ? 'none' : 'flex';
+		}
+
+		window.onclick = function(event) {
+			const reportModal = document.getElementById('reportModal');
+			if (event.target === reportModal) {
+				reportModal.style.display = 'none';
+			}
+		};
 
 
+		// Загружаем данные и сохраняем их для сброса
 		fetch('https://raw.githubusercontent.com/alinachrks/fun_house/main/hotels_.geojson')
 			.then(response => response.json())
-			.then(data => generateChart(data));
+			.then(data => {
+				originalData = data; // Сохраняем исходные данные
+				generateChart(data);  // Генерируем график
+			});
+
+
 	</script>
 </body>
 </html>

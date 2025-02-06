@@ -272,6 +272,40 @@
             display: none; /* Прячем содержимое */
         }
 
+        /* Контейнер кнопок внутри графика */
+        .chart-controls {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            gap: 6px; /* Отступ между кнопками */
+        }
+
+        /* Исправленный стиль для кнопок */
+        .chart-controls button {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #7c8f98, #296585);
+            color: #ffffff;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .chart-controls button:hover {
+            background: linear-gradient(135deg, #98a5ab, #356580);
+            transform: scale(1.1);
+        }
+
+        .chart-controls button:active {
+            transform: scale(0.9);
+        }
+
 
         /* Общие стили кнопок */
         /* Контейнер для кнопок */
@@ -481,15 +515,42 @@
     <!-- Карта -->
     <div id="map" class="map-container"></div>
 
-    <!-- График -->
-    <div class="chart-container minimized" id="chartContainer">
-        <i class="fas fa-chart-line"></i>
-        <canvas id="qChart"></canvas>
-        <button class="expand-chart" id="expandChart" title="Свернуть график">
-            <i class="fas fa-compress"></i>
-        </button>
-    </div>
+    <!-- Контейнер для графиков -->
+    <div class="charts-wrapper">
+        
+        <!-- График QoL -->
+        <div class="chart-container minimized" id="chartContainer">
+            <canvas id="qChart"></canvas>
+            <div class="chart-controls">
+                <button class="toggle-chart" id="expandChart" title="Развернуть график">
+                    <i class="fas fa-expand"></i>
+                </button>
+            </div>
+        </div>
 
+        <!-- График QoL по районам -->
+        <div class="chart-container minimized" id="multiDistrictChartContainer">
+            <canvas id="multiDistrictChart"></canvas>
+            <div class="chart-controls">
+                <button class="toggle-chart" id="toggleMultiDistrictFullscreen" title="Во весь экран">
+                    <i class="fas fa-expand"></i>
+                </button>
+            </div>
+        </div>
+        
+
+        <!-- Кнопки переключения графиков -->
+        <div class="chart-buttons">
+            <button id="showSingleDistrictChart" class="action-button" title="График QoL для района">
+                <i class="fas fa-chart-line"></i>
+            </button>
+            <button id="showMultiDistrictChart" class="action-button" title="График QoL по районам">
+                <i class="fas fa-chart-area"></i>
+            </button>
+        </div>
+        
+
+    </div>
 
 
     <div class="button-container">
@@ -744,6 +805,8 @@
                 "Количество зарегистрированных субъектов всего по району", "Количество действующих субъектов всего по району",
                 "Действующие зарегистрированные субъекты малого предпринимательства",
                 "Всего зарегистрированных субъектов малого предпринимательства (юрид. и физ. лица)",
+                "Количество действующих государственных предприятий", "Количество действующих частных предприятий",
+                "Количество действующих иностранных предприятий",
 
                 // 🚨 Безопасность и смертность
                 "Коэффицент младенческой смертности на 1000 человек", "Умершие от несчастных случаев, отравлений и травм",
@@ -899,7 +962,6 @@
             console.log("Данные latestQuarter:", latestQuarter);
             console.log("Доступные ключи:", Object.keys(latestQuarter)); // Проверяем доступные ключи
 
-            // Параметры для отображения
             const parameters = [
                 // 📊 Демография
                 { label: "Численность населения", key: "orig_Численность населения" },
@@ -1000,7 +1062,7 @@
         function updateChart(districtData) {
             const ctx = document.getElementById('qChart').getContext('2d');
 
-            // Проверка данных
+            // Проверка наличия данных
             if (!districtData || districtData.length === 0) {
                 console.warn('Нет данных для построения графика.');
                 return;
@@ -1022,17 +1084,17 @@
 
             // Цвета точек для QoL
             const pointColorsQoL = values.map(value => {
-                if (value < 0.1) return '#d7191c'; // Очень низкий
-                if (value < 0.3) return '#fdae61'; // Средний
-                if (value < 0.5) return '#a6d96a'; // Выше среднего
-                return '#1a9641';                // Высокий
+                if (value < 0.1) return '#d7191c'; // Очень низкий QoL (красный)
+                if (value < 0.3) return '#fdae61'; // Средний QoL (оранжевый)
+                if (value < 0.5) return '#a6d96a'; // Выше среднего QoL (зелёный)
+                return '#1a9641';                // Высокий QoL (тёмно-зелёный)
             });
 
             // Цвета точек для изменения QoL
             const pointColorsChange = changes.map(change => {
-                if (change > 0) return '#1a9641'; // Положительная динамика
-                if (change < 0) return '#d7191c'; // Отрицательная динамика
-                return '#6c757d';                // Без изменений
+                if (change > 0) return '#1a9641'; // Рост (зелёный)
+                if (change < 0) return '#d7191c'; // Падение (красный)
+                return '#6c757d';                // Без изменений (серый)
             });
 
             // Удаляем предыдущий график, если он существует
@@ -1049,7 +1111,7 @@
                         {
                             label: 'Индекс QoL',
                             data: values,
-                            borderColor: '#1a9641', // Зелёный для линии QoL
+                            borderColor: '#1a9641', // Зелёный цвет для линии QoL
                             backgroundColor: 'rgba(26, 150, 65, 0.1)',
                             pointBackgroundColor: pointColorsQoL,
                             pointRadius: 5,
@@ -1058,7 +1120,7 @@
                         {
                             label: 'Изменение QoL (%)',
                             data: changes,
-                            borderColor: '#6c757d', // Серый цвет для линии
+                            borderColor: '#6c757d', // Серый цвет для линии изменения
                             backgroundColor: 'rgba(108, 117, 125, 0.1)',
                             pointBackgroundColor: pointColorsChange,
                             pointRadius: 4,
@@ -1070,6 +1132,7 @@
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: { display: true },
                         title: {
@@ -1079,7 +1142,7 @@
                         tooltip: {
                             callbacks: {
                                 label: function (context) {
-                                    const value = context.raw.toFixed(2);
+                                    const value = context.raw !== null ? context.raw.toFixed(2) : "Нет данных";
                                     return context.dataset.label.includes('QoL')
                                         ? `${context.dataset.label}: ${value}`
                                         : `${context.dataset.label}: ${value}%`;
@@ -1106,9 +1169,97 @@
         }
 
 
+        function drawMultiDistrictChart() {
+            const canvas = document.getElementById("multiDistrictChart");
+            if (!canvas) {
+                console.warn("Элемент multiDistrictChart не найден.");
+                return;
+            }
+            const ctx = canvas.getContext("2d");
+
+            if (!fullDataset || fullDataset.length === 0) {
+                console.warn("Нет данных для построения графика.");
+                return;
+            }
+
+            // Группировка данных по районам
+            const groupedData = {};
+            fullDataset.forEach(entry => {
+                if (!entry.orig_district_name || entry.QoL === undefined) return; // Пропуск некорректных данных
+                if (!groupedData[entry.orig_district_name]) {
+                    groupedData[entry.orig_district_name] = [];
+                }
+                groupedData[entry.orig_district_name].push({
+                    date: entry.orig_indicator_date,
+                    QoL: entry.QoL
+                });
+            });
+
+            const sortedDistricts = Object.keys(groupedData).sort();
+            if (sortedDistricts.length === 0) {
+                console.warn("Нет данных по районам.");
+                return;
+            }
+
+            // Сортировка всех дат
+            const allDates = [...new Set(fullDataset.map(d => d.orig_indicator_date))].sort();
+
+            // Функция генерации цвета для графика
+            function generateColor(index, total) {
+                const hue = (index / total) * 360;
+                return `hsl(${hue}, 70%, 50%)`;
+            }
+
+            const datasets = sortedDistricts.map((district, index) => {
+                const color = generateColor(index, sortedDistricts.length);
+                const dataMap = Object.fromEntries(groupedData[district].map(d => [d.date, d.QoL]));
+                const values = allDates.map(date => dataMap[date] !== undefined ? dataMap[date] : null);
+
+                return {
+                    label: district,
+                    data: values,
+                    borderColor: color,
+                    backgroundColor: "transparent",
+                    pointRadius: 2,
+                    tension: 0.3
+                };
+            });
+
+            if (window.multiDistrictChartInstance) {
+                window.multiDistrictChartInstance.destroy();
+            }
+
+            window.multiDistrictChartInstance = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: allDates,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true },
+                        title: { display: true, text: "Индекс качества жизни по районам" },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return `${context.dataset.label}: ${context.raw !== null ? context.raw.toFixed(2) : "Нет данных"}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: "Дата" } },
+                        y: { title: { display: true, text: "Индекс QoL" }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+
 
         document.addEventListener("DOMContentLoaded", () => {
-            // Элементы управления
+            // Получаем элементы управления
             const fullscreenToggle = document.getElementById("fullscreen-toggle");
             const showCurrentQ = document.getElementById("showCurrentQ");
             const showPreviousQ = document.getElementById("showPreviousQ");
@@ -1116,12 +1267,19 @@
             const sidebar = document.getElementById("sidebar");
             const toggleSidebarButton = document.getElementById("toggleSidebar");
             const chartContainer = document.getElementById("chartContainer");
+            const multiChartContainer = document.getElementById("multiDistrictChartContainer");
+            const expandChartButton = document.getElementById("expandChart");
+            const multiChartFullscreenButton = document.getElementById("toggleMultiDistrictFullscreen");
+            const showMultiDistrictChart = document.getElementById("showMultiDistrictChart");
+            const showSingleDistrictChart = document.getElementById("showSingleDistrictChart");
+            const methodologyButton = document.getElementById("showMethodology");
+            const modal = document.getElementById("modal");
+            const closeModalButton = document.querySelector(".close-modal");
 
-            // Состояния
             let isFullscreen = false;
-            let showQMode = "current"; // Режим отображения: текущий QoL или изменение QoL
+            let showQMode = "current"; // Режим отображения QoL
 
-            // Полноэкранный режим с кросс-браузерной поддержкой
+            /** 🌐 Полноэкранный режим */
             fullscreenToggle.addEventListener("click", () => {
                 const element = document.documentElement;
 
@@ -1143,69 +1301,44 @@
                 isFullscreen = !isFullscreen;
             });
 
-            // Обновление цветов слоёв на основе текущего режима
-            const updateLayerColor = () => {
+            /** 🔄 Переключение между текущим QoL и изменением QoL */
+            function updateLayerColor() {
                 if (!map.isStyleLoaded()) {
                     console.warn("Карта ещё не загружена. Попробуйте позже.");
                     return;
                 }
 
-                if (showQMode === "current") {
-                    // Логика цветов для "QoL"
-                    map.setPaintProperty("districts-layer", "fill-color", [
-                        "step",
-                        ["get", "QoL"],
-                        "#6c757d", // Нет данных
-                        0.1, "#d7191c", // Очень низкий QoL
-                        0.3, "#fdae61", // Средний QoL
-                        0.5, "#a6d96a", // Выше среднего QoL
-                        0.7, "#1a9641" // Высокий QoL
-                    ]);
-                } else if (showQMode === "previous") {
-                    // Логика цветов для "QoL_change"
-                    map.setPaintProperty("districts-layer", "fill-color", [
-                        "interpolate",
-                        ["linear"],
-                        ["get", "QoL_change"],
-                        -80, "#67001f", // Очень сильное негативное изменение
-                        -20, "#d73027", // Значительное негативное изменение
-                        -5, "#f46d43",  // Умеренное негативное изменение
-                        0, "#fdae61",   // Нейтральное изменение (0)
-                        5, "#a6d96a",   // Умеренное позитивное изменение
-                        20, "#1a9641",  // Значительное позитивное изменение
-                        100, "#00441b"  // Очень сильное позитивное изменение
-                    ]);
-
-                }
-            };
-
-            // Переключение между текущим QoL и изменением QoL
-            const toggleShowQMode = (mode) => {
-                showQMode = mode;
-                updateLayerColor();
-            };
+                const property = showQMode === "current" ? "QoL" : "QoL_change";
+                map.setPaintProperty("districts-layer", "fill-color", [
+                    "step",
+                    ["get", property],
+                    "#6c757d", // Нет данных
+                    0.1, "#d7191c",
+                    0.3, "#fdae61",
+                    0.5, "#a6d96a",
+                    0.7, "#1a9641"
+                ]);
+            }
 
             showCurrentQ.addEventListener("click", () => {
-                toggleShowQMode("current");
-                console.log("Отображается текущий индекс QoL");
+                showQMode = "current";
+                updateLayerColor();
             });
 
             showPreviousQ.addEventListener("click", () => {
-                toggleShowQMode("previous");
-                console.log("Отображается изменение QoL");
+                showQMode = "previous";
+                updateLayerColor();
             });
 
-            // Изменение прозрачности слоя карты
+            /** 🎚️ Изменение прозрачности карты */
             opacitySlider.addEventListener("input", (e) => {
                 const opacity = parseFloat(e.target.value);
                 if (map.isStyleLoaded()) {
                     map.setPaintProperty("districts-layer", "fill-opacity", opacity);
-                } else {
-                    console.warn("Карта ещё не загружена. Попробуйте позже.");
                 }
             });
 
-            // Обработка кнопки скрытия/отображения боковой панели
+            /** 📌 Скрытие/отображение боковой панели */
             toggleSidebarButton.addEventListener("click", () => {
                 sidebar.classList.toggle("collapsed");
                 toggleSidebarButton.classList.toggle("collapsed");
@@ -1218,70 +1351,89 @@
                 icon.classList.toggle("fa-chevron-right", isCollapsed);
             });
 
-            // Обработка минимизации и раскрытия графика
-            chartContainer.addEventListener("click", () => {
-                chartContainer.classList.toggle("minimized");
-                chartContainer.classList.toggle("expanded");
+            /** 📊 Сворачивание/разворачивание графика */
+            function toggleChart(chart, button) {
+                chart.classList.toggle("minimized");
+                chart.classList.toggle("expanded");
 
-                const canvas = document.getElementById("qChart");
-                const isExpanded = chartContainer.classList.contains("expanded");
+                button.innerHTML = chart.classList.contains("expanded")
+                    ? `<i class="fas fa-compress"></i>`  // "Свернуть"
+                    : `<i class="fas fa-expand"></i>`;   // "Развернуть"
 
-                canvas.style.width = isExpanded ? "100%" : "380px";
-                canvas.style.height = isExpanded ? "100%" : "280px";
+                // Перерисовка графика после изменения размеров
+                if (chart.contains(document.getElementById("qChart")) && window.chartInstance) {
+                    window.chartInstance.resize();
+                }
+                if (chart.contains(document.getElementById("multiDistrictChart")) && window.multiDistrictChartInstance) {
+                    window.multiDistrictChartInstance.resize();
+                }
+            }
 
-                if (typeof chartInstance !== "undefined" && chartInstance) {
-                    chartInstance.resize();
+            expandChartButton.addEventListener("click", () => {
+                toggleChart(chartContainer, expandChartButton);
+            });
+
+            multiChartFullscreenButton.addEventListener("click", () => {
+                if (!document.fullscreenElement) {
+                    multiChartContainer.requestFullscreen().catch(err => {
+                        console.error(`Ошибка при входе в полноэкранный режим: ${err.message}`);
+                    });
+                } else {
+                    document.exitFullscreen();
                 }
             });
-        });
 
+            /** 🔄 Переключение между одиночным и мульти-графиком */
+            showSingleDistrictChart.addEventListener("click", () => {
+                chartContainer.classList.remove("minimized");
+                chartContainer.classList.add("expanded");
+                multiChartContainer.classList.add("minimized");
+            });
 
-        document.addEventListener("DOMContentLoaded", () => {
-            const methodologyButton = document.getElementById("showMethodology");
-            const modal = document.getElementById("methodologyModal");
-            const closeModal = document.getElementById("closeModal");
+            showMultiDistrictChart.addEventListener("click", () => {
+                multiChartContainer.classList.remove("minimized");
+                multiChartContainer.classList.add("expanded");
+                chartContainer.classList.add("minimized");
+            });
 
-            // Показать модальное окно
+            /** 📖 Обработчик для модального окна методологии */
             methodologyButton.addEventListener("click", () => {
                 modal.style.display = "block";
             });
 
-            // Закрыть модальное окно
-            closeModal.addEventListener("click", () => {
-                modal.style.display = "none";
-            });
-
-            // Закрыть модал при клике вне содержимого
-            window.addEventListener("click", (event) => {
-                if (event.target === modal) {
-                    modal.style.display = "none";
-                }
-            });
-        });
-
-        document.addEventListener("DOMContentLoaded", () => {
-            // Получаем элементы модального окна
-            const methodologyButton = document.getElementById("showMethodology");
-            const modal = document.getElementById("modal");
-            const closeModalButton = document.querySelector(".close-modal");
-
-            // Показать модальное окно при клике на кнопку "Методика"
-            methodologyButton.addEventListener("click", () => {
-                modal.style.display = "block";
-            });
-
-            // Закрыть модальное окно при клике на крестик
             closeModalButton.addEventListener("click", () => {
                 modal.style.display = "none";
             });
 
-            // Закрыть модальное окно при клике вне его содержимого
             window.addEventListener("click", (event) => {
                 if (event.target === modal) {
                     modal.style.display = "none";
                 }
             });
         });
+
+
+
+        document.getElementById("showMultiDistrictChart").addEventListener("click", () => {
+            const container = document.getElementById("multiDistrictChartContainer");
+            container.classList.toggle("minimized");
+            container.classList.toggle("expanded");
+
+            drawMultiDistrictChart();
+        });
+
+        document.getElementById("toggleMultiDistrictFullscreen").addEventListener("click", () => {
+            const chartContainer = document.getElementById("multiDistrictChartContainer");
+            if (!document.fullscreenElement) {
+                chartContainer.requestFullscreen().catch(err => {
+                    console.error(`Ошибка при входе в полноэкранный режим: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+      
 
     </script>
 </body>

@@ -1,286 +1,309 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="utf-8">
-    <title>Hotel Locations in Almaty</title>
-    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <title>Аналитика Отелей Алматы</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { margin: 0; padding: 0; }
-        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
-        .button-container {
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
+        body {
+            margin: 0;
             display: flex;
-            gap: 10px;
-            z-index: 1;
+            height: 100vh;
+            font-family: 'Roboto', Arial, sans-serif;
+            background: linear-gradient(135deg, #f3f4f6, #e2e5ea);
         }
-
-        .button {
-            padding: 12px 20px; /* Увеличен размер кнопки */
-            background-color: #0a4e97; /* Яркий синий цвет для привлечения внимания */
+        #map { flex: 1; width: 100%; height: 100%; }
+        .sidebar {
+            width: 400px;
+            max-width: 80%;
+            padding: 12px;
+            background: rgba(20, 30, 50, 0.95);
+            color: #ffffff;
+            overflow-y: auto;
+            height: 100%;
+            position: fixed;
+            left: 0;
+            top: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .sidebar.collapsed { transform: translateX(-100%); opacity: 0; }
+        .toggle-sidebar {
+            position: fixed;
+            top: 20px;
+            left: 410px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(145deg, #7b9cc0, #2e4359);
             color: white;
             border: none;
-            border-radius: 5px;
-            font-size: 16px; /* Увеличен размер текста */
-            font-weight: bold;
+            border-radius: 50%;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Тень для объема */
+            transition: transform 0.3s ease-in-out;
         }
-
-        .button:hover {
-            background-color: #0056b3; /* Темно-синий цвет при наведении */
-            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2); /* Увеличенная тень при наведении */
-            transform: translateY(-2px); /* Легкий эффект поднятия кнопки при наведении */
-        }
-
-        .button:active {
-            background-color: #003f7f; /* Цвет кнопки при нажатии */
-            transform: translateY(0); /* Кнопка возвращается на место при нажатии */
-        }
-
-        /* Legend Styling with Adaptive Font Size */
+        .toggle-sidebar:hover { transform: scale(1.1); }
         .legend {
-            background-color: white;
-            border-radius: 3px;
-            bottom: 30px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-            padding: 10px;
             position: absolute;
-            z-index: 1;
-            right: 10px;
-            width: 150px;
-            font-family: 'Open Sans', 'Arial Unicode MS', sans-serif; /* Используем те же шрифты */
+            bottom: 20px;
+            right: 20px;
+            background: rgba(20, 30, 50, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            color: #ffffff;
+            transition: opacity 0.3s ease-in-out;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
-
+        
         .legend h4 {
-            margin: 0 0 12px;
-            font-size: 0.7vw;
-            font-weight: bold;
-            color: #333;
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-family: 'Open Sans Bold', 'Arial Unicode MS Bold', sans-serif; /* Применение нужных шрифтов */
+            margin: 0 0 10px;
+            font-size: 16px;
         }
-
+        
         .legend div {
             display: flex;
             align-items: center;
-            font-size: 0.7vw;
-            font-family: 'Open Sans', 'Arial Unicode MS', sans-serif; /* Применение нужных шрифтов */
+            gap: 10px;
+            margin-bottom: 5px;
         }
-
-        .legend div span {
+        
+        .legend-circle {
+            width: 14px;
+            height: 14px;
             display: inline-block;
-            height: 15px;
-            width: 15px;
-            margin-right: 12px;
+            border-radius: 50%;
+            border: 1px solid white;
+        }
+        
+        .legend-toggle {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: none;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
         }
 
+        .chart-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 400px;
+            height: 300px;
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.5s ease-in-out;
+        }
+        .chart-container:hover { transform: scale(1.05); }
     </style>
 </head>
 <body>
-<div id="map"></div>
-<div class="button-container">
-    <button class="button" onclick="resetMap()">Сбросить</button>
-    <button class="button" onclick="toggleFullScreen()">Во весь экран</button>
-</div>
-
-<!-- Legend -->
-<div class="legend">
-    <h4>Количество номеров</h4>
-    <div><span style="background-color:#bddcf0;"></span> менее 10</div>
-    <div><span style="background-color:#9bcbe8;"></span> 10 - 20</div>
-    <div><span style="background-color:#56a6d0;"></span> 20 - 30</div>
-    <div><span style="background-color:#1081b8;"></span> 30 - 50</div>
-    <div><span style="background-color:#1071a1;"></span> 50 - 90</div>
-    <div><span style="background-color:#10608a;"></span> 90 - 120</div>
-    <div><span style="background-color:#124e70;"></span> 120 - 150</div>
-    <div><span style="background-color:#133c55;"></span> 150 - 200</div>
-    <div><span style="background-color:#13354c;"></span> 210 - 250</div>
-    <div><span style="background-color:#122d40;"></span> более 250</div>
-</div>
-
-<script>
-mapboxgl.accessToken = 'pk.eyJ1IjoiYWxpbmFjaCIsImEiOiJjbGlpcnZpaTgwMTZ4M2twaGo1NjRsNHhhIn0.9jw_R_D1i1nqOtaolld-dQ';
-const map = new mapboxgl.Map({
-    container: 'map',
-    style: 'mapbox://styles/alinach/cm1j0n58p00jq01qp98m35mrk',  // Use a valid Mapbox style here
-    center: [76.945, 43.255], // Coordinates for Almaty
-    zoom: 12
-});
-
-map.on('load', () => {
-    const geojsonUrl = 'https://raw.githubusercontent.com/alinachrks/fun_house/main/hotels_.geojson';
-
-    map.addSource('hotels', {
-        'type': 'geojson',
-        'data': geojsonUrl
-    });
-
-    // Add circle layer for hotels
-    map.addLayer({
-        'id': 'hotels-diamonds',
-        'type': 'circle',
-        'source': 'hotels',
-        'paint': {
-            'circle-radius': [
-                'interpolate',
-                ['linear'],
-                ['zoom'],
-                10, [
-                    'interpolate',
-                    ['linear'],
-                    ['get', 'Количество номеров'],
-                    30, 10,
-                    250, 14
-                ],
-                14, [
-                    'interpolate',
-                    ['linear'],
-                    ['get', 'Количество номеров'],
-                    30, 20,
-                    250, 40
-                ],
-                16, [
-                    'interpolate',
-                    ['linear'],
-                    ['get', 'Количество номеров'],
-                    50, 30,
-                    250, 52
-                ]
-            ],
-            'circle-color': [
-                'interpolate',
-                ['linear'],
-                ['get', 'Количество номеров'],
-                10, '#bddcf0',
-                20, '#9bcbe8',
-                30, '#56a6d0',
-                50, '#1081b8',
-                90, '#1071a1',
-                120, '#10608a',
-                150, '#124e70',
-                200, '#133c55',
-                210, '#13354c',
-                250, '#122d40'
-            ],
-            'circle-stroke-width': 1,
-            'circle-stroke-color': '#ffffff',
-            'circle-pitch-alignment': 'map',
-            'circle-pitch-scale': 'viewport'
-        }
-    });
-
-    // Add symbol layer for room count text
-    map.addLayer({
-        'id': 'hotels-room-count',
-        'type': 'symbol',
-        'source': 'hotels',
-        'layout': {
-            'text-field': ['get', 'Количество номеров'],
-            'text-size': [
-                'interpolate',
-                ['linear'],
-                ['zoom'],
-                10, 12,
-                14, 14,
-                16, 16,
-                20, 24
-            ],
-            'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-            'text-offset': [0, 0.5],
-            'text-anchor': 'center',
-            'text-allow-overlap': true
-        },
-        'paint': {
-            'text-color': [
-                'step',
-                ['get', 'Количество номеров'],
-                '#000000',  // Чёрный цвет для отелей с меньшим количеством номеров
-                70, '#ffffff' // Белый цвет для отелей с количеством номеров 70 и выше
-            ],
-            'text-opacity': [
-                'interpolate',
-                ['linear'],
-                ['zoom'],
-                10, 0,
-                14, 1
-            ]
-        }
-    });
-
-
-    // Popup for hotel information
-    const popup = new mapboxgl.Popup({
-        closeButton: false,
-        closeOnClick: true,
-        offset: 15
-    });
-
-    map.on('click', 'hotels-diamonds', (e) => {
-        const coordinates = e.lngLat;
-        const properties = e.features[0].properties;
-
-        popup
-            .setLngLat(coordinates)
-            .setHTML(`
-                <div style="font-family: Arial, sans-serif; padding: 10px;">
-                    <h3 style="font-size: 18px; margin: 0 0 10px 0; font-weight: bold;">${properties['Наименование']}</h3>
-                    <p style="font-size: 16px; margin: 0 0 5px 0;">
-                        <strong>Адрес:</strong> ${properties['Адрес']}
-                    </p>
-                    <p style="font-size: 16px; margin: 0;">
-                        <strong>Количество номеров:</strong> ${properties['Количество номеров']}
-                    </p>
-                </div>
-            `)
-            .addTo(map);
-
-        map.flyTo({
-            center: coordinates,
-            zoom: 16,
-            pitch: 65,
-            essential: true
+    <div id="map"></div>
+    <div class="legend" id="legend">
+        <button class="legend-toggle" onclick="toggleLegend()">✖</button>
+        <h4>Количество номеров</h4>
+        <div><span class="legend-circle" style="background-color:#25bbc8;"></span> Менее 50</div>
+        <div><span class="legend-circle" style="background-color:#239c07;"></span> 50 - 100</div>
+        <div><span class="legend-circle" style="background-color:#ecbe08;"></span> 100 - 200</div>
+        <div><span class="legend-circle" style="background-color:#e01612;"></span> 200+</div>
+    </div>
+      
+    <div class="chart-container"> <canvas id="hotelChart"></canvas> </div>
+    
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoiYWxpbmFjaCIsImEiOiJjbGlpcnZpaTgwMTZ4M2twaGo1NjRsNHhhIn0.9jw_R_D1i1nqOtaolld-dQ';
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/alinach/cm1j0n58p00jq01qp98m35mrk',
+            center: [76.945, 43.255],
+            zoom: 12
         });
-    });
 
-    map.on('mouseenter', 'hotels-diamonds', () => {
-        map.getCanvas().style.cursor = 'pointer';
-    });
+        fetch('https://raw.githubusercontent.com/alinachrks/fun_house/main/hotels_.geojson')
+            .then(response => response.json())
+            .then(data => {
+                map.addSource('hotels', {
+                    type: 'geojson',
+                    data: data
+                });
+                map.addLayer({
+                    id: 'hotels-layer',
+                    type: 'circle',
+                    source: 'hotels',
+                    paint: {
+                        'circle-radius': ['interpolate', ['linear'], ['get', 'Количество номеров'], 50, 4, 300, 10],
+                        'circle-color': [
+                            'interpolate', ['linear'], ['get', 'Количество номеров'],
+                            0, '#25bbc8',  // Голубой <50
+                            50, '#239c07',  // Зелёный 50-100
+                            100, '#ecbe08', // Жёлтый 100-200
+                            200, '#e01612'  // Красный 200+
+                        ],
+                        'circle-stroke-width': 1,
+                        'circle-stroke-color': '#fff'
+                    }
+                });
 
-    map.on('mouseleave', 'hotels-diamonds', () => {
-        map.getCanvas().style.cursor = '';
-    });
-});
+            map.on('mouseenter', 'hotels-layer', (e) => {
+                map.getCanvas().style.cursor = 'pointer';
+            
+                // Получаем ID объекта
+                const featureId = e.features[0].id;
+            
+                // Увеличиваем только один круг
+                map.setFeatureState({ source: 'hotels', id: featureId }, { hovered: true });
+            
+                const properties = e.features[0].properties;
+                const popup = new mapboxgl.Popup()
+                    .setLngLat(e.lngLat)
+                    .setHTML(`<strong>${properties['Наименование']}</strong><br>Адрес: ${properties['Адрес']}<br>Количество номеров: ${properties['Количество номеров']}`)
+                    .addTo(map);
+            
+                // Убираем popup через 5 секунд
+                setTimeout(() => popup.remove(), 5000);
+            });
+            
+            map.on('mouseleave', 'hotels-layer', (e) => {
+                map.getCanvas().style.cursor = '';
+            
+                // Получаем ID объекта
+                const featureId = e.features[0].id;
+            
+                // Возвращаем исходный размер только для одного круга
+                map.setFeatureState({ source: 'hotels', id: featureId }, { hovered: false });
+            });
+            
+            // Обновляем стили слоя с учетом состояния hover
+            map.addLayer({
+                id: 'hotels-layer',
+                type: 'circle',
+                source: 'hotels',
+                paint: {
+                    'circle-radius': [
+                        'case',
+                        ['boolean', ['feature-state', 'hovered'], false], 
+                        ['interpolate', ['linear'], ['get', 'Количество номеров'], 50, 6, 300, 14],  // Увеличенный размер
+                        ['interpolate', ['linear'], ['get', 'Количество номеров'], 50, 4, 300, 10]   // Обычный размер
+                    ],
+                    'circle-color': [
+                        'interpolate', ['linear'], ['get', 'Количество номеров'],
+                        0, '#25bbc8',
+                        50, '#239c07',
+                        100, '#ecbe08',
+                        200, '#e01612'
+                    ],
+                    'circle-stroke-width': 1,
+                    'circle-stroke-color': '#fff'
+                }
+            });
 
-function resetMap() {
-    map.flyTo({
-        center: [76.945, 43.255],
-        zoom: 12,
-        pitch: 0,
-        essential: true
-    });
-    popup.remove(); // Remove the popup when resetting the map
-}
 
-function toggleFullScreen() {
-    var button = document.querySelector('.button-container .button:nth-child(2)');
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen();
-        button.textContent = 'Свернуть';
-    } else {
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-            button.textContent = 'Во весь экран';
+
+                // Добавляем обработчик кликов для отображения информации
+                map.on('click', 'hotels-layer', (e) => {
+                    const properties = e.features[0].properties;
+                    new mapboxgl.Popup()
+                        .setLngLat(e.lngLat)
+                        .setHTML(`<strong>${properties['Наименование']}</strong><br>Адрес: ${properties['Адрес']}<br>Количество номеров: ${properties['Количество номеров']}`)
+                        .addTo(map);
+                });
+            });
+
+            function toggleLegend() {
+                const legend = document.getElementById('legend');
+                legend.style.display = legend.style.display === 'none' ? 'block' : 'none';
+            }
+
+
+        function animateZoom() {
+            map.easeTo({ center: [76.945, 43.255], zoom: 14, duration: 2000 });
         }
-    }
-}
-</script>
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                animateZoom();
+            }, 1000);
+        });
+
+        // Инициализация графика
+        function generateChart(data) {
+            const ctx = document.getElementById('hotelChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.features.map(f => f.properties['Наименование']),
+                    datasets: [{
+                        label: 'Количество номеров',
+                        data: data.features.map(f => f.properties['Количество номеров']),
+                        backgroundColor: '#1081b8'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+
+        // Полноэкранный режим
+        function toggleFullScreen() {
+            const fullscreenButton = document.querySelector('#fullscreen-toggle i'); // Иконка кнопки
+            const fullscreenButtonContainer = document.querySelector('#fullscreen-toggle'); // Контейнер кнопки
+
+            // Кросс-браузерные методы для проверки и запуска полноэкранного режима
+            const element = document.documentElement;
+            const requestFullscreen = element.requestFullscreen || element.webkitRequestFullscreen || element.mozRequestFullScreen || element.msRequestFullscreen;
+            const exitFullscreen = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+
+            if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
+                // Входим в полноэкранный режим
+                if (requestFullscreen) {
+                    requestFullscreen.call(element)
+                        .then(() => {
+                            updateFullscreenButton(true); // Обновляем кнопку
+                            console.log('Вошли в полноэкранный режим');
+                        })
+                        .catch((err) => {
+                            console.error(`Ошибка при входе в полноэкранный режим: ${err.message}`);
+                        });
+                }
+            } else {
+                // Выходим из полноэкранного режима
+                if (exitFullscreen) {
+                    exitFullscreen.call(document)
+                        .then(() => {
+                            updateFullscreenButton(false); // Обновляем кнопку
+                            console.log('Вышли из полноэкранного режима');
+                        })
+                        .catch((err) => {
+                            console.error(`Ошибка при выходе из полноэкранного режима: ${err.message}`);
+                        });
+                }
+            }
+
+            // Вспомогательная функция для обновления иконки и подсказки кнопки
+            function updateFullscreenButton(isFullscreen) {
+                if (isFullscreen) {
+                    fullscreenButton.classList.remove('fa-expand');
+                    fullscreenButton.classList.add('fa-compress');
+                    fullscreenButtonContainer.setAttribute('title', 'Свернуть экран');
+                } else {
+                    fullscreenButton.classList.remove('fa-compress');
+                    fullscreenButton.classList.add('fa-expand');
+                    fullscreenButtonContainer.setAttribute('title', 'Во весь экран');
+                }
+            }
+        }
+
+        fetch('https://raw.githubusercontent.com/alinachrks/fun_house/main/hotels_.geojson')
+            .then(response => response.json())
+            .then(data => generateChart(data));
+    </script>
 </body>
 </html>
